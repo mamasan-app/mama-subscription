@@ -1,13 +1,10 @@
 <?php
 
-declare(strict_types=1);
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -22,6 +19,8 @@ return new class extends Migration
             $table->timestamp('ends_at')->nullable();
             $table->timestamp('expires_at')->nullable();
             $table->timestamp('last_notification_at')->nullable();
+
+            $table->json('metadata')->nullable();
 
             $table->foreignId('user_id');
             $table->foreignId('service_id');
