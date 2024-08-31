@@ -37,9 +37,9 @@ class ServiceResource extends Resource
                     ->numeric()
                     ->default(0),
                 Forms\Components\Toggle::make('published')
-                    ->required(),
+                    ->default(false),
                 Forms\Components\Toggle::make('featured')
-                    ->required(),
+                    ->default(false),
             ]);
     }
 

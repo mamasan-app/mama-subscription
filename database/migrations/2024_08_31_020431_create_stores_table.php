@@ -17,7 +17,6 @@ return new class extends Migration {
             $table->string('address');
             $table->string('certificate_of_incorporation_path')->nullable();
             $table->string('rif_path')->nullable();
-            $table->timestamp('verified_at')->nullable();
 
             $table->timestamps();
             $table->softDeletes();
