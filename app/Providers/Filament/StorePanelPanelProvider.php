@@ -26,11 +26,17 @@ class StorePanelPanelProvider extends PanelProvider
             ->id('store')
             ->path('store')
             ->login()
+            ->loginRouteSlug('ingresar')
+            ->registration()
+            ->registrationRouteSlug('registrar')
             ->passwordReset()
+            ->passwordResetRequestRouteSlug('restablecer-password')
             ->emailVerification()
+            ->emailVerificationPromptRouteSlug('verificar-email')
             ->colors([
                 'primary' => Color::Purple,
             ])
+            ->default()
             ->discoverResources(in: app_path('Filament/Store/Resources'), for: 'App\\Filament\\Store\\Resources')
             ->discoverPages(in: app_path('Filament/Store/Pages'), for: 'App\\Filament\\Store\\Pages')
             ->pages([
@@ -48,7 +54,7 @@ class StorePanelPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                
+
             ])
             ->authMiddleware([
                 Authenticate::class,

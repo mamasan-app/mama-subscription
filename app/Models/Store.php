@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Str;
 
 class Store extends Model
 {
@@ -13,6 +14,8 @@ class Store extends Model
 
     protected $table = 'stores';
     protected $primaryKey = 'id';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     protected $fillable = [
         'name',
@@ -21,6 +24,17 @@ class Store extends Model
         'certificate_of_incorporation_path',
         'owner_id',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($store) {
+            if (empty($store->{$store->getKeyName()})) {
+                $store->{$store->getKeyName()} = (string) Str::ulid();
+            }
+        });
+    }
 
     public function owner(): BelongsTo
     {
@@ -31,5 +45,5 @@ class Store extends Model
     {
         return $this->belongsToMany(User::class);
     }
-    
+
 }

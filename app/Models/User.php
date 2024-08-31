@@ -9,6 +9,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use Filament\Models\Contracts\FilamentUser;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable implements FilamentUser
 {
@@ -71,6 +72,16 @@ class User extends Authenticatable implements FilamentUser
 
         // Retorna false por defecto si no coincide con ninguno de los paneles
         return false;
+    }
+
+    public function stores(): BelongsToMany
+    {
+        return $this->belongsToMany(Store::class);
+    }
+
+    public function isCustomer(): bool
+    {
+        return $this->hasRole('customer');
     }
 
 }
