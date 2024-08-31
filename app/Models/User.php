@@ -4,11 +4,13 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Filament\Panel;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+use Filament\Models\Contracts\FilamentUser;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     use HasFactory, Notifiable, HasRoles;
 
@@ -45,4 +47,30 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        $panelId = $panel->getId();
+
+        //dd($panelId, auth()->user()->roles->pluck('name'));
+
+        // Lógica para el panel de admin
+        if ($panelId === 'admin') {
+            return $this->hasRole('admin');
+        }
+
+        // Lógica para el panel de app
+        if ($panelId === 'app') {
+            return $this->hasRole('customer');
+        }
+
+        // Lógica para el panel de owner_store
+        if ($panelId === 'store') {
+            return $this->hasRole('owner_store');
+        }
+
+        // Retorna false por defecto si no coincide con ninguno de los paneles
+        return false;
+    }
+
 }

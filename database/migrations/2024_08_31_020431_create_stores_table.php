@@ -18,6 +18,8 @@ return new class extends Migration {
             $table->string('certificate_of_incorporation_path')->nullable();
             $table->string('rif_path')->nullable();
 
+            $table->foreignId('owner_id');
+
             $table->timestamps();
             $table->softDeletes();
         });
