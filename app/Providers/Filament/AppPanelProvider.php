@@ -16,7 +16,6 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use App\Http\Middleware\PanelAccessMiddleware;
 
 class AppPanelProvider extends PanelProvider
 {
@@ -31,7 +30,7 @@ class AppPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Indigo,
                 'gray' => Color::Slate,
-            ])        
+            ])
             ->discoverResources(in: app_path('Filament/App/Resources'), for: 'App\\Filament\\App\\Resources')
             ->discoverPages(in: app_path('Filament/App/Pages'), for: 'App\\Filament\\App\\Pages')
             ->pages([
@@ -51,7 +50,6 @@ class AppPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-                PanelAccessMiddleware::class,
             ]);
     }
 }

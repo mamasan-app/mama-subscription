@@ -16,7 +16,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use App\Http\Middleware\PanelAccessMiddleware;
+//use App\Http\Middleware\PanelAccessMiddleware;
 
 class StorePanelPanelProvider extends PanelProvider
 {
@@ -24,7 +24,7 @@ class StorePanelPanelProvider extends PanelProvider
     {
         return $panel
             ->id('store')
-            ->path('store')
+            ->path('tienda')
             ->login()
             ->loginRouteSlug('ingresar')
             ->registration()
@@ -36,7 +36,6 @@ class StorePanelPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Purple,
             ])
-            ->default()
             ->discoverResources(in: app_path('Filament/Store/Resources'), for: 'App\\Filament\\Store\\Resources')
             ->discoverPages(in: app_path('Filament/Store/Pages'), for: 'App\\Filament\\Store\\Pages')
             ->pages([
@@ -58,7 +57,7 @@ class StorePanelPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-                PanelAccessMiddleware::class,
+                //PanelAccessMiddleware::class,
             ]);
     }
 }
