@@ -32,7 +32,7 @@ class Subscription extends Model
         'last_notification_at',
         'metadata',
         'store_id',
-        'service_id', // Usamos service_id en lugar de plan_id o variant_id
+        'service_id',
     ];
 
     /**
@@ -162,7 +162,7 @@ class Subscription extends Model
         return $this->belongsTo(Store::class);
     }
 
-    public function service(): BelongsTo // Relación con el modelo Service
+    public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class);
     }

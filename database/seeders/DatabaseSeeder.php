@@ -18,21 +18,24 @@ class DatabaseSeeder extends Seeder
 
         // Crear usuarios y asignar roles
         $admin = User::create([
-            'name' => 'Admin',
+            'first_name' => 'Admin',
+            'last_name' => 'Admin',
             'email' => 'admin@gmail.com',
             'password' => bcrypt('201102'),
         ]);
         $admin->assignRole('admin');
 
         $owner = User::create([
-            'name' => 'Owner',
+            'first_name' => 'Owner',
+            'last_name' => 'Owner',
             'email' => 'store@gmail.com',
             'password' => bcrypt('201102'),
         ]);
         $owner->assignRole('owner_store');
 
         $customer = User::create([
-            'name' => 'Customer',
+            'first_name' => 'Customer',
+            'last_name' => 'Customer',
             'email' => 'customer@gmail.com',
             'password' => bcrypt('201102'),
         ]);
