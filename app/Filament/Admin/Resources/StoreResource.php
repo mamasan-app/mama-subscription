@@ -18,7 +18,10 @@ class StoreResource extends Resource
 {
     protected static ?string $model = Store::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $modelLabel = 'Tiendas';
+
+    protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
+
 
     public static function form(Form $form): Form
     {
@@ -28,20 +31,24 @@ class StoreResource extends Resource
                     ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('url')
-                    ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('address')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('certificate_of_incorporation_path')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('rif_path')
-                    ->maxLength(255),
+                Forms\Components\FileUpload::make('certificate_of_incorporation_path')
+                    ->label('Certificate of Incorporation')
+                    ->maxSize(1024)
+                    ->acceptedFileTypes(['application/pdf', 'image/*']),
+                Forms\Components\FileUpload::make('rif_path')
+                    ->label('RIF')
+                    ->maxSize(1024)
+                    ->acceptedFileTypes(['application/pdf', 'image/*']),
                 Forms\Components\Select::make('owner_id')
                     ->label('Owner')
                     ->options(function () {
                         return User::role('owner_store') // Filtra los usuarios que tienen el rol 'owner_store'
-                            ->pluck('name', 'id'); // Genera una lista de opciones donde la clave es el id y el valor es el nombre
+                            ->get() // Obtiene la colección de usuarios
+                            ->pluck('name', 'id'); // Utiliza el accesor 'name' para obtener el nombre completo
                     })
                     ->required()
                     ->searchable(),
@@ -52,9 +59,6 @@ class StoreResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
-                    ->label('ID')
-                    ->searchable(),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('url')
