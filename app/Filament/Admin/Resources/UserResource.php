@@ -69,6 +69,15 @@ class UserResource extends Resource
                     ->disk(config('filesystems.users'))
                     ->maxFiles(1)
                     ->columnSpanFull(),
+                
+                Forms\Components\Select::make('role')
+                    ->label('Role')
+                    ->options([
+                        'admin' => 'Admin',
+                        'owner_store' => 'Owner',
+                    ])
+                    ->required()
+                    ->default('owner_store'),
 
                 Forms\Components\TextInput::make('password')
                     ->label('Contraseña')
@@ -77,9 +86,8 @@ class UserResource extends Resource
                     ->required()
                     ->hiddenOn('edit')
                     ->confirmed()
-                    ->maxLength(255)
-                    ->dehydrateStateUsing(fn(string $state): string => Hash::make($state)),
-
+                    ->maxLength(255),
+                
                 Forms\Components\TextInput::make('password_confirmation')
                     ->label('Confirmar contraseña')
                     ->password()
