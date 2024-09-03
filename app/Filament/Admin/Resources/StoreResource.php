@@ -60,27 +60,28 @@ class StoreResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
+                    ->label('Nombre')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('url')
+                    ->label('Url')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('address')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('certificate_of_incorporation_path')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('rif_path')
+                    ->label('Dirección')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('owner.name')
+                ->label('Propietario')
                     ->numeric()
                     ->sortable(),
+                Tables\Columns\IconColumn::make('verified')
+                ->label('Verificada')
+                    ->boolean(),
                 Tables\Columns\TextColumn::make('created_at')
+                ->label('Creación')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('deleted_at')
+                ->label('Modificación')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

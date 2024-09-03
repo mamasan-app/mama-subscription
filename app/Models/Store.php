@@ -23,6 +23,7 @@ class Store extends Model
         'rif_path',
         'certificate_of_incorporation_path',
         'owner_id',
+        'verified',
     ];
 
     protected static function boot()

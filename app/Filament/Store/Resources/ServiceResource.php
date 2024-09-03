@@ -17,7 +17,8 @@ class ServiceResource extends Resource
 {
     protected static ?string $model = Service::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $modelLabel = 'Servicios';
+    protected static ?string $navigationIcon = 'heroicon-o-briefcase';
 
     public static function form(Form $form): Form
     {
@@ -28,10 +29,14 @@ class ServiceResource extends Resource
                     ->maxLength(255),
                 Forms\Components\Textarea::make('description')
                     ->columnSpanFull(),
-                Forms\Components\TextInput::make('variant')
+                Forms\Components\Select::make('variant')
                     ->required()
-                    ->maxLength(255)
-                    ->default('monthly'),
+                    ->options([
+                        'mensual' => 'Mensual',
+                        'semestral' => 'Semestral',
+                        'anual' => 'Anual',
+                    ])
+                    ->default('Mensual'),
                 Forms\Components\TextInput::make('price_cents')
                     ->required()
                     ->numeric()
