@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use Filament\Pages;
 use Filament\Http\Middleware\Authenticate;
+use App\Filament\Pages\Auth\UserRegister;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Panel;
@@ -26,7 +27,7 @@ class StorePanelPanelProvider extends PanelProvider
             ->path('tienda')
             ->login()
             ->loginRouteSlug('ingresar')
-            ->registration()
+            ->registration(UserRegister::class)
             ->registrationRouteSlug('registrar')
             ->passwordReset()
             ->passwordResetRequestRouteSlug('restablecer-password')
