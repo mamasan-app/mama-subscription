@@ -51,6 +51,7 @@ class ServiceResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),

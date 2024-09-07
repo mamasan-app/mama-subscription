@@ -90,14 +90,30 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return false;
     }
 
-    public function stores(): BelongsToMany
-    {
-        return $this->belongsToMany(Store::class);
-    }
-
-    public function isCustomer(): bool
-    {
-        return $this->hasRole('customer');
-    }
+    // Relación con las tiendas donde el usuario es 'owner', 'employee' o 'customer'
+     public function stores()
+     {
+         return $this->belongsToMany(Store::class, 'store_user')
+                     ->withPivot('role')
+                     ->withTimestamps();
+     }
+ 
+     // Obtener tiendas donde el usuario es 'employee'
+     public function employeeStores()
+     {
+         return $this->stores()->wherePivot('role', 'employee');
+     }
+ 
+     // Obtener tiendas donde el usuario es 'customer'
+     public function customerStores()
+     {
+         return $this->stores()->wherePivot('role', 'customer');
+     }
+ 
+     // Obtener tiendas donde el usuario es 'owner_store'
+     public function ownedStores()
+     {
+         return $this->stores()->wherePivot('role', 'owner_store');
+     }
 
 }

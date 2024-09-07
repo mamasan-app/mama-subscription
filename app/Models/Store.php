@@ -39,14 +39,31 @@ class Store extends Model
         });
     }
 
-    public function owner(): BelongsTo
+
+    // Relación con los usuarios (owner_store, employees, customers)
+    public function users()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsToMany(User::class, 'store_user')
+            ->withPivot('role')
+            ->withTimestamps();
     }
 
-    public function users(): BelongsToMany
+    // Relación específica con los 'employees'
+    public function employees()
     {
-        return $this->belongsToMany(User::class);
+        return $this->users()->wherePivot('role', 'employee');
+    }
+
+    // Relación específica con los 'customers'
+    public function customers()
+    {
+        return $this->users()->wherePivot('role', 'customer');
+    }
+
+    // Relación específica con los 'owner_store'
+    public function owner()
+    {
+        return $this->belongsTo(User::class, 'owner_id');
     }
 
 }
