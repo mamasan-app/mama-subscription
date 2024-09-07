@@ -110,4 +110,10 @@ class Service extends Model
                 ->toArray();
         });
     }
+
+    public function store()
+    {
+        return $this->belongsTo(Store::class);
+    }
+
 }

@@ -29,6 +29,13 @@ class ServiceResource extends Resource
                     ->maxLength(255),
                 Forms\Components\Textarea::make('description')
                     ->columnSpanFull(),
+                Forms\Components\Select::make('store_id')
+                    ->label('Tienda')
+                    ->options(function () {
+                        return auth()->user()->stores()->pluck('stores.name', 'stores.id');
+                    })
+                    ->required()
+                    ->preload(),
                 Forms\Components\Select::make('variant')
                     ->required()
                     ->options([
@@ -51,7 +58,7 @@ class ServiceResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            
+            ->query(static::getTableQuery())
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
@@ -96,6 +103,21 @@ class ServiceResource extends Resource
             //
         ];
     }
+
+    public static function getTableQuery()
+    {
+        // Obtener el usuario autenticado
+        $authUser = auth()->user();
+
+        // Obtener todos los IDs de las tiendas asociadas al usuario autenticado
+        $storeIds = $authUser->stores()->pluck('stores.id')->toArray();
+
+        return Service::query()
+            ->whereHas('store', function ($query) use ($storeIds) {
+                $query->whereIn('id', $storeIds);
+            });
+    }
+
 
     public static function getPages(): array
     {
