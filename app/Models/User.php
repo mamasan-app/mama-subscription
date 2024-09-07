@@ -61,7 +61,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     public function name(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->first_name.' '.$this->last_name,
+            get: fn() => $this->first_name . ' ' . $this->last_name,
         );
     }
 
@@ -83,7 +83,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 
         // Lógica para el panel de owner_store
         if ($panelId === 'store') {
-            return $this->hasRole('owner_store');
+            return $this->hasRole('owner_store') || $this->hasRole('employee');
         }
 
         // Retorna false por defecto si no coincide con ninguno de los paneles

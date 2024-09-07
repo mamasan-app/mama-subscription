@@ -13,7 +13,7 @@ return new class extends Migration {
         Schema::create('stores', function (Blueprint $table) {
             $table->ulid('id')->primary();
             $table->string('name');
-            $table->string('url');
+            $table->string('url')->nullable();
             $table->string('address');
             $table->string('certificate_of_incorporation_path')->nullable();
             $table->string('rif_path')->nullable();

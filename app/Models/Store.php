@@ -20,6 +20,8 @@ class Store extends Model
     protected $fillable = [
         'name',
         'description',
+        'url',
+        'address',
         'rif_path',
         'certificate_of_incorporation_path',
         'owner_id',
