@@ -17,7 +17,9 @@ use App\Filament\Inputs\IdentityDocumentTextInput;
 class ClientesResource extends Resource
 {
     protected static ?string $model = User::class;
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    protected static ?string $modelLabel = 'Clientes';
+    protected static ?string $navigationIcon = 'heroicon-o-users';
 
     public static function form(Form $form): Form
     {
@@ -195,11 +197,14 @@ class ClientesResource extends Resource
         // Obtener el usuario autenticado
         $authUser = auth()->user();
 
-        // Filtrar los usuarios asociados a la tienda del usuario autenticado
+        // Obtener todos los IDs de las tiendas asociadas al usuario autenticado
+        $storeIds = $authUser->stores()->pluck('stores.id')->toArray();
+
+        // Filtrar los usuarios que están asociados a las tiendas del usuario autenticado
         return User::query()
-            ->whereHas('stores', function ($query) use ($authUser) {
-                // Aquí filtramos por la(s) tienda(s) asociada(s) al usuario autenticado
-                $query->where('stores.id', $authUser->stores()->first()->id);
+            ->whereHas('stores', function ($query) use ($storeIds) {
+                // Filtrar los usuarios que están en las tiendas del usuario autenticado
+                $query->whereIn('stores.id', $storeIds);
             })
             ->role('customer'); // Filtramos directamente por el rol "customer" usando Spatie
     }

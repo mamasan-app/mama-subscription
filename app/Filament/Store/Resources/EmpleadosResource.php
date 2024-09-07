@@ -4,7 +4,7 @@ namespace App\Filament\Store\Resources;
 
 use App\Filament\Store\Resources\EmpleadosResource\Pages;
 use App\Filament\Store\Resources\EmpleadosResource\RelationManagers;
-use App\Models\Empleados;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -15,9 +15,11 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class EmpleadosResource extends Resource
 {
-    protected static ?string $model = Empleados::class;
+    protected static ?string $model = User::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $modelLabel = 'Empleador';
+
+    protected static ?string $navigationIcon = 'heroicon-o-users';
 
     public static function form(Form $form): Form
     {
