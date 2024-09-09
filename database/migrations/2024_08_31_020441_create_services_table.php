@@ -14,11 +14,15 @@ return new class extends Migration {
             $table->id()->primary();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->string('variant')->default('monthly');
             $table->unsignedInteger('price_cents')->default(0);
             $table->boolean('published')->default(false);
             $table->boolean('featured')->default(false);
-
+            
+            $table->foreignId('frequency_id')
+                  ->constrained('frequencies')
+                  ->onDelete('cascade')
+                  ->nullable();
+            
             $table->timestamps();
             $table->softDeletes();
         });

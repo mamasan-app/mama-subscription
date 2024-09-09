@@ -25,9 +25,11 @@ class ServiceResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
+                    ->label('Nombre')
                     ->required()
                     ->maxLength(255),
                 Forms\Components\Textarea::make('description')
+                    ->label('Descripción')
                     ->columnSpanFull(),
                 Forms\Components\Select::make('store_id')
                     ->label('Tienda')
@@ -37,6 +39,7 @@ class ServiceResource extends Resource
                     ->required()
                     ->preload(),
                 Forms\Components\Select::make('variant')
+                    ->label('Frecuencia')
                     ->required()
                     ->options([
                         'mensual' => 'Mensual',
@@ -45,12 +48,16 @@ class ServiceResource extends Resource
                     ])
                     ->default('Mensual'),
                 Forms\Components\TextInput::make('price_cents')
+                    ->label('Precio')
                     ->required()
                     ->numeric()
+                    ->columnSpanFull()
                     ->default(0),
                 Forms\Components\Toggle::make('published')
+                    ->label('Publicado')
                     ->required(),
                 Forms\Components\Toggle::make('featured')
+                    ->label('Destacado')
                     ->required(),
             ]);
     }
@@ -61,25 +68,33 @@ class ServiceResource extends Resource
             ->query(static::getTableQuery())
             ->columns([
                 Tables\Columns\TextColumn::make('name')
+                    ->label('Nombre')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('variant')
+                    ->label('Frecuencia')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('price_cents')
+                    ->label('Precio')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\IconColumn::make('published')
+                    ->label('Publicado')
                     ->boolean(),
                 Tables\Columns\IconColumn::make('featured')
+                    ->label('Destacado')
                     ->boolean(),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Fecha de Creación')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Fecha de Edición')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('deleted_at')
+                    ->label('Fecha de Eliminación')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

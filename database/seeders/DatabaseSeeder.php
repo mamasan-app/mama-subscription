@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Store;
+use App\Models\Address;
+use App\Models\Frequency;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 
@@ -53,8 +55,13 @@ class DatabaseSeeder extends Seeder
 
         $store = Store::create([
             'name' => 'Tienda Prueba',
-            'address' => 'Guarenas',
+            'slug' => 'tiendaPrueba',
             'owner_id' => $owner->id,
+        ]);
+
+        $address = Address::create([
+            'name' => 'Guarenas',
+            'store_id' => $store->id,
         ]);
 
         
@@ -66,6 +73,26 @@ class DatabaseSeeder extends Seeder
         
         // Si quieres, también puedes asociar clientes
         $store->users()->attach($customer->id, ['role' => 'customer']);
+
+        Frequency::create([
+            'nombre' => 'Semanal',
+            'cantidad_dias' => 7,
+        ]);
+
+        Frequency::create([
+            'nombre' => 'Quincenal',
+            'cantidad_dias' => 15,
+        ]);
+
+        Frequency::create([
+            'nombre' => 'Mensual',
+            'cantidad_dias' => 30,
+        ]);
+
+        Frequency::create([
+            'nombre' => 'Trimestral',
+            'cantidad_dias' => 1,
+        ]);
 
     }
 }

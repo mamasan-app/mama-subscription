@@ -66,4 +66,9 @@ class Store extends Model
         return $this->belongsTo(User::class, 'owner_id');
     }
 
+    public function addresses()
+    {
+        return $this->hasMany(Address::class);
+    }
+
 }

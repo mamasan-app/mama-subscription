@@ -52,6 +52,15 @@ class EmpleadosResource extends Resource
                 IdentityDocumentTextInput::make('identity_document')
                     ->required(),
 
+                Forms\Components\Select::make('stores')
+                    ->label('Tiendas')
+                    ->multiple()
+                    ->options(function () {
+                        return auth()->user()->stores()->pluck('stores.name', 'stores.id');
+                    })
+                    ->required()
+                    ->preload(),
+
                 Forms\Components\TextInput::make('password')
                     ->label('Contraseña')
                     ->password()
@@ -85,15 +94,6 @@ class EmpleadosResource extends Resource
                     ->visibleOn('edit')
                     ->same('new_password')
                     ->requiredWith('new_password'),
-
-                Forms\Components\Select::make('stores')
-                    ->label('Tiendas')
-                    ->multiple()
-                    ->options(function () {
-                        return auth()->user()->stores()->pluck('stores.name', 'stores.id');
-                    })
-                    ->required()
-                    ->preload(),
 
             ]);
     }

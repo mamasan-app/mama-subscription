@@ -65,7 +65,6 @@ class UserResource extends Resource
 
                 Forms\Components\FileUpload::make('ci_picture_path')
                     ->label('Documento de Identidad')
-                    ->required()
                     ->disk(config('filesystems.users'))
                     ->maxFiles(1)
                     ->columnSpanFull(),

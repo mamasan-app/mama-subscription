@@ -20,12 +20,16 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class StorePanelPanelProvider extends PanelProvider
 {
+    const string PANEL_ID = 'store';
+
     public function panel(Panel $panel): Panel
     {
         return $panel
-            ->id('store')
-            ->path('tienda')
+            ->default()
+            ->id(self::PANEL_ID)
+            ->path('/tienda')
             ->login()
+            ->profile()
             ->loginRouteSlug('ingresar')
             ->registration(UserRegister::class)
             ->registrationRouteSlug('registrar')

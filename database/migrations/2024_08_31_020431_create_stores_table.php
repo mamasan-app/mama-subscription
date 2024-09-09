@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->ulid('id')->primary();
             $table->string('name');
             $table->string('url')->nullable();
-            $table->string('address');
+            $table->string('slug')->unique();
             $table->string('certificate_of_incorporation_path')->nullable();
             $table->string('rif_path')->nullable();
 
