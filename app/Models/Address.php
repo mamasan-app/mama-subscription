@@ -11,7 +11,7 @@ class Address extends Model
 
     protected $table = 'address';
 
-    protected $fillable = ['nombre', 'store_id'];
+    protected $fillable = ['short_address', 'long_address', 'store_id'];
 
     /**
      * Relación "Address pertenece a Store".

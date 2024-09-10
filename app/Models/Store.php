@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\Storage;
 
 class Store extends Model
 {
@@ -21,11 +23,13 @@ class Store extends Model
         'name',
         'description',
         'url',
+        'slug',
         'address',
         'rif_path',
         'certificate_of_incorporation_path',
         'owner_id',
         'verified',
+        'logo',
     ];
 
     protected static function boot()
@@ -37,6 +41,13 @@ class Store extends Model
                 $store->{$store->getKeyName()} = (string) Str::ulid();
             }
         });
+    }
+
+    public function url(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => 'https://' . $this->slug . '.mama-subscription.localhost',
+        );
     }
 
 
@@ -69,6 +80,15 @@ class Store extends Model
     public function addresses()
     {
         return $this->hasMany(Address::class);
+    }
+
+    public function logoUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->logo
+            ? Storage::disk('stores')->url($this->logo)  // Obtener la URL pública del logo
+            : asset('images/default-logo.png'),  // Si no hay logo, usar una imagen por defecto
+        );
     }
 
 }

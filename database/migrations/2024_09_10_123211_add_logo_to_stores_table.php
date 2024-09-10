@@ -11,12 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('address', function (Blueprint $table) {
-            $table->id();
-            $table->string('short_address');
-            $table->string('long_address');
-            $table->foreignUlid('store_id')->nullable()->constrained('stores')->onDelete('cascade');
-            $table->timestamps();
+        Schema::table('stores', function (Blueprint $table) {
+            $table->string('logo')->nullable();
         });
     }
 
@@ -25,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('address');
+        Schema::table('stores', function (Blueprint $table) {
+            $table->dropColumn('logo');
+        });
     }
 };

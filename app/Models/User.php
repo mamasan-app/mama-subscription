@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Models\Contracts\HasTenants;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Filament\Panel;
@@ -12,8 +13,10 @@ use Spatie\Permission\Traits\HasRoles;
 use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Model;
 
-class User extends Authenticatable implements FilamentUser, MustVerifyEmail
+class User extends Authenticatable implements FilamentUser, MustVerifyEmail, HasTenants
 {
     use HasFactory, Notifiable, HasRoles, SoftDeletes;
 
@@ -91,29 +94,55 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     }
 
     // Relación con las tiendas donde el usuario es 'owner', 'employee' o 'customer'
-     public function stores()
-     {
-         return $this->belongsToMany(Store::class, 'store_user')
-                     ->withPivot('role')
-                     ->withTimestamps();
-     }
- 
-     // Obtener tiendas donde el usuario es 'employee'
-     public function employeeStores()
-     {
-         return $this->stores()->wherePivot('role', 'employee');
-     }
- 
-     // Obtener tiendas donde el usuario es 'customer'
-     public function customerStores()
-     {
-         return $this->stores()->wherePivot('role', 'customer');
-     }
- 
-     // Obtener tiendas donde el usuario es 'owner_store'
-     public function ownedStores()
-     {
-         return $this->stores()->wherePivot('role', 'owner_store');
-     }
+    public function stores()
+    {
+        return $this->belongsToMany(Store::class, 'store_user')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
+    // Obtener tiendas donde el usuario es 'employee'
+    public function employeeStores()
+    {
+        return $this->stores()->wherePivot('role', 'employee');
+    }
+
+    // Obtener tiendas donde el usuario es 'customer'
+    public function customerStores()
+    {
+        return $this->stores()->wherePivot('role', 'customer');
+    }
+
+    // Obtener tiendas donde el usuario es 'owner_store'
+    public function ownedStores()
+    {
+        return $this->stores()->wherePivot('role', 'owner_store');
+    }
+
+    /**
+     * Implementación para Filament: Obtener los tenantes (stores) para un panel
+     */
+    public function getTenants(Panel $panel): Collection
+    {
+        if ($panel->getId() === 'store') {
+            // Obtener las tiendas a las que el usuario tiene acceso (owner o empleado)
+            return $this->stores;
+        }
+
+        return collect(); // Retornar vacío para otros paneles
+    }
+
+    /**
+     * Implementación para Filament: Verificar si el usuario puede acceder a un tenante específico
+     */
+    public function canAccessTenant(Model $tenant): bool
+    {
+        return $this->ownedStores()
+            ->where('stores.id', $tenant->getKey()) // Especificar tabla 'stores'
+            ->exists()
+            || $this->stores()
+                ->where('stores.id', $tenant->getKey()) // Especificar tabla 'stores'
+                ->exists();
+    }
 
 }

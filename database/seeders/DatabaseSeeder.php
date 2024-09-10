@@ -60,7 +60,8 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $address = Address::create([
-            'name' => 'Guarenas',
+            'short_address' => 'Guarenas',
+            'long_address' => 'Guarenas, frenta el estacionamiento del Seguro Social',
             'store_id' => $store->id,
         ]);
 
