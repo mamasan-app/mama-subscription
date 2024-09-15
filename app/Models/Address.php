@@ -21,4 +21,10 @@ class Address extends Model
     {
         return $this->belongsTo(Store::class, 'store_id');
     }
+
+    // Relación muchos a muchos con 'Service'
+    public function services()
+    {
+        return $this->belongsToMany(Service::class, 'address_service', 'address_id', 'service_id');
+    }
 }

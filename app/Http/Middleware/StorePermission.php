@@ -29,7 +29,7 @@ class StorePermission
         }
 
         // Verificar si Filament está sirviendo una solicitud
-        if (! Filament::isServing()) {
+        if (!Filament::isServing()) {
             return $next($request);
         }
 
@@ -41,9 +41,9 @@ class StorePermission
         // Obtener la tienda actual desde Filament
         /** @var Store|null $store */
         $store = Filament::getTenant();
-        
+
         // Si hay una tienda, configuramos el ID para los permisos
-        if (! empty($store)) {
+        if (!empty($store)) {
             setPermissionsTeamId($store->id);  // Configurar permisos basados en la tienda actual
         }
 

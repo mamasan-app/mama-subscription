@@ -91,4 +91,18 @@ class Store extends Model
         );
     }
 
+    public function services()
+    {
+        return $this->hasManyThrough(
+            Service::class,  // Modelo destino (Service)
+            Address::class,  // Modelo intermedio (Address)
+            'store_id',      // Clave foránea en Address hacia Store
+            'id',            // Clave foránea en Service
+            'id',            // Clave primaria en Store
+            'id'             // Clave primaria en Address
+        );
+    }
+
+
+
 }

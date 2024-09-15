@@ -3,15 +3,16 @@
 namespace App\Filament\Store\Resources;
 
 use App\Filament\Store\Resources\ServiceResource\Pages;
-use App\Filament\Store\Resources\ServiceResource\RelationManagers;
 use App\Models\Service;
+use App\Models\Frequency;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Facades\Filament;
+
 
 class ServiceResource extends Resource
 {
@@ -28,31 +29,40 @@ class ServiceResource extends Resource
                     ->label('Nombre')
                     ->required()
                     ->maxLength(255),
+
                 Forms\Components\Textarea::make('description')
                     ->label('Descripción')
                     ->columnSpanFull(),
-                Forms\Components\Select::make('store_id')
-                    ->label('Tienda')
+
+                Forms\Components\Select::make('address_id')
+                    ->label('Dirección')
                     ->options(function () {
-                        return auth()->user()->stores()->pluck('stores.name', 'stores.id');
+                        $currentStore = Filament::getTenant();
+                        if ($currentStore) {
+                            return $currentStore->addresses()->pluck('short_address', 'id');
+                        }
+                        return [];
                     })
+                    ->multiple()
                     ->required()
                     ->preload(),
-                Forms\Components\Select::make('variant')
+
+                Forms\Components\Select::make('frequency_id')
                     ->label('Frecuencia')
                     ->required()
-                    ->options([
-                        'mensual' => 'Mensual',
-                        'semestral' => 'Semestral',
-                        'anual' => 'Anual',
-                    ])
-                    ->default('Mensual'),
-                Forms\Components\TextInput::make('price_cents')
+                    ->options(function () {
+                        // Obtener las frecuencias de la base de datos
+                        return Frequency::pluck('nombre', 'id');
+                    })
+                    ->preload(),
+
+                Forms\Components\TextInput::make('price')
                     ->label('Precio')
                     ->required()
                     ->numeric()
                     ->columnSpanFull()
                     ->default(0),
+
                 Forms\Components\Toggle::make('published')
                     ->label('Publicado')
                     ->required(),
@@ -70,12 +80,12 @@ class ServiceResource extends Resource
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nombre')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('variant')
+                Tables\Columns\TextColumn::make('frequency_id')
                     ->label('Frecuencia')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('price_cents')
+                Tables\Columns\TextColumn::make('formattedPrice')  // No uses el accessor, usa un método
                     ->label('Precio')
-                    ->numeric()
+                    ->getStateUsing(fn(Service $record): string => $record->getFormattedPrice()) // Aquí usa el método personalizado
                     ->sortable(),
                 Tables\Columns\IconColumn::make('published')
                     ->label('Publicado')
@@ -119,19 +129,43 @@ class ServiceResource extends Resource
         ];
     }
 
-    public static function getTableQuery()
+    public static function getTableQuery(): Builder
     {
-        // Obtener el usuario autenticado
-        $authUser = auth()->user();
+        // Obtener la tienda actual (tenant) a través de Filament
+        $currentStore = Filament::getTenant();
 
-        // Obtener todos los IDs de las tiendas asociadas al usuario autenticado
-        $storeIds = $authUser->stores()->pluck('stores.id')->toArray();
+        // Aseguramos que el tenant (la tienda) está correctamente obtenido
+        if ($currentStore) {
+            // 1. Obtener todas las direcciones asociadas a la tienda actual
+            $addresses = $currentStore->addresses()->pluck('id');
 
-        return Service::query()
-            ->whereHas('store', function ($query) use ($storeIds) {
-                $query->whereIn('id', $storeIds);
-            });
+            // Verifica si se obtuvieron direcciones
+            if ($addresses->isEmpty()) {
+                // Si no hay direcciones, retorna una consulta vacía
+                return Service::query()->whereRaw('1 = 0');
+            }
+
+            // 2. Obtener los IDs de los servicios asociados a las direcciones
+            $serviceIds = \DB::table('address_service')
+                ->whereIn('address_id', $addresses) // Filtra por las direcciones de la tienda
+                ->pluck('service_id');
+
+            // Verifica si se obtuvieron IDs de servicios
+            if ($serviceIds->isEmpty()) {
+                // Si no hay servicios asociados a esas direcciones, retorna una consulta vacía
+                return Service::query()->whereRaw('1 = 0');
+            }
+
+            // 3. Retornar los servicios cuyo ID esté en la lista de servicios encontrados
+            return Service::query()->whereIn('id', $serviceIds);
+        }
+
+        // Si no hay tienda seleccionada (por algún motivo), devolvemos una consulta vacía
+        return Service::query()->whereRaw('1 = 0'); // Retorna una consulta vacía si no hay tienda
     }
+
+
+
 
 
     public static function getPages(): array

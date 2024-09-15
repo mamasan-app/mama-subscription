@@ -12,9 +12,5 @@ class Frequency extends Model
     protected $table = 'frequencies';
     protected $fillable = ['nombre', 'cantidad_dias', 'activo'];
 
-    public function frequency()
-    {
-        return $this->belongsTo(Frequency::class);
-    }
 
 }

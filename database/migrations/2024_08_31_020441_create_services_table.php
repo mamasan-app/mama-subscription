@@ -17,12 +17,12 @@ return new class extends Migration {
             $table->unsignedInteger('price_cents')->default(0);
             $table->boolean('published')->default(false);
             $table->boolean('featured')->default(false);
-            
+
             $table->foreignId('frequency_id')
-                  ->constrained('frequencies')
-                  ->onDelete('cascade')
-                  ->nullable();
-            
+                ->constrained('frequencies')
+                ->onDelete('cascade')
+                ->nullable();
+
             $table->timestamps();
             $table->softDeletes();
         });
