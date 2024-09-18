@@ -14,6 +14,10 @@ class Service extends Model
 
     protected $table = 'services';
 
+    protected $primaryKey = 'id';  // Asegúrate de que esté configurado correctamente
+    public $incrementing = true;  // Si usas IDs autoincrementales, ponlo a true
+    protected $keyType = 'int';
+
     protected $fillable = [
         'name',
         'description',

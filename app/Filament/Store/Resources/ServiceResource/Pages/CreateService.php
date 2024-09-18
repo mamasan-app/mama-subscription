@@ -13,11 +13,16 @@ class CreateService extends CreateRecord
 {
     protected static string $resource = ServiceResource::class;
 
-    protected function beforeCreate()
+    protected function mutateFormDataBeforeCreate(array $data): array
     {
+        // Convierte el precio en dólares a centavos
+        $data['price_cents'] = $data['price'] * 100;
+
         // Guardar las direcciones seleccionadas por el usuario en la sesión
-        $addresses = $this->data['address_id'] ?? [];
+        $addresses = $data['address_id'] ?? [];
         Session::put('address_id', $addresses);
+
+        return $data;
     }
 
     protected function getRedirectUrl(): string
