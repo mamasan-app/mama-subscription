@@ -50,6 +50,9 @@ class AppPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+            ])
+            ->resources([
+                \App\Filament\App\Resources\SubscriptionResource::class,
             ]);
     }
 }

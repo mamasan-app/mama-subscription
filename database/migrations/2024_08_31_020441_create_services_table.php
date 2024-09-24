@@ -17,6 +17,7 @@ return new class extends Migration {
             $table->unsignedInteger('price_cents')->default(0);
             $table->boolean('published')->default(false);
             $table->boolean('featured')->default(false);
+            $table->foreignUlid('store_id')->nullable()->constrained('stores')->onDelete('cascade');
 
             $table->foreignId('frequency_id')
                 ->constrained('frequencies')

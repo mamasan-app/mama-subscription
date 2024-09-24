@@ -5,6 +5,7 @@ namespace App\Filament\Store\Resources\ClientesResource\Pages;
 use App\Filament\Store\Resources\ClientesResource;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
+use Filament\Facades\Filament;
 
 class CreateClientes extends CreateRecord
 {
@@ -12,14 +13,10 @@ class CreateClientes extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // Verifica si se han seleccionado tiendas
-        if (isset($data['stores'])) {
-            $this->selectedStores = $data['stores'];  // Guardar tiendas seleccionadas temporalmente
-            unset($data['stores']);  // Eliminar el campo 'stores' antes de guardar en la tabla 'users'
-        }
-
-        // Hash de la contraseña antes de guardar
+        // Hash the password before storing it
         $data['password'] = bcrypt($data['password']);
+
+        // Asegurarse de que 'password_confirmation' no se almacene
         unset($data['password_confirmation']);
 
         return $data;
@@ -27,23 +24,20 @@ class CreateClientes extends CreateRecord
 
     protected function afterCreate(): void
     {
-        $this->record->assignRole('customer');
-        // Asignar el rol 'customer' al usuario recién creado
-        
+        // Verificar si el usuario ya tiene un rol asignado en la tabla intermedia y modificarlo
+        $this->record->syncRoles(['customer']);
 
-        // Si se seleccionaron tiendas, asociarlas con el usuario
-        if (!empty($this->selectedStores)) {
+        // Obtener la tienda actual desde Filament (getTenant)
+        $currentStore = Filament::getTenant();
 
-            // Asociar las tiendas con el rol 'customer' en la tabla intermedia
-            $storesWithRole = [];
-            foreach ($this->selectedStores as $storeId) {
-                $storesWithRole[$storeId] = ['role' => 'customer'];  // Asignar el rol a cada tienda
-            }
-
-            // Sincronizar tiendas con el rol en la tabla intermedia
-            $this->record->stores()->sync($storesWithRole);
+        // Modificar la relación en la tabla intermedia store_user con el rol de 'customer'
+        if ($currentStore) {
+            // Actualiza el pivote existente con el rol 'customer'
+            $this->record->stores()->updateExistingPivot($currentStore->id, ['role' => 'customer']);
+        } else {
+            // En caso de que no haya una tienda
+            dd('No se pudo obtener la tienda actual');
         }
     }
-
 
 }

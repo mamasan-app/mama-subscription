@@ -30,34 +30,45 @@ class RolePermissionSeeder extends Seeder
         // Asignar permisos al rol 'owner_store'
         $ownerRole = Role::firstOrCreate(['name' => 'owner_store']);
         $ownerRole->givePermissionTo([
-            'create services', 
-            'delete services', 
+            'create services',
+            'delete services',
             'edit services',
             'create subscriptions',
-            'edit subscriptions',   
-            'delete subscriptions', 
+            'edit subscriptions',
+            'delete subscriptions',
         ]);
 
         $ownerRole->givePermissionTo([
-            'create subscriptions', 
-            'edit subscriptions', 
-            'delete subscriptions', 
+            'create subscriptions',
+            'edit subscriptions',
+            'delete subscriptions',
             'view subscriptions',
             'restore subscriptions',
             'force delete subscriptions',
         ]);
-        
+
         // Asignar permisos al rol 'employee', solo edición de servicios y suscripciones
         $employeeRole = Role::firstOrCreate(['name' => 'employee']);
         $employeeRole->givePermissionTo([
             'edit services',
-            'create subscriptions',  
-            'edit subscriptions',    
+            'create subscriptions',
+            'edit subscriptions',
         ]);
 
         $employeeRole->givePermissionTo([
-            'create subscriptions', 
-            'edit subscriptions', 
+            'create subscriptions',
+            'edit subscriptions',
+            'view subscriptions',
+        ]);
+
+        $customerRole = Role::firstOrCreate(['name' => 'customer']);
+        $customerRole->givePermissionTo([
+            'view subscriptions',
+            'edit subscriptions',
+        ]);
+
+        $customerRole->givePermissionTo([
+            'edit subscriptions',
             'view subscriptions',
         ]);
     }

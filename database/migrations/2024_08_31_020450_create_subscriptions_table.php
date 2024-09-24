@@ -13,17 +13,15 @@ return new class extends Migration {
         Schema::create('subscriptions', function (Blueprint $table) {
             $table->id();
             $table->string('status');
-            $table->string('billing_provider')->default('internal');
             $table->timestamp('trial_ends_at')->nullable();
             $table->timestamp('renews_at')->nullable();
             $table->timestamp('ends_at')->nullable();
             $table->timestamp('expires_at')->nullable();
             $table->timestamp('last_notification_at')->nullable();
 
-            $table->json('metadata')->nullable();
-
             $table->foreignId('user_id');
             $table->foreignId('service_id');
+            $table->foreignUlid('store_id')->nullable()->constrained('stores')->onDelete('cascade');
 
             $table->index('user_id');
 

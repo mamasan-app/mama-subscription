@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\BillingProviderEnum;
 use App\Enums\SubscriptionStatusEnum;
 use App\Support\MoneyFormatter;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -15,7 +14,7 @@ use Money\Money;
 
 class Subscription extends Model
 {
-    use HasFactory, HasUlids, SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -24,7 +23,6 @@ class Subscription extends Model
      */
     protected $fillable = [
         'status',
-        'billing_provider',
         'price_usd_cents',
         'trial_ends_at',
         'renews_at',
@@ -33,6 +31,9 @@ class Subscription extends Model
         'metadata',
         'store_id',
         'service_id',
+        'store_id',
+        'user_id',
+        'expires_at',
     ];
 
     /**
@@ -42,7 +43,6 @@ class Subscription extends Model
      */
     protected $casts = [
         'status' => SubscriptionStatusEnum::class,
-        'billing_provider' => BillingProviderEnum::class,
         'price_usd_cents' => 'integer',
         'trial_ends_at' => 'datetime',
         'renews_at' => 'datetime',
@@ -165,5 +165,10 @@ class Subscription extends Model
     public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

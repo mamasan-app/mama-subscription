@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Store extends Model
 {
@@ -103,6 +104,9 @@ class Store extends Model
         );
     }
 
-
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class, 'store_id');
+    }
 
 }

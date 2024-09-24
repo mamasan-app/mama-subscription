@@ -63,8 +63,8 @@ class StorePanelPanelProvider extends PanelProvider
             ->tenantMenuItems([
                 'billing' => MenuItem::make()
                     ->visible(fn() => auth()->user()?->can('manageSubscription', Store::class)),  // Permisos para manejar la subscripción
-                'register' => MenuItem::make()->label('Register new team'),
-                'profile' => MenuItem::make()->label('Edit team profile'),
+                'register' => MenuItem::make()->label('Registrar una nueva Tienda'),
+                'profile' => MenuItem::make()->label('Editar Perfil de la Tienda'),
             ])
             ->unsavedChangesAlerts()
             ->databaseTransactions()

@@ -7,24 +7,24 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Cache;
 
-
 class Service extends Model
 {
     use HasFactory;
 
     protected $table = 'services';
 
-    protected $primaryKey = 'id';  // Asegúrate de que esté configurado correctamente
-    public $incrementing = true;  // Si usas IDs autoincrementales, ponlo a true
+    protected $primaryKey = 'id';  // Ya está configurado correctamente
+    public $incrementing = true;  // Si usas IDs autoincrementales, debe estar en true
     protected $keyType = 'int';
 
     protected $fillable = [
         'name',
         'description',
-        'price_cents', // Esto está en la base de datos
+        'price_cents', // Este es el campo en la base de datos
         'published',
         'featured',
         'frequency_id',
+        'store_id',  // Asegúrate de agregar este campo al array fillable
     ];
 
     protected $casts = [
@@ -33,10 +33,10 @@ class Service extends Model
         'price_cents' => 'integer',
     ];
 
-    protected $appends = ['price']; // No necesitas price_cents aquí
+    protected $appends = ['price']; // Esto crea un campo virtual 'price' en las salidas JSON
 
     /**
-     * @return Attribute<Closure, Closure>
+     * Atributo calculado para el precio en formato decimal.
      */
     public function price(): Attribute
     {
@@ -49,7 +49,7 @@ class Service extends Model
     }
 
     /**
-     * @return Attribute<Closure, Closure>
+     * Atributo para formatear el precio como un string con dos decimales.
      */
     public function formattedPrice(): Attribute
     {
@@ -58,11 +58,17 @@ class Service extends Model
         );
     }
 
+    /**
+     * Método para obtener el precio formateado con la moneda.
+     */
     public function getFormattedPrice(): string
     {
-        return number_format($this->price, 2) . ' USD';  // Formatea el precio con dos decimales y "USD"
+        return number_format($this->price, 2) . ' USD';  // Devuelve el precio con dos decimales y la etiqueta "USD"
     }
 
+    /**
+     * Atributo para verificar si el servicio está publicado.
+     */
     public function isPublished(): Attribute
     {
         return Attribute::make(
@@ -70,21 +76,29 @@ class Service extends Model
         );
     }
 
+    /**
+     * Relación de muchos a uno con 'Frequency'.
+     */
     public function frequency()
     {
         return $this->belongsTo(Frequency::class);
     }
 
-    // Relación muchos a muchos con 'Address'
+    /**
+     * Relación muchos a muchos con 'Address'.
+     */
     public function addresses()
     {
         return $this->belongsToMany(Address::class, 'address_service', 'service_id', 'address_id');
     }
 
-
-    // Relación con 'Store' a través de 'Address'
+    /**
+     * Relación de uno a muchos con 'Store'.
+     * 
+     * Relación directa con la tabla 'stores' usando 'store_id'.
+     */
     public function store()
     {
-        return $this->hasOneThrough(Store::class, Address::class, 'id', 'id', 'id', 'store_id');
+        return $this->belongsTo(Store::class, 'store_id');
     }
 }

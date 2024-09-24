@@ -18,14 +18,14 @@ class ClientesResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static ?string $modelLabel = 'Clientes';
-    protected static ?string $navigationIcon = 'heroicon-o-users';
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    public static ?string $tenantOwnershipRelationshipName = 'customerStores';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-
                 Forms\Components\TextInput::make('first_name')
                     ->label('Nombre')
                     ->required()
@@ -102,24 +102,18 @@ class ClientesResource extends Resource
                     ->visibleOn('edit')
                     ->same('new_password')
                     ->requiredWith('new_password'),
-
-                Forms\Components\Select::make('stores')
-                    ->label('Tiendas')
-                    ->multiple()
-                    ->options(function () {
-                        return auth()->user()->stores()->pluck('stores.name', 'stores.id');
-                    })
-                    ->required()
-                    ->preload(),
-
             ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
-            ->query(static::getTableQuery())
             ->columns([
+                Tables\Columns\TextColumn::make('id')
+                    ->label('ID')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nombre')
                     ->sortable()
@@ -132,6 +126,7 @@ class ClientesResource extends Resource
                 Tables\Columns\TextColumn::make('email')
                     ->label('Email')
                     ->searchable(),
+
                 Tables\Columns\TextColumn::make('phone_number')
                     ->label('Número de teléfono')
                     ->searchable(),
@@ -190,23 +185,6 @@ class ClientesResource extends Resource
         return [
             //
         ];
-    }
-
-    public static function getTableQuery()
-    {
-        // Obtener el usuario autenticado
-        $authUser = auth()->user();
-
-        // Obtener todos los IDs de las tiendas asociadas al usuario autenticado
-        $storeIds = $authUser->stores()->pluck('stores.id')->toArray();
-
-        // Filtrar los usuarios que están asociados a las tiendas del usuario autenticado
-        return User::query()
-            ->whereHas('stores', function ($query) use ($storeIds) {
-                // Filtrar los usuarios que están en las tiendas del usuario autenticado
-                $query->whereIn('stores.id', $storeIds);
-            })
-            ->role('customer'); // Filtramos directamente por el rol "customer" usando Spatie
     }
 
     public static function getPages(): array

@@ -7,6 +7,7 @@ use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 use App\Models\Service;
 use Illuminate\Support\Facades\Session;
+use Filament\Facades\Filament;
 
 
 class CreateService extends CreateRecord
@@ -22,13 +23,15 @@ class CreateService extends CreateRecord
         $addresses = $data['address_id'] ?? [];
         Session::put('address_id', $addresses);
 
-        return $data;
-    }
+        // Obtener el store_id desde el sistema de multitenancy (Tenant)
+        $currentStore = Filament::getTenant();
 
-    protected function getRedirectUrl(): string
-    {
-        // Redirige a la página de listado de servicios después de la creación
-        return $this->getResource()::getUrl('index');
+        if ($currentStore) {
+            // Si se obtuvo el tenant, asignar el store_id al servicio
+            $data['store_id'] = $currentStore->id;
+        }
+
+        return $data;
     }
 
 }

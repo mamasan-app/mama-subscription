@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Service;
 use App\Observers\ServiceObserver;
 
+
 class AppServiceProvider extends ServiceProvider
 {
     /**

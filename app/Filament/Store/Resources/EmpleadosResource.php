@@ -3,7 +3,6 @@
 namespace App\Filament\Store\Resources;
 
 use App\Filament\Store\Resources\EmpleadosResource\Pages;
-use App\Filament\Store\Resources\EmpleadosResource\RelationManagers;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -11,8 +10,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Inputs\IdentityDocumentTextInput;
+use Filament\Facades\Filament;
 
 class EmpleadosResource extends Resource
 {
@@ -26,7 +24,6 @@ class EmpleadosResource extends Resource
     {
         return $form
             ->schema([
-
                 Forms\Components\TextInput::make('first_name')
                     ->label('Nombre')
                     ->required()
@@ -36,7 +33,6 @@ class EmpleadosResource extends Resource
                     ->label('Apellido')
                     ->required()
                     ->maxLength(255),
-
 
                 Forms\Components\TextInput::make('email')
                     ->email()
@@ -94,7 +90,6 @@ class EmpleadosResource extends Resource
                     ->visibleOn('edit')
                     ->same('new_password')
                     ->requiredWith('new_password'),
-
             ]);
     }
 
@@ -139,7 +134,6 @@ class EmpleadosResource extends Resource
                     ->sortable()
                     ->formatStateUsing(fn($state) => $state ? $state->format('d-m-Y H:i') : 'No verificado'),
 
-
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -177,15 +171,18 @@ class EmpleadosResource extends Resource
 
     public static function getTableQuery()
     {
-        $authUser = auth()->user();
+        // Obtener la tienda actual desde la sesión (usando Filament::getTenant())
+        $currentStore = Filament::getTenant();
 
-        // Obtener todos los IDs de las tiendas asociadas al usuario autenticado
-        $storeIds = $authUser->stores()->pluck('stores.id')->toArray();
+        if (!$currentStore) {
+            // Si no hay tienda en sesión, devolver una consulta vacía
+            return User::query()->whereRaw('1 = 0');
+        }
 
-        // Filtrar los usuarios que están asociados a las tiendas del usuario autenticado
+        // Filtrar los usuarios con rol 'employee' asociados a la tienda actual
         return User::query()
-            ->whereHas('stores', function ($query) use ($storeIds) {
-                $query->whereIn('stores.id', $storeIds);
+            ->whereHas('stores', function ($query) use ($currentStore) {
+                $query->where('stores.id', $currentStore->id);
             })
             ->role('employee');
     }

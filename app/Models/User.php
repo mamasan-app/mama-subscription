@@ -145,4 +145,9 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
                 ->exists();
     }
 
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class, 'user_id');
+    }
+
 }
