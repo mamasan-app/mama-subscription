@@ -66,24 +66,6 @@ class SubscriptionResource extends Resource
                     })
                     ->searchable()
                     ->required(),
-
-                Forms\Components\TextInput::make('days')
-                    ->label('Días Gratuitos')
-                    ->required()
-                    ->numeric()
-                    ->inputMode('numeric')
-                    ->minValue(1)
-                    ->maxValue(365)
-                    ->placeholder('Ingresa el número de días gratuitos'),
-
-                Forms\Components\TextInput::make('days_expired')
-                    ->label('Período de Gracia')
-                    ->required()
-                    ->numeric()
-                    ->inputMode('numeric')
-                    ->minValue(1)
-                    ->maxValue(365)
-                    ->placeholder('Días adicionales para cancelar después del vencimiento del período de prueba'),
             ]);
     }
 

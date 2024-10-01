@@ -69,6 +69,24 @@ class ServiceResource extends Resource
                 Forms\Components\Toggle::make('featured')
                     ->label('Destacado')
                     ->required(),
+
+                Forms\Components\TextInput::make('free_days')
+                    ->label('Días Gratuitos')
+                    ->required()
+                    ->numeric()
+                    ->inputMode('numeric')
+                    ->minValue(1)
+                    ->maxValue(365)
+                    ->placeholder('Ingresa el número de días gratuitos'),
+
+                Forms\Components\TextInput::make('grace_period')
+                    ->label('Período de Gracia')
+                    ->required()
+                    ->numeric()
+                    ->inputMode('numeric')
+                    ->minValue(1)
+                    ->maxValue(365)
+                    ->placeholder('Días adicionales para cancelar después del vencimiento del período de prueba'),
             ]);
     }
 

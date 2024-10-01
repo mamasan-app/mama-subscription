@@ -24,9 +24,6 @@ class CreateClientes extends CreateRecord
 
     protected function afterCreate(): void
     {
-        // Verificar si el usuario ya tiene un rol asignado en la tabla intermedia y modificarlo
-        $this->record->syncRoles(['customer']);
-
         // Obtener la tienda actual desde Filament (getTenant)
         $currentStore = Filament::getTenant();
 

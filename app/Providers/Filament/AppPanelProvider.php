@@ -27,6 +27,8 @@ class AppPanelProvider extends PanelProvider
             ->login()
             ->passwordReset()
             ->emailVerification()
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('30s')
             ->colors([
                 'primary' => Color::Indigo,
                 'gray' => Color::Slate,
@@ -52,7 +54,7 @@ class AppPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->resources([
-                \App\Filament\App\Resources\SubscriptionResource::class,
+                \App\Filament\App\Resources\UserSubscriptionResource::class,
             ]);
     }
 }

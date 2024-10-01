@@ -7,6 +7,9 @@ use App\Enums\SubscriptionStatusEnum;
 use Filament\Resources\Pages\CreateRecord;
 use Carbon\Carbon;
 use Filament\Facades\Filament;
+use App\Models\User;
+use Filament\Notifications\Notification;
+use App\Models\Service;
 
 class CreateSubscription extends CreateRecord
 {
@@ -25,18 +28,23 @@ class CreateSubscription extends CreateRecord
             throw new \Exception('No se ha encontrado una tienda actual para asociar la suscripción.');
         }
 
-        // Asegurarse de que 'days' y 'days_expired' sean enteros
-        $days = (int) $data['days'];  // Convertir a entero
-        $daysExpired = (int) $data['days_expired'];  // Convertir a entero
+        // Obtener el servicio asociado a la suscripción
+        $service = Service::find($data['service_id']);
+
+        if (!$service) {
+            throw new \Exception('El servicio seleccionado no se encontró.');
+        }
+
+        // Obtener los días gratuitos desde el servicio
+        $freeDays = (int) $service->free_days;  // Días gratuitos del servicio
+        $gracePeriod = (int) $service->grace_period;
 
         // Obtener la fecha y hora actual en Caracas
         $nowInCaracas = Carbon::now('America/Caracas');
 
-        // Calcular el trial_ends_at sumando los días gratuitos
-        $trialEndsAt = $nowInCaracas->addDays($days);
-
-        // Calcular el expires_at sumando el período de gracia a la fecha de vencimiento del trial
-        $expiresAt = $trialEndsAt->clone()->addDays($daysExpired);
+        // Calcular el trial_ends_at sumando los días gratuitos del servicio
+        $trialEndsAt = $nowInCaracas->clone()->addDays($freeDays);
+        $expiresAt = $nowInCaracas->clone()->addDays($gracePeriod);
 
         // Llenar los datos adicionales de la suscripción
         $data['status'] = SubscriptionStatusEnum::OnTrial->value; // Estado de prueba

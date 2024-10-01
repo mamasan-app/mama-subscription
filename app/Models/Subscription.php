@@ -23,7 +23,6 @@ class Subscription extends Model
      */
     protected $fillable = [
         'status',
-        'price_usd_cents',
         'trial_ends_at',
         'renews_at',
         'ends_at',
@@ -43,11 +42,11 @@ class Subscription extends Model
      */
     protected $casts = [
         'status' => SubscriptionStatusEnum::class,
-        'price_usd_cents' => 'integer',
         'trial_ends_at' => 'datetime',
         'renews_at' => 'datetime',
         'ends_at' => 'datetime',
         'last_notification_at' => 'datetime',
+        'expires_at' => 'datetime',
         'metadata' => 'array',
     ];
 
@@ -85,41 +84,6 @@ class Subscription extends Model
             get: fn() => $this->status === SubscriptionStatusEnum::Expired
         );
     }
-
-    public function price(): Attribute
-    {
-        return Attribute::make(
-            get: fn() => Money::USD($this->price_usd_cents),
-        );
-    }
-
-    public function priceInBsCents(): Attribute
-    {
-        return Attribute::make(
-            get: function () {
-                $exchangeRate = ExchangeRate::query()->latest('date')->first();
-                $price = Money::USD($this->price_usd_cents);
-                $multiplier = (int) round($exchangeRate->rate * 1000);
-
-                return $price->multiply($multiplier)->divide(1000)->getAmount();
-            }
-        );
-    }
-
-    public function formattedPriceInBs(): Attribute
-    {
-        return Attribute::make(
-            get: fn() => 'Bs. ' . $this->price_in_bs_cents / 100
-        );
-    }
-
-    public function formattedPrice(): Attribute
-    {
-        return Attribute::make(
-            get: fn() => MoneyFormatter::make(Money::USD($this->price_usd_cents))->format()
-        );
-    }
-
     public function nextRenewalDate(): Attribute
     {
         return Attribute::make(
@@ -171,4 +135,20 @@ class Subscription extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function getPrice(): Money
+    {
+        if ($this->service && $this->service->price_cents) {
+            return Money::USD($this->service->price_cents);
+        }
+
+        // Si no se encuentra el precio del servicio, devolver un valor predeterminado o lanzar una excepción
+        return Money::USD(0); // Precio predeterminado (por ejemplo, $0.00)
+    }
+
+    public function formattedPrice(): string
+    {
+        return MoneyFormatter::make($this->getPrice())->format();
+    }
+
 }

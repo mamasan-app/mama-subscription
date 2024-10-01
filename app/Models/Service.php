@@ -20,11 +20,13 @@ class Service extends Model
     protected $fillable = [
         'name',
         'description',
-        'price_cents', // Este es el campo en la base de datos
+        'price_cents',
         'published',
         'featured',
         'frequency_id',
-        'store_id',  // Asegúrate de agregar este campo al array fillable
+        'store_id',
+        'free_days',
+        'grace_period',
     ];
 
     protected $casts = [
