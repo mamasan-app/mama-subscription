@@ -1,5 +1,12 @@
 <?php
 
+use App\Http\Controllers\PaymentController;
+
+Route::get('/payment/success/{subscription}', [PaymentController::class, 'success'])->name('payment.success');
+Route::get('/payment/cancel', [PaymentController::class, 'cancel'])->name('payment.cancel');
+
+
+
 //use App\Mail\Confirmed;
 //use Illuminate\Support\Facades\Mail;
 //

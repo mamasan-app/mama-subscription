@@ -31,12 +31,5 @@
                 @endif
             </div>
         </div>
-
-        <!-- Botón para iniciar el pago -->
-        <div class="mt-6">
-            <x-filament::button color="success" wire:click="processPayment">
-                Iniciar Pago
-            </x-filament::button>
-        </div>
     </div>
 </x-filament::page>

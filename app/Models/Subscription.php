@@ -151,4 +151,9 @@ class Subscription extends Model
         return MoneyFormatter::make($this->getPrice())->format();
     }
 
+    public function formattedPriceInCents()
+    {
+        return $this->service->price_cents; // Asume que tienes un precio en centavos en el servicio
+    }
+
 }

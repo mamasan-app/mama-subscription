@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1bee5baec0428889819a58c20a738a3e",
+    "content-hash": "f8992a4a6747555426d47ce2292de949",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -5653,16 +5653,16 @@
         },
         {
             "name": "stripe/stripe-php",
-            "version": "v15.8.0",
+            "version": "v16.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/stripe/stripe-php.git",
-                "reference": "5ed133fa45987771f80ad300be2316c05832f6a7"
+                "reference": "47c55a5a8414d1d7584e6bbfb3e8179f3c43d83a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/stripe/stripe-php/zipball/5ed133fa45987771f80ad300be2316c05832f6a7",
-                "reference": "5ed133fa45987771f80ad300be2316c05832f6a7",
+                "url": "https://api.github.com/repos/stripe/stripe-php/zipball/47c55a5a8414d1d7584e6bbfb3e8179f3c43d83a",
+                "reference": "47c55a5a8414d1d7584e6bbfb3e8179f3c43d83a",
                 "shasum": ""
             },
             "require": {
@@ -5706,9 +5706,9 @@
             ],
             "support": {
                 "issues": "https://github.com/stripe/stripe-php/issues",
-                "source": "https://github.com/stripe/stripe-php/tree/v15.8.0"
+                "source": "https://github.com/stripe/stripe-php/tree/v16.1.0"
             },
-            "time": "2024-08-29T21:58:14+00:00"
+            "time": "2024-10-03T22:48:28+00:00"
         },
         {
             "name": "symfony/clock",
