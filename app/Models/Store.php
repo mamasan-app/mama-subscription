@@ -92,10 +92,10 @@ class Store extends Model
         );
     }
 
-    public function services()
+    public function plans()
     {
         return $this->hasManyThrough(
-            Service::class,  // Modelo destino (Service)
+            Plan::class,  // Modelo destino (Service)
             Address::class,  // Modelo intermedio (Address)
             'store_id',      // Clave foránea en Address hacia Store
             'id',            // Clave foránea en Service
@@ -104,9 +104,12 @@ class Store extends Model
         );
     }
 
+
     public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class, 'store_id');
     }
+
+
 
 }

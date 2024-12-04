@@ -11,7 +11,7 @@ class Address extends Model
 
     protected $table = 'address';
 
-    protected $fillable = ['short_address', 'long_address', 'store_id'];
+    protected $fillable = ['branch', 'location', 'store_id'];
 
     /**
      * Relación "Address pertenece a Store".
@@ -22,9 +22,9 @@ class Address extends Model
         return $this->belongsTo(Store::class, 'store_id');
     }
 
-    // Relación muchos a muchos con 'Service'
-    public function services()
+    // Relación muchos a muchos con 'membership'
+    public function memberships()
     {
-        return $this->belongsToMany(Service::class, 'address_service', 'address_id', 'service_id');
+        return $this->belongsToMany(Plan::class, 'address_plan', 'address_id', 'plan_id');
     }
 }

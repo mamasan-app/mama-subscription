@@ -9,7 +9,7 @@ use Carbon\Carbon;
 use Filament\Facades\Filament;
 use App\Models\User;
 use Filament\Notifications\Notification;
-use App\Models\Service;
+use App\Models\Plan;
 
 class CreateSubscription extends CreateRecord
 {
@@ -29,15 +29,15 @@ class CreateSubscription extends CreateRecord
         }
 
         // Obtener el servicio asociado a la suscripción
-        $service = Service::find($data['service_id']);
+        $plan = Plan::find($data['service_id']); // Cambiado de 'Plan_id' a 'plan_id'
 
-        if (!$service) {
+        if (!$plan) {
             throw new \Exception('El servicio seleccionado no se encontró.');
         }
 
         // Obtener los días gratuitos desde el servicio
-        $freeDays = (int) $service->free_days;  // Días gratuitos del servicio
-        $gracePeriod = (int) $service->grace_period;
+        $freeDays = (int) $plan->free_days;  // Días gratuitos del servicio
+        $gracePeriod = (int) $plan->grace_period;
 
         // Obtener la fecha y hora actual en Caracas
         $nowInCaracas = Carbon::now('America/Caracas');
@@ -54,4 +54,5 @@ class CreateSubscription extends CreateRecord
 
         return $data;
     }
+
 }

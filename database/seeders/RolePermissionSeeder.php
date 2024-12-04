@@ -15,9 +15,9 @@ class RolePermissionSeeder extends Seeder
     public function run(): void
     {
         // Crear los permisos específicos para servicios
-        Permission::create(['name' => 'create services']);
-        Permission::create(['name' => 'delete services']);
-        Permission::create(['name' => 'edit services']);
+        Permission::create(['name' => 'create plan']);
+        Permission::create(['name' => 'delete plan']);
+        Permission::create(['name' => 'edit plan']);
 
         // Crear permisos específicos para suscripciones
         Permission::create(['name' => 'create subscriptions']);
@@ -30,9 +30,9 @@ class RolePermissionSeeder extends Seeder
         // Asignar permisos al rol 'owner_store'
         $ownerRole = Role::firstOrCreate(['name' => 'owner_store']);
         $ownerRole->givePermissionTo([
-            'create services',
-            'delete services',
-            'edit services',
+            'create plan',
+            'delete plan',
+            'edit plan',
             'create subscriptions',
             'edit subscriptions',
             'delete subscriptions',
@@ -50,7 +50,7 @@ class RolePermissionSeeder extends Seeder
         // Asignar permisos al rol 'employee', solo edición de servicios y suscripciones
         $employeeRole = Role::firstOrCreate(['name' => 'employee']);
         $employeeRole->givePermissionTo([
-            'edit services',
+            'edit plan',
             'create subscriptions',
             'edit subscriptions',
         ]);

@@ -15,10 +15,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
+use NorbyBaru\Passwordless\CanUsePasswordlessAuthenticatable;
+use NorbyBaru\Passwordless\Traits\PasswordlessAuthenticatable;
 
-class User extends Authenticatable implements FilamentUser, MustVerifyEmail, HasTenants
+class User extends Authenticatable implements FilamentUser, MustVerifyEmail, HasTenants, CanUsePasswordlessAuthenticatable
 {
-    use HasFactory, Notifiable, HasRoles, SoftDeletes;
+    use HasFactory, Notifiable, HasRoles, SoftDeletes, PasswordlessAuthenticatable;
 
     /**
      * The attributes that are mass assignable.

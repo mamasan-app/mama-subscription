@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\HtmlString;
 use Illuminate\Validation\Rules\Password;
 use Filament\Http\Responses\Auth\Contracts\RegistrationResponse;
+use Illuminate\Support\Str;
 
 class UserRegister extends FilamentRegister
 {
@@ -194,19 +195,27 @@ class UserRegister extends FilamentRegister
         // Crear la tienda y asociarla al usuario
         $store = Store::create([
             'name' => $data['store_name'],
+            'slug' => Str::slug($data['store_name']), // Generar slug a partir del nombre
             'description' => $data['store_description'],
             'rif_path' => $data['store_rif_path'],
             'certificate_of_incorporation_path' => $data['certificate_of_incorporation_path'],
             'owner_id' => $user->id, // Asociar la tienda al usuario
-            'address' => $data['address_store'],
+        ]);
+
+        // Crear la dirección de la tienda en la tabla `address`
+        \App\Models\Address::create([
+            'branch' => $data['store_name'], // O el valor que desees colocar como `branch`
+            'location' => $data['address_store'],
+            'store_id' => $store->id, // Asocia la dirección a la tienda creada
         ]);
 
         // Asociar la tienda al usuario en la relación many-to-many
-        $user->stores()->attach($store->id);
+        $user->stores()->attach($store->id, ['role' => 'owner_store']);
 
         // Devolver la respuesta de registro estándar de Filament
         return $this->registered($user);
     }
+
 
     protected function registered(User $user): RegistrationResponse|null
     {

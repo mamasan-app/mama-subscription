@@ -7,9 +7,8 @@ use App\Models\Subscription;
 use Filament\Pages\Actions\Action;
 use Filament\Resources\Pages\Page;
 use Filament\Notifications\Notification;
-use Filament\Forms; // Importa Filament Forms para que los componentes funcionen correctamente.
-use Filament\Forms\Components\Radio; // Importa Radio directamente si lo necesitas.
 use Filament\Forms\Components\TextInput;
+use Illuminate\Support\Facades\Http;
 use Stripe\Stripe;
 use Stripe\Checkout\Session as StripeSession;
 
@@ -18,35 +17,26 @@ class UserSubscriptionPayment extends Page
     protected static string $resource = UserSubscriptionResource::class;
     protected static string $view = 'filament.pages.user-subscription-payment';
 
-
-
     public Subscription $subscription;
     public $service;
 
+    public $bank;
+    public $phone;
+    public $identity;
+    public $amount;
+    public $otp;
+
     public function mount($record): void
     {
-        // Cargar la suscripción y su servicio asociado
         $this->subscription = Subscription::with('service')->findOrFail($record);
         $this->service = $this->subscription->service;
-    }
-
-    public function processPayment($paymentMethod)
-    {
-        if ($paymentMethod === 'usd') {
-            return $this->createStripeSession(); // Crear sesión de Stripe
-        }
-
-        Notification::make()
-            ->title('Pago iniciado')
-            ->body('Se ha iniciado el proceso de pago en bolívares.')
-            ->send();
+        $this->amount = $this->subscription->formattedPriceInCents() / 100; // Convierte a dólares si es necesario
     }
 
     protected function createStripeSession()
     {
         Stripe::setApiKey(config('stripe.secret_key'));
 
-        // Crear sesión de Stripe para el pago
         $session = StripeSession::create([
             'payment_method_types' => ['card'],
             'line_items' => [
@@ -59,53 +49,155 @@ class UserSubscriptionPayment extends Page
                         'unit_amount' => $this->subscription->formattedPriceInCents(),
                     ],
                     'quantity' => 1,
-                ]
+                ],
             ],
             'mode' => 'payment',
-            'success_url' => route('payment.success', ['subscription' => $this->subscription->id]),
-            'cancel_url' => route('payment.cancel'),
+            'success_url' => static::getUrl(['record' => $this->subscription->id]),
+            'cancel_url' => static::getUrl(['record' => $this->subscription->id]),
         ]);
 
-        // Redirigir a la URL de Stripe
         return redirect($session->url);
+    }
+
+    public function submitBolivaresPayment(array $data)
+    {
+        $this->bank = $data['bank'];
+        $this->phone = $data['phone'];
+        $this->identity = $data['identity'];
+
+        try {
+            // Generar el OTP
+            $otpResponse = $this->generateOtp();
+
+            if ($otpResponse['status'] !== 'success') {
+                Notification::make()
+                    ->title('Error')
+                    ->body('No se pudo generar el OTP. Intente nuevamente.')
+                    ->danger()
+                    ->send();
+                return;
+            }
+
+            // Abrir el modal para confirmar OTP
+            $this->dispatchBrowserEvent('open-otp-modal');
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('Error Interno')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
+    }
+
+    public function confirmOtp(array $data)
+    {
+        $this->otp = $data['otp'];
+
+        try {
+            $paymentResponse = $this->processImmediateDebit();
+
+            if ($paymentResponse['status'] === 'success') {
+                Notification::make()
+                    ->title('Pago Completado')
+                    ->body('El pago se procesó exitosamente.')
+                    ->success()
+                    ->send();
+
+                return redirect(static::getUrl(['record' => $this->subscription->id]));
+            } else {
+                Notification::make()
+                    ->title('Error')
+                    ->body('No se pudo completar el pago. Intente nuevamente.')
+                    ->danger()
+                    ->send();
+            }
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('Error Interno')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
+    }
+
+    protected function generateOtp()
+    {
+        $tokenAuthorization = hash_hmac(
+            'sha256',
+            "{$this->bank}{$this->amount}{$this->phone}{$this->identity}",
+            config('banking.token_key')
+        );
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'Authorization' => $tokenAuthorization,
+            'Commerce' => config('banking.commerce_id'),
+        ])->post(config('banking.otp_url'), [
+                    'bank' => $this->bank,
+                    'phone' => $this->phone,
+                    'identity' => $this->identity,
+                    'amount' => $this->amount,
+                ]);
+
+        return $response->json();
+    }
+
+    protected function processImmediateDebit()
+    {
+        $tokenAuthorization = hash_hmac(
+            'sha256',
+            "{$this->bank}{$this->identity}{$this->phone}{$this->amount}{$this->otp}",
+            config('banking.token_key')
+        );
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'Authorization' => $tokenAuthorization,
+            'Commerce' => config('banking.commerce_id'),
+        ])->post(config('banking.debit_url'), [
+                    'bank' => $this->bank,
+                    'identity' => $this->identity,
+                    'phone' => $this->phone,
+                    'amount' => $this->amount,
+                    'otp' => $this->otp,
+                ]);
+
+        return $response->json();
     }
 
     protected function getActions(): array
     {
         return [
-            Action::make('iniciarPago')
-                ->label('Iniciar Pago')
+            Action::make('payInUSD')
+                ->label('Pagar en USD')
                 ->color('success')
-                ->modalHeading('Selecciona el Método de Pago')
-                ->modalSubheading('Elige la forma en que deseas pagar')
-                ->modalButton('Confirmar Pago')
-                ->action(function (array $data) {
-                    $this->processPayment($data['payment_method']);
-                })
+                ->action(function () {
+                    $this->createStripeSession();
+                }),
+
+            Action::make('payInBolivares')
+                ->label('Pagar en Bolívares')
+                ->color('warning')
                 ->form([
-                    Radio::make('payment_method')
-                        ->label('Elige tu forma de pago')
-                        ->options([
-                            'usd' => 'USD',
-                            'bs' => 'Bolívares (Bs)',
-                        ])
-                        ->required(),
+                    TextInput::make('bank')->label('Banco')->required(),
+                    TextInput::make('phone')->label('Teléfono')->required(),
+                    TextInput::make('identity')->label('Cédula')->required(),
+                    TextInput::make('amount')->label('Monto')->disabled()->default(fn() => $this->amount),
                 ])
-                ->button(),
+                ->action(function (array $data) {
+                    $this->submitBolivaresPayment($data);
+                }),
+
+            Action::make('confirmOtp')
+                ->label('Confirmar OTP')
+                ->color('info')
+                ->form([
+                    TextInput::make('otp')->label('Código OTP')->required(),
+                ])
+                ->action(function (array $data) {
+                    $this->confirmOtp($data);
+                })
+                ->hidden(fn() => !$this->otp),
         ];
     }
-
-    protected function getViewData(): array
-    {
-        return [
-            'subscription' => $this->subscription,
-            'service' => $this->service,
-        ];
-    }
-
 }
-
-
-
-
-

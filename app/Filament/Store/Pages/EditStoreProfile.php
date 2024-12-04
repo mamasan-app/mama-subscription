@@ -44,31 +44,29 @@ class EditStoreProfile extends EditTenantProfile
                     ->prefix('https://')  // Prefijo para el enlace
                     ->suffix('.' . config('app.domain')),  // Sufijo con el dominio de la app
 
+                // Descripción de la tienda
+                Textarea::make('description')
+                    ->label('Descripción')
+                    ->columnSpanFull(),
+
                 // Repeater para gestionar direcciones
                 Repeater::make('addresses')
                     ->relationship('addresses') // Relacionado con el modelo Store
                     ->label('Direcciones de la tienda')
                     ->schema([
-                        TextInput::make('short_address')
-                            ->label('Dirección Corta')
+                        TextInput::make('branch')
+                            ->label('Sucursal')
+                            ->columnSpanFull()
                             ->required(),
-                        TextInput::make('long_address')
-                            ->label('Dirección Larga')
-                            ->required(),
+                        TextInput::make('location')
+                            ->label('Dirección')
+                            ->required()
+                            ->columnSpanFull(),
                     ])
-                    ->columns(2)
+                    ->columnSpanFull()
                     ->createItemButtonLabel('Agregar nueva dirección'),
 
-                // Descripción de la tienda
-                Textarea::make('description')
-                    ->label('Descripción'),
 
-                // URL de la tienda
-                TextInput::make('url')
-                    ->label('URL de la tienda')
-                    ->url()  // Validación como URL
-                    ->prefix('https://')  // Prefijo de la URL
-                    ->placeholder('www.mitienda.com'),
 
                 // Verificación del estatus de la tienda (booleano)
                 Toggle::make('verified')  // Usa Toggle en lugar de TextInput

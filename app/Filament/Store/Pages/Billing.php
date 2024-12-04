@@ -11,7 +11,7 @@ use App\Enums\TransactionTypeEnum;
 use App\Filament\Forms\PaymentMethodCustomerForm;
 use App\Models\ExchangeRate;
 use App\Models\PaymentMethod;
-use App\Models\Service;
+use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\Store;
 use App\Models\Transaction;
@@ -35,7 +35,7 @@ class Billing extends Page implements HasTable
 {
     use InteractsWithTable;
 
-    protected static ?string $title = 'Subscripción';
+    protected static ?string $title = 'Suscripción';
 
     protected static ?string $navigationIcon = 'icon-credit-card-pos';
 
@@ -45,7 +45,7 @@ class Billing extends Page implements HasTable
 
     protected static bool $shouldRegisterNavigation = false;
 
-    /** @var Collection<int, Service>|null */
+    /** @var Collection<int, Plan>|null */
     public ?Collection $services;
 
     public Store $store;
@@ -66,7 +66,7 @@ class Billing extends Page implements HasTable
         $this->store = $store;
 
         // Obtener servicios disponibles para la tienda
-        $this->services = Service::query()
+        $this->services = Plan::query()
             ->where('published', true)
             ->orderBy('name') // Ordenar por nombre de servicio
             ->get();
@@ -298,7 +298,7 @@ class Billing extends Page implements HasTable
                 $exchangeRate = ExchangeRate::latest()->first();
                 /** @var Subscription $subscription */
                 $subscription = $this->store->subscription;
-                /** @var Service $service */
+                /** @var Plan $service */
                 $service = $subscription->service;
 
                 $amountInVE = $exchangeRate->convertToVE($service->price);

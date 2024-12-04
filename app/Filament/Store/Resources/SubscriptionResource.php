@@ -6,7 +6,7 @@ use App\Filament\Store\Resources\SubscriptionResource\Pages;
 use App\Filament\Store\Resources\SubscriptionResource\RelationManagers;
 use App\Models\Subscription;
 use App\Models\User;
-use App\Models\Service;
+use App\Models\Plan;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -48,24 +48,19 @@ class SubscriptionResource extends Resource
                     ->searchable()
                     ->required(),
 
-                // Selector de Servicio
-                Forms\Components\Select::make('service_id')
-                    ->label('Servicio')
+                Forms\Components\Select::make('service_id') // Cambiar 'plan_id' por 'service_id'
+                    ->label('Plan')
                     ->options(function () {
-                        // Obtener la tienda actual (tenant)
                         $currentStore = Filament::getTenant();
-
-                        // Verificar que hay una tienda actual
                         if ($currentStore) {
-                            return Service::where('store_id', $currentStore->id)
+                            return Plan::where('store_id', $currentStore->id)
                                 ->pluck('name', 'id');
                         }
-
-                        // Si no hay tienda actual, retornar un array vacío
                         return [];
                     })
                     ->searchable()
                     ->required(),
+
             ]);
     }
 
@@ -83,9 +78,10 @@ class SubscriptionResource extends Resource
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('service.name')
-                    ->label('Servicio')
+                    ->label('Plan')
                     ->sortable()
                     ->searchable(),
+
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')

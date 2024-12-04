@@ -16,6 +16,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use App\Filament\Pages\Auth\UserLogin;
 
 class AppPanelProvider extends PanelProvider
 {
@@ -24,7 +25,7 @@ class AppPanelProvider extends PanelProvider
         return $panel
             ->id('app')
             ->path('app')
-            ->login()
+            ->login(UserLogin::class)
             ->passwordReset()
             ->emailVerification()
             ->databaseNotifications()

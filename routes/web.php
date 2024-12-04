@@ -1,24 +1,12 @@
 <?php
 
-use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\MagicLinkLoginController;
+use Illuminate\Support\Facades\Route;
 
-Route::get('/payment/success/{subscription}', [PaymentController::class, 'success'])->name('payment.success');
-Route::get('/payment/cancel', [PaymentController::class, 'cancel'])->name('payment.cancel');
+Route::get('/magiclink/send', [MagicLinkLoginController::class, 'sendMagicLink'])->name('magiclink.send');
+Route::get('/magiclink/login', [MagicLinkLoginController::class, 'loginWithMagicLink'])->name('magiclink.login');
 
 
-
-//use App\Mail\Confirmed;
-//use Illuminate\Support\Facades\Mail;
-//
-//Route::get('/tienda/email-verification/verificar-email', function () {
-//    $email = Auth::user()->email;
-//    Mail::to($email)->send(new Confirmed());
-//    return redirect(route('filament.store.pages.dashboard'));
-//});
-
-//use Illuminate\Support\Facades\Route;
-//
-//
-//Route::get('/', function () {
-//    return redirect(route('filament.store.pages.dashboard'));
-//});
+Route::get('/', function () {
+    return redirect('/app');
+});

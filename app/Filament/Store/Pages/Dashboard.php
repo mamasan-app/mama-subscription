@@ -4,7 +4,7 @@ namespace App\Filament\Store\Pages;
 
 use App\Filament\Store\Actions\HelpAction;
 use App\Enums\SubscriptionStatusEnum;
-use App\Models\Service;
+use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Filament\Store\Widgets\SubscriptionChart;
@@ -26,14 +26,14 @@ class Dashboard extends FilamentDashboard
                 ->label('Registrar Suscripción')
                 ->form([
                     // Seleccionar un servicio para la suscripción
-                    Select::make('service_id')
-                        ->label('Servicio')
+                    Select::make('plan')
+                        ->label('Plan')
                         ->searchable()
                         ->getSearchResultsUsing(function (string $search): array {
-                            return Service::query()
+                            return Plan::query()
                                 ->where('name', 'like', "%$search%")
                                 ->get()
-                                ->mapWithKeys(fn(Service $service) => [$service->id => $service->name])
+                                ->mapWithKeys(fn(Plan $plan) => [$plan->id => $plan->name])
                                 ->all();
                         }),
 
@@ -63,13 +63,13 @@ class Dashboard extends FilamentDashboard
                 ->action(function (array $data) {
                     // Registrar una nueva suscripción
                     Subscription::create([
-                        'service_id' => $data['service_id'],
+                        'plan' => $data['plan_id'],
                         'user_id' => $data['user_id'],  // Relacionar la suscripción con el usuario
                         'store_id' => auth()->user()->ownedStores->first()->id ?? null,  // Obtener la tienda del propietario
                         'status' => SubscriptionStatusEnum::OnTrial,
                         'trial_ends_at' => $data['trial_ends_at'],
                         'renews_at' => $data['renews_at'],
-                        'price_usd_cents' => Service::find($data['service_id'])->price * 100,  // Obtener el precio del servicio
+                        'price_usd_cents' => Plan::find($data['plan_id'])->price * 100,  // Obtener el precio del servicio
                         'creator_id' => auth()->id(),
                     ]);
 
@@ -80,7 +80,7 @@ class Dashboard extends FilamentDashboard
                 }),
 
             HelpAction::iconButton()
-                //->modalContent(view('filament.store.actions.help.dashboard')),
+            //->modalContent(view('filament.store.actions.help.dashboard')),
         ];
     }
 

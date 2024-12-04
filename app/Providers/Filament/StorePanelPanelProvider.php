@@ -11,6 +11,7 @@ use App\Filament\Store\Pages\RegisterStore;
 use App\Filament\Store\Billing\BillingProvider;
 use App\Http\Middleware\RouteToMainRegisterRoute;
 use App\Http\Middleware\StorePermission;
+use App\Filament\Pages\Auth\UserRegister;
 use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -30,6 +31,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
+
 class StorePanelPanelProvider extends PanelProvider
 {
     const string PANEL_ID = 'store';
@@ -45,7 +47,7 @@ class StorePanelPanelProvider extends PanelProvider
             ->favicon(asset('favicon.ico'))
             ->login()
             ->loginRouteSlug('ingresar')
-            ->registration(RegisterStore::class)  // Página de registro de tiendas
+            ->registration(UserRegister::class)  // Página de registro de tiendas
             ->registrationRouteSlug('registrar')
             ->passwordReset()
             ->passwordResetRequestRouteSlug('restablecer-password')

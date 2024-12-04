@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f8992a4a6747555426d47ce2292de949",
+    "content-hash": "259d8a1cb579ae773daa194a8e0311cc",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -350,6 +350,75 @@
                 }
             ],
             "time": "2024-02-09T16:56:22+00:00"
+        },
+        {
+            "name": "cesargb/laravel-magiclink",
+            "version": "v2.20.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/cesargb/laravel-magiclink.git",
+                "reference": "78420c921cc212c2f83b96f6d9c0f58f46852ba4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/cesargb/laravel-magiclink/zipball/78420c921cc212c2f83b96f6d9c0f58f46852ba4",
+                "reference": "78420c921cc212c2f83b96f6d9c0f58f46852ba4",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/auth": "^9.0|^10.0|^11.0",
+                "illuminate/container": "^9.0|^10.0|^11.0",
+                "illuminate/contracts": "^9.0|^10.0|^11.0",
+                "illuminate/database": "^9.0|^10.0|^11.0",
+                "laravel/serializable-closure": "^1.0",
+                "php": "^8.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.9",
+                "larastan/larastan": "^2.0",
+                "orchestra/testbench": "^7.0|^8.0|^9.0",
+                "phpunit/phpunit": "^9.0|^10.5"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "MagicLink\\MagicLinkServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "MagicLink\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Cesar Garcia",
+                    "email": "cesargb@gmail.com",
+                    "homepage": "https://github.com/cesargb",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Create secure link for access to private data or login in Laravel without password",
+            "homepage": "https://github.com/cesargb/laravel-magiclink",
+            "keywords": [
+                "auth",
+                "download",
+                "file",
+                "laravel",
+                "link",
+                "login"
+            ],
+            "support": {
+                "issues": "https://github.com/cesargb/laravel-magiclink/issues",
+                "source": "https://github.com/cesargb/laravel-magiclink/tree/v2.20.0"
+            },
+            "time": "2024-05-05T16:55:56+00:00"
         },
         {
             "name": "composer/semver",
@@ -3994,6 +4063,69 @@
                 "source": "https://github.com/nikic/PHP-Parser/tree/v5.1.0"
             },
             "time": "2024-07-01T20:03:41+00:00"
+        },
+        {
+            "name": "norbybaru/passwordless-auth",
+            "version": "v1.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/norbybaru/laravel-passwordless-authentication.git",
+                "reference": "c8aad75876e95df622df7864ac5974f8e8d17ec3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/norbybaru/laravel-passwordless-authentication/zipball/c8aad75876e95df622df7864ac5974f8e8d17ec3",
+                "reference": "c8aad75876e95df622df7864ac5974f8e8d17ec3",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/support": "^9.52|^10.0|^11.0",
+                "php": "^8.0"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.1",
+                "nunomaduro/larastan": "^1.0|^2.0",
+                "orchestra/testbench": "^7.0|^8.0|^9.0",
+                "phpunit/phpunit": "^9.5|^10.0|^11.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "NorbyBaru\\Passwordless\\PasswordlessServiceProvider"
+                    ],
+                    "aliases": {
+                        "Passwordless": "NorbyBaru\\Passwordless\\Facades\\Passwordless"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "NorbyBaru\\Passwordless\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Norby Baruani",
+                    "email": "norbybaru@gmail.com"
+                }
+            ],
+            "description": "Laravel Passwordless login - Magic link",
+            "keywords": [
+                "Laravel Auth",
+                "Passwordless",
+                "laravel",
+                "magic link"
+            ],
+            "support": {
+                "issues": "https://github.com/norbybaru/laravel-passwordless-authentication/issues",
+                "source": "https://github.com/norbybaru/laravel-passwordless-authentication/tree/v1.2.0"
+            },
+            "time": "2024-04-04T10:17:51+00:00"
         },
         {
             "name": "nunomaduro/termwind",
