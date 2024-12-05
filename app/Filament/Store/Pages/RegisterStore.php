@@ -46,12 +46,12 @@ class RegisterStore extends RegisterTenant
 
                 // Aquí guardaremos la dirección corta (short_address)
                 TextInput::make('short_address')
-                    ->label('Dirección Corta de la tienda')
+                    ->label('Sucursal')
                     ->required(),
 
                 // Aquí guardaremos la dirección larga (long_address)
                 TextInput::make('long_address')
-                    ->label('Dirección Completa de la tienda')
+                    ->label('Direccion')
                     ->required(),
             ]);
     }
@@ -79,11 +79,10 @@ class RegisterStore extends RegisterTenant
 
             // Creamos la dirección relacionada con la tienda
             Address::create([
-                'short_address' => $data['short_address'],
-                'long_address' => $data['long_address'],
-                'store_id' => $store->id,  // Asociamos la dirección a la tienda
+                'branch' => $data['short_address'], // O el valor que desees colocar como `branch`
+                'location' => $data['long_address'],
+                'store_id' => $store->id, // Asocia la dirección a la tienda creada  // Asociamos la dirección a la tienda
             ]);
-
             return $store;
         });
     }

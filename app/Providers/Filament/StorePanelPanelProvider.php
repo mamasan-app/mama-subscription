@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Filament\Pages\Settings;
 use App\Filament\Store\Pages\Dashboard;
 use App\Filament\Store\Pages\EditStoreProfile;
+use App\Filament\Store\Pages\Auth\EditProfile;
 use App\Filament\Store\Pages\RegisterStore;
 use App\Filament\Store\Billing\BillingProvider;
 use App\Http\Middleware\RouteToMainRegisterRoute;
@@ -53,7 +54,7 @@ class StorePanelPanelProvider extends PanelProvider
             ->passwordResetRequestRouteSlug('restablecer-password')
             ->emailVerification()
             ->emailVerificationPromptRouteSlug('verificar-email')
-            ->profile()
+            ->profile(EditProfile::class)
             ->databaseNotifications()
             ->tenant(model: Store::class, slugAttribute: 'slug')  // Relación de tenant con tienda
             //->tenantDomain('{tenant:slug}.mama-subscription.localhost')  // Manejo de subdominio basado en tienda

@@ -3,7 +3,6 @@
 namespace App\Filament\Store\Resources;
 
 use App\Filament\Store\Resources\SubscriptionResource\Pages;
-use App\Filament\Store\Resources\SubscriptionResource\RelationManagers;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Plan;
@@ -13,7 +12,6 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Facades\Filament;
 
 class SubscriptionResource extends Resource
@@ -22,6 +20,9 @@ class SubscriptionResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    /**
+     * Define el formulario para crear/editar suscripciones.
+     */
     public static function form(Form $form): Form
     {
         return $form
@@ -33,14 +34,13 @@ class SubscriptionResource extends Resource
                         $currentStore = Filament::getTenant();
 
                         if ($currentStore) {
-                            // Obtén los usuarios asociados a la tienda como "customers"
+                            // Filtrar usuarios que sean clientes de la tienda en sesión
                             return User::whereHas('stores', function (Builder $query) use ($currentStore) {
                                 $query->where('store_id', $currentStore->id)
-                                    ->where('store_user.role', 'customer'); // Cambia 'pivot' por 'store_user.role'
+                                    ->where('store_user.role', 'customer'); // Rol definido como 'customer'
                             })
-                                // Obtén todos los usuarios y luego crea una colección con sus nombres completos
                                 ->get()
-                                ->pluck('name', 'id');  // Utiliza el accessor 'name'
+                                ->pluck('name', 'id'); // Accesor para obtener el nombre completo
                         }
 
                         return [];
@@ -48,25 +48,33 @@ class SubscriptionResource extends Resource
                     ->searchable()
                     ->required(),
 
-                Forms\Components\Select::make('service_id') // Cambiar 'plan_id' por 'service_id'
+                // Selector de Plan
+                Forms\Components\Select::make('service_id') // Asociado al modelo 'Plan'
                     ->label('Plan')
                     ->options(function () {
                         $currentStore = Filament::getTenant();
+
                         if ($currentStore) {
+                            // Filtrar planes por tienda actual y solo planes publicados
                             return Plan::where('store_id', $currentStore->id)
+                                ->where('published', true) // Solo planes publicados
                                 ->pluck('name', 'id');
                         }
+
                         return [];
                     })
                     ->searchable()
                     ->required(),
-
             ]);
     }
 
+    /**
+     * Define la tabla para listar suscripciones.
+     */
     public static function table(Table $table): Table
     {
         return $table
+            ->query(static::getTableQuery()) // Filtrar suscripciones por tienda actual
             ->columns([
                 Tables\Columns\TextColumn::make('id')
                     ->label('ID')
@@ -82,7 +90,6 @@ class SubscriptionResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
                     ->sortable()
@@ -93,18 +100,10 @@ class SubscriptionResource extends Resource
                     ->dateTime()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('renews_at')
-                    ->label('Fecha de Renovación')
-                    ->dateTime()
-                    ->sortable(),
-
                 Tables\Columns\TextColumn::make('expires_at')
-                    ->label('Fecha de Expiracion')
+                    ->label('Fecha de Expiración')
                     ->dateTime()
                     ->sortable(),
-            ])
-            ->filters([
-                //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -116,13 +115,28 @@ class SubscriptionResource extends Resource
             ]);
     }
 
-    public static function getRelations(): array
+    /**
+     * Filtra las suscripciones para que solo se muestren las relacionadas a la tienda actual.
+     */
+    public static function getTableQuery(): Builder
     {
-        return [
-            //
-        ];
+        $currentStore = Filament::getTenant();
+
+        if (!$currentStore) {
+            // Si no hay tienda en sesión, no mostrar resultados
+            return Subscription::query()->whereRaw('1 = 0');
+        }
+
+        // Filtrar suscripciones asociadas a los planes de la tienda actual
+        return Subscription::query()->whereHas('service', function (Builder $query) use ($currentStore) {
+            $query->where('store_id', $currentStore->id)
+                ->where('published', true); // Solo planes publicados
+        });
     }
 
+    /**
+     * Relación con las páginas de Filament.
+     */
     public static function getPages(): array
     {
         return [

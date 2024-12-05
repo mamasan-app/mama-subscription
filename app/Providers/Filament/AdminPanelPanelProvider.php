@@ -18,6 +18,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use App\Filament\Admin\Pages\Auth\EditProfile;
 
 class AdminPanelPanelProvider extends PanelProvider
 {
@@ -31,6 +32,7 @@ class AdminPanelPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Red,
             ])
+            ->profile(EditProfile::class)
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\\Filament\\Admin\\Pages')
             ->pages([
