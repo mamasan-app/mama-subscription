@@ -11,6 +11,10 @@ use Filament\Forms\Components\TextInput;
 use Illuminate\Support\Facades\Http;
 use Stripe\Stripe;
 use Stripe\Checkout\Session as StripeSession;
+use Stripe\Customer;
+use Stripe\Product;
+use Stripe\Price;
+use Stripe\Subscription as StripeSubscription;
 
 class UserSubscriptionPayment extends Page
 {
@@ -18,7 +22,6 @@ class UserSubscriptionPayment extends Page
     protected static string $view = 'filament.pages.user-subscription-payment';
 
     public Subscription $subscription;
-
     public $bank;
     public $phone;
     public $identity;
@@ -29,29 +32,81 @@ class UserSubscriptionPayment extends Page
     {
         $this->subscription = Subscription::findOrFail($record);
         $this->amount = $this->subscription->service_price_cents / 100; // Convertir a dólares
+
+        // Capturar el resultado del pago
+        if (request('success') === 'true') {
+            Notification::make()
+                ->title('Pago exitoso')
+                ->body('Tu suscripción se activó correctamente.')
+                ->success()
+                ->send();
+        } elseif (request('success') === 'false') {
+            Notification::make()
+                ->title('Pago cancelado')
+                ->body('No se pudo completar el pago de tu suscripción. Inténtalo nuevamente.')
+                ->danger()
+                ->send();
+        }
     }
+
 
     protected function createStripeSession()
     {
         Stripe::setApiKey(config('stripe.secret_key'));
 
+        // 1. Crear un cliente en Stripe si no existe
+        if (!$this->subscription->user->stripe_customer_id) {
+            $customer = Customer::create([
+                'email' => $this->subscription->user->email,
+                'name' => $this->subscription->user->name,
+            ]);
+
+            $this->subscription->user->update(['stripe_customer_id' => $customer->id]);
+        } else {
+            $customer = Customer::retrieve($this->subscription->user->stripe_customer_id);
+        }
+
+        // 2. Crear un producto en Stripe si no existe
+        if (!$this->subscription->service->stripe_product_id) {
+            $product = Product::create([
+                'name' => $this->subscription->service_name,
+                'description' => $this->subscription->service_description,
+            ]);
+
+            $this->subscription->service->update(['stripe_product_id' => $product->id]);
+        } else {
+            $product = Product::retrieve($this->subscription->service->stripe_product_id);
+        }
+
+        // 3. Crear el precio en Stripe
+        $price = Price::create([
+            'product' => $product->id,
+            'unit_amount' => $this->subscription->service_price_cents,
+            'currency' => 'usd',
+            'recurring' => [
+                'interval' => 'month',
+            ],
+        ]);
+
+        // 4. Crear la Checkout Session
         $session = StripeSession::create([
+            'customer' => $customer->id,
             'payment_method_types' => ['card'],
             'line_items' => [
                 [
-                    'price_data' => [
-                        'currency' => 'usd',
-                        'product_data' => [
-                            'name' => $this->subscription->service_name, // Usar información directamente de la suscripción
-                        ],
-                        'unit_amount' => $this->subscription->service_price_cents, // Usar precio directamente de la suscripción
-                    ],
+                    'price' => $price->id,
                     'quantity' => 1,
                 ],
             ],
-            'mode' => 'payment',
-            'success_url' => static::getUrl(['record' => $this->subscription->id]),
-            'cancel_url' => static::getUrl(['record' => $this->subscription->id]),
+            'mode' => 'subscription',
+            'success_url' => static::getResource()::getUrl('payment', [
+                'record' => $this->subscription->id,
+                'success' => true,
+            ]),
+            'cancel_url' => static::getResource()::getUrl('payment', [
+                'record' => $this->subscription->id,
+                'success' => false,
+            ]),
         ]);
 
         return redirect($session->url);

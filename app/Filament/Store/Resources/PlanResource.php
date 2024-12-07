@@ -45,7 +45,10 @@ class PlanResource extends Resource
                     })
                     ->multiple()
                     ->required()
-                    ->preload(),
+                    ->preload()
+                    ->default(fn($record) => $record ? $record->addresses->pluck('id')->toArray() : [])
+                    ->relationship('addresses', 'branch'),
+
 
                 Forms\Components\Select::make('frequency_id')
                     ->label('Frecuencia')
