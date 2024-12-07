@@ -34,13 +34,13 @@ class UserSubscriptionPayment extends Page
         $this->amount = $this->subscription->service_price_cents / 100; // Convertir a dólares
 
         // Capturar el resultado del pago
-        if (request('success') === 'true') {
+        if ($filter = request()->query('success') === "1") {
             Notification::make()
                 ->title('Pago exitoso')
                 ->body('Tu suscripción se activó correctamente.')
                 ->success()
                 ->send();
-        } elseif (request('success') === 'false') {
+        } else {
             Notification::make()
                 ->title('Pago cancelado')
                 ->body('No se pudo completar el pago de tu suscripción. Inténtalo nuevamente.')
@@ -48,7 +48,6 @@ class UserSubscriptionPayment extends Page
                 ->send();
         }
     }
-
 
     protected function createStripeSession()
     {
