@@ -18,7 +18,6 @@ class UserSubscriptionPayment extends Page
     protected static string $view = 'filament.pages.user-subscription-payment';
 
     public Subscription $subscription;
-    public $service;
 
     public $bank;
     public $phone;
@@ -28,9 +27,8 @@ class UserSubscriptionPayment extends Page
 
     public function mount($record): void
     {
-        $this->subscription = Subscription::with('service')->findOrFail($record);
-        $this->service = $this->subscription->service;
-        $this->amount = $this->subscription->formattedPriceInCents() / 100; // Convierte a dólares si es necesario
+        $this->subscription = Subscription::findOrFail($record);
+        $this->amount = $this->subscription->service_price_cents / 100; // Convertir a dólares
     }
 
     protected function createStripeSession()
@@ -44,9 +42,9 @@ class UserSubscriptionPayment extends Page
                     'price_data' => [
                         'currency' => 'usd',
                         'product_data' => [
-                            'name' => $this->service->name,
+                            'name' => $this->subscription->service_name, // Usar información directamente de la suscripción
                         ],
-                        'unit_amount' => $this->subscription->formattedPriceInCents(),
+                        'unit_amount' => $this->subscription->service_price_cents, // Usar precio directamente de la suscripción
                     ],
                     'quantity' => 1,
                 ],
@@ -66,7 +64,6 @@ class UserSubscriptionPayment extends Page
         $this->identity = $data['identity'];
 
         try {
-            // Generar el OTP
             $otpResponse = $this->generateOtp();
 
             if ($otpResponse['status'] !== 'success') {
@@ -78,7 +75,6 @@ class UserSubscriptionPayment extends Page
                 return;
             }
 
-            // Abrir el modal para confirmar OTP
             $this->dispatchBrowserEvent('open-otp-modal');
         } catch (\Exception $e) {
             Notification::make()

@@ -27,7 +27,7 @@ class Store extends Model
         'slug',
         'address',
         'rif_path',
-        'certificate_of_incorporation_path',
+        'constitutive_document_path',
         'owner_id',
         'verified',
         'logo',

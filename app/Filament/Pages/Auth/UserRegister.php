@@ -95,7 +95,7 @@ class UserRegister extends FilamentRegister
                         ]),
 
                     // Paso 2: Información Personal del Usuario
-                    Wizard\Step::make('Información Personal')
+                    Wizard\Step::make('Información Representante Legal')
                         ->columns(2)
                         ->schema([
                             IdentityDocumentTextInput::make()
@@ -143,10 +143,17 @@ class UserRegister extends FilamentRegister
                                 ->label('Descripción de la Tienda')
                                 ->required()
                                 ->placeholder('Descripción breve de la tienda'),
-                            Textarea::make('address_store')
+
+                            TextInput::make('short_address')
+                                ->label('Sucursal')
+                                ->placeholder('Altamira')
+                                ->required(),
+
+                            Textarea::make('long_address')
                                 ->label('Direccion del Negocio')
                                 ->required()
                                 ->placeholder('Av. 1 con Calle 1, Edificio 1, Piso 1, Apartamento 1'),
+
 
                             FileUpload::make('store_rif_path')
                                 ->label('RIF de la Tienda')
@@ -154,8 +161,8 @@ class UserRegister extends FilamentRegister
                                 ->maxFiles(1)
                                 ->placeholder('rif.jpg'),
 
-                            FileUpload::make('certificate_of_incorporation_path')
-                                ->label('Certificado de Incorporación')
+                            FileUpload::make('constitutive_document_path')
+                                ->label('Documento Constitutivo')
                                 ->disk(config('filesystems.stores'))
                                 ->maxFiles(1)
                                 ->placeholder('certificate.jpg'),
@@ -198,14 +205,14 @@ class UserRegister extends FilamentRegister
             'slug' => Str::slug($data['store_name']), // Generar slug a partir del nombre
             'description' => $data['store_description'],
             'rif_path' => $data['store_rif_path'],
-            'certificate_of_incorporation_path' => $data['certificate_of_incorporation_path'],
+            'constitutive_document_path' => $data['constitutive_document_path'],
             'owner_id' => $user->id, // Asociar la tienda al usuario
         ]);
 
         // Crear la dirección de la tienda en la tabla `address`
         \App\Models\Address::create([
-            'branch' => $data['store_name'], // O el valor que desees colocar como `branch`
-            'location' => $data['address_store'],
+            'branch' => $data['short_address'], // O el valor que desees colocar como `branch`
+            'location' => $data['long_address'],
             'store_id' => $store->id, // Asocia la dirección a la tienda creada
         ]);
 

@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Filament\Store\Widgets;
 
 use App\Models\Subscription;
@@ -10,6 +8,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Collection;
+use Filament\Facades\Filament;
 
 class SubscriptionChart extends ChartWidget
 {
@@ -52,12 +51,28 @@ class SubscriptionChart extends ChartWidget
             default => [now()->subWeek(), now()],
         };
 
-        /** @var User $authUser */
-        $authUser = auth()->user();
+        /** @var Store $currentStore */
+        $currentStore = Filament::getTenant();
 
-        // Filtrar suscripciones para la tienda del usuario (si es necesario)
+        // Si no hay una tienda en sesión, devolvemos datos vacíos
+        if (!$currentStore) {
+            return [
+                'datasets' => [
+                    [
+                        'label' => 'Suscripciones',
+                        'data' => [],
+                    ],
+                ],
+                'labels' => [],
+            ];
+        }
+
+        // Filtrar suscripciones para la tienda actual
         $dbData = Subscription::query()
             ->whereBetween('created_at', [$start, $end])
+            ->whereHas('service', function ($query) use ($currentStore) {
+                $query->where('store_id', $currentStore->id); // Solo servicios asociados a la tienda actual
+            })
             ->orderBy('created_at')
             ->get('created_at')
             ->map(function (Subscription $subscription) {

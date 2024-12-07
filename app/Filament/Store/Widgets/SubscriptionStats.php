@@ -9,6 +9,7 @@ use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Facades\Filament;
 
 class SubscriptionStats extends BaseWidget
 {
@@ -23,18 +24,39 @@ class SubscriptionStats extends BaseWidget
 
     protected function getStats(): array
     {
-        // Contar suscripciones creadas en los últimos 7 días
+        /** @var Store|null $currentStore */
+        $currentStore = Filament::getTenant();
+
+        // Si no hay tienda activa, devolver valores vacíos
+        if (!$currentStore) {
+            return [
+                Stat::make('Suscripciones últimos 7 días', 0),
+                Stat::make('Suscripciones este mes', 0),
+                Stat::make('Suscripciones mes pasado', 0),
+            ];
+        }
+
+        // Contar suscripciones creadas en los últimos 7 días para la tienda activa
         $subscriptionsLastWeekCount = Subscription::query()
+            ->whereHas('service', function (Builder $query) use ($currentStore) {
+                $query->where('store_id', $currentStore->id);
+            })
             ->where('created_at', '>=', now()->subWeek())
             ->count();
 
-        // Contar suscripciones creadas en este mes
+        // Contar suscripciones creadas este mes para la tienda activa
         $subscriptionsThisMonthCount = Subscription::query()
+            ->whereHas('service', function (Builder $query) use ($currentStore) {
+                $query->where('store_id', $currentStore->id);
+            })
             ->where('created_at', '>=', now('America/Caracas')->startOfMonth()->setTimezone('UTC'))
             ->count();
 
-        // Contar suscripciones creadas en el mes pasado
+        // Contar suscripciones creadas en el mes pasado para la tienda activa
         $subscriptionsLastMonthCount = Subscription::query()
+            ->whereHas('service', function (Builder $query) use ($currentStore) {
+                $query->where('store_id', $currentStore->id);
+            })
             ->where('created_at', '>=', now('America/Caracas')->subMonth()->startOfMonth()->setTimezone('UTC'))
             ->where('created_at', '<', now('America/Caracas')->subMonth()->endOfMonth()->setTimezone('UTC'))
             ->count();

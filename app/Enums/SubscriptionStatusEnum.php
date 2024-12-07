@@ -17,4 +17,25 @@ enum SubscriptionStatusEnum: string
     case Cancelled = 'cancelled';
 
     case Expired = 'expired';
+
+    public function getLabel(): ?string
+    {
+        return match ($this) {
+            self::OnTrial => 'En periodo de prueba',
+            self::Active => 'Activa',
+            self::Paused => 'Pausada',
+            self::PastDue => 'Con deuda',
+            self::Unpaid => 'No pagada',
+            self::Cancelled => 'Cancelada',
+            self::Expired => 'Expirada',
+        };
+    }
+
+    public function getColor(): string
+    {
+        return match ($this) {
+            self::OnTrial, self::Active => 'success',
+            default => 'danger',
+        };
+    }
 }

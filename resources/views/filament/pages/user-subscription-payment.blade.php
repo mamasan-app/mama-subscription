@@ -20,12 +20,12 @@
             <!-- Detalles del Servicio -->
             <div>
                 <h3 class="text-xl font-medium">Información del Servicio</h3>
-                @if ($service)
-                    <p><strong>Nombre del Servicio:</strong> {{ $service->name }}</p>
-                    <p><strong>Descripción:</strong> {{ $service->description }}</p>
+                @if ($subscription)
+                    <p><strong>Nombre del Servicio:</strong> {{ $subscription->service_name }}</p>
+                    <p><strong>Descripción:</strong> {{ $subscription->service_description }}</p>
                     <p><strong>Precio:</strong> {{ $subscription->formattedPrice() }}</p>
-                    <p><strong>Días Gratuitos:</strong> {{ $service->free_days }} días</p>
-                    <p><strong>Período de Gracia:</strong> {{ $service->grace_period }} días</p>
+                    <p><strong>Días Gratuitos:</strong> {{ $subscription->service_free_days }} días</p>
+                    <p><strong>Período de Gracia:</strong> {{ $subscription->service_grace_period }} días</p>
                 @else
                     <p>No hay servicio disponible para esta suscripción.</p>
                 @endif

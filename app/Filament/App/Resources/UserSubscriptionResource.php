@@ -8,6 +8,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
 use App\Filament\App\Resources\UserSubscriptionResource\Pages;
+use App\Enums\SubscriptionStatusEnum;
 use Filament\Forms\Form;
 
 class UserSubscriptionResource extends Resource
@@ -49,10 +50,14 @@ class UserSubscriptionResource extends Resource
     {
         return $table
             ->query(static::getTableQuery()) // Llama al método de la consulta personalizada
+            ->defaultSort('created_at', 'desc') // Ordenar por defecto por fecha de creación, descendente
             ->columns([
                 Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
                 Tables\Columns\TextColumn::make('service.name')->label('Servicio')->sortable()->searchable(),
-                Tables\Columns\TextColumn::make('status')->label('Estado')->sortable(),
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Estado')
+                    ->sortable()
+                    ->formatStateUsing(fn($state) => $state?->getLabel()),
                 Tables\Columns\TextColumn::make('trial_ends_at')->label('Fin del Período de Prueba')->dateTime(),
                 Tables\Columns\TextColumn::make('expires_at')->label('Fecha de Expiración')->dateTime(),
             ])
@@ -65,6 +70,8 @@ class UserSubscriptionResource extends Resource
                     ->button(),
             ]);
     }
+
+
 
     public static function getTableQuery()
     {

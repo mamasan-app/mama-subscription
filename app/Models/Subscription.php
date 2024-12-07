@@ -27,13 +27,17 @@ class Subscription extends Model
         'renews_at',
         'ends_at',
         'last_notification_at',
-        'metadata',
-        'store_id',
-        'service_id',
         'store_id',
         'user_id',
         'expires_at',
+        'service_name',
+        'service_description',
+        'service_price_cents',
+        'service_free_days',
+        'service_grace_period',
+        'service_id',
     ];
+
 
     /**
      * The attributes that should be cast to native types.
@@ -49,6 +53,28 @@ class Subscription extends Model
         'expires_at' => 'datetime',
         'metadata' => 'array',
     ];
+
+    /**
+     * Accessor for service_price_cents to return formatted price.
+     */
+    public function formattedServicePrice(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => number_format($this->service_price_cents / 100, 2) . ' USD'
+        );
+    }
+
+    /**
+     * Accessor for frequency_days to describe the frequency in text.
+     */
+    public function frequencyDescription(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->frequency_days
+            ? "{$this->frequency_name} ({$this->frequency_days} días)"
+            : null
+        );
+    }
 
     public function isActive(): Attribute
     {
@@ -84,6 +110,7 @@ class Subscription extends Model
             get: fn() => $this->status === SubscriptionStatusEnum::Expired
         );
     }
+
     public function nextRenewalDate(): Attribute
     {
         return Attribute::make(
@@ -91,11 +118,9 @@ class Subscription extends Model
                 $renewalDate = $this->status === SubscriptionStatusEnum::OnTrial ? $this->trial_ends_at : $this->renews_at;
 
                 // Asumimos que la frecuencia de pago es mensual si no se indica lo contrario
-                return match ($this->service->payment_frecuency) {
-                    'annual' => $renewalDate->addYear(),
-                    'every_6_months' => $renewalDate->addMonths(6),
-                    default => $renewalDate->addMonth(),
-                };
+                return $this->frequency_days
+                    ? $renewalDate->addDays($this->frequency_days)
+                    : $renewalDate->addMonth();
             }
         );
     }
@@ -128,8 +153,9 @@ class Subscription extends Model
 
     public function service(): BelongsTo
     {
-        return $this->belongsTo(Plan::class);
+        return $this->belongsTo(Plan::class, 'service_id');
     }
+
 
     public function user()
     {
@@ -138,11 +164,10 @@ class Subscription extends Model
 
     public function getPrice(): Money
     {
-        if ($this->service && $this->service->price_cents) {
-            return Money::USD($this->service->price_cents);
+        if ($this->service_price_cents) {
+            return Money::USD($this->service_price_cents);
         }
 
-        // Si no se encuentra el precio del servicio, devolver un valor predeterminado o lanzar una excepción
         return Money::USD(0); // Precio predeterminado (por ejemplo, $0.00)
     }
 
@@ -150,10 +175,4 @@ class Subscription extends Model
     {
         return MoneyFormatter::make($this->getPrice())->format();
     }
-
-    public function formattedPriceInCents()
-    {
-        return $this->service->price_cents; // Asume que tienes un precio en centavos en el servicio
-    }
-
 }

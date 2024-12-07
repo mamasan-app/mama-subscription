@@ -20,39 +20,55 @@ class CreateSubscription extends CreateRecord
         // Obtener la tienda actual desde el Tenant
         $currentStore = Filament::getTenant();
 
-        // Verifica que se haya obtenido el store_id correctamente
-        if ($currentStore) {
-            $data['store_id'] = $currentStore->id;
-        } else {
-            // Manejo en caso de no encontrar una tienda actual
+        if (!$currentStore) {
             throw new \Exception('No se ha encontrado una tienda actual para asociar la suscripción.');
         }
 
-        // Obtener el servicio asociado a la suscripción
-        $plan = Plan::find($data['service_id']); // Cambiado de 'Plan_id' a 'plan_id'
+        // Asignar el store_id a la suscripción
+        $data['store_id'] = $currentStore->id;
+        $plan = Plan::find($data['service_id']);
+
+
 
         if (!$plan) {
             throw new \Exception('El servicio seleccionado no se encontró.');
         }
 
-        // Obtener los días gratuitos desde el servicio
-        $freeDays = (int) $plan->free_days;  // Días gratuitos del servicio
-        $gracePeriod = (int) $plan->grace_period;
+        // Obtener datos del Plan
+        $freeDays = (int) $plan->free_days; // Días gratuitos del Plan
+        $gracePeriod = (int) $plan->grace_period; // Período de gracia
+        $serviceName = $plan->name;
+        $serviceDescription = $plan->description;
+        $servicePriceCents = $plan->price_cents;
 
-        // Obtener la fecha y hora actual en Caracas
+        // Obtener datos de la frecuencia
+        $frequency = $plan->frequency;
+        $frequencyName = $frequency ? $frequency->nombre : null;
+        $frequencyDays = $frequency ? $frequency->cantidad_dias : null;
+
+        // Calcular fechas importantes
         $nowInCaracas = Carbon::now('America/Caracas');
-
-        // Calcular el trial_ends_at sumando los días gratuitos del servicio
         $trialEndsAt = $nowInCaracas->clone()->addDays($freeDays);
         $expiresAt = $nowInCaracas->clone()->addDays($gracePeriod);
 
-        // Llenar los datos adicionales de la suscripción
-        $data['status'] = SubscriptionStatusEnum::OnTrial->value; // Estado de prueba
-        $data['trial_ends_at'] = $trialEndsAt; // Fecha de finalización del trial
-        $data['renews_at'] = $trialEndsAt->clone(); // Fecha de renovación (ajusta según la lógica de negocio)
-        $data['expires_at'] = $expiresAt; // Fecha de expiración con el período de gracia
+        // Llenar datos adicionales
+        $data['status'] = SubscriptionStatusEnum::OnTrial->value; // Estado inicial
+        $data['trial_ends_at'] = $trialEndsAt;
+        $data['renews_at'] = $trialEndsAt->clone();
+        $data['expires_at'] = $expiresAt;
+
+        // Datos desnormalizados del Plan
+        $data['service_name'] = $serviceName;
+        $data['service_description'] = $serviceDescription;
+        $data['service_price_cents'] = $servicePriceCents;
+        $data['service_free_days'] = $freeDays;
+        $data['service_grace_period'] = $gracePeriod;
+
+
+        // Datos desnormalizados de la Frecuencia
+        $data['frequency_name'] = $frequencyName;
+        $data['frequency_days'] = $frequencyDays;
 
         return $data;
     }
-
 }
