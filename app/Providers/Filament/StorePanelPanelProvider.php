@@ -35,13 +35,11 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class StorePanelPanelProvider extends PanelProvider
 {
-    const string PANEL_ID = 'store';
-
     public function panel(Panel $panel): Panel
     {
         return $panel
             ->default()
-            ->id(self::PANEL_ID)
+            ->id('store')
             ->path('/tienda')
             //->brandLogo(fn() => view('filament.logo'))  // Puedes crear un logo específico para la tienda
             ->brandName('Negocio')
