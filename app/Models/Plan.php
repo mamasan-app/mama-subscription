@@ -87,8 +87,14 @@ class Plan extends Model
      */
     public function frequency()
     {
-        return $this->belongsTo(Frequency::class);
+        return $this->belongsTo(Frequency::class, 'frequency_id');
     }
+
+    public function getFrequencyDays(): int
+    {
+        return Frequency::where('id', $this->frequency_id)->value('days_count') ?? 0;
+    }
+
 
     /**
      * Relación muchos a muchos con 'Address'.

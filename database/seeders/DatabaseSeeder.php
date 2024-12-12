@@ -7,7 +7,7 @@ use App\Models\Store;
 use App\Models\Address;
 use App\Models\Frequency;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
+use App\Models\Plan;
 
 class DatabaseSeeder extends Seeder
 {
@@ -73,9 +73,50 @@ class DatabaseSeeder extends Seeder
         $store->users()->attach($employee->id, ['role' => 'customer']);
 
         // Crear frecuencias
-        Frequency::create(['name' => 'Semanal', 'days_count' => 7]);
-        Frequency::create(['name' => 'Quincenal', 'days_count' => 15]);
-        Frequency::create(['name' => 'Mensual', 'days_count' => 30]);
-        Frequency::create(['name' => 'Trimestral', 'days_count' => 90]);
+        $weekly = Frequency::create(['name' => 'Semanal', 'days_count' => 7]);
+        $monthly = Frequency::create(['name' => 'Mensual', 'days_count' => 30]);
+        $yearly = Frequency::create(['name' => 'Anual', 'days_count' => 365]);
+
+        // Crear planes de suscripción
+        Plan::create([
+            'name' => 'Plan Básico',
+            'description' => 'Acceso limitado a funciones básicas.',
+            'price_cents' => 5000, // $50.00
+            'published' => true,
+            'featured' => false,
+            'store_id' => $store->id,
+            'frequency_id' => $weekly->id,
+            'free_days' => 7,
+            'grace_period' => 3,
+            'infinite_duration' => false,
+            'duration' => 7,
+        ]);
+
+        Plan::create([
+            'name' => 'Plan Pro',
+            'description' => 'Acceso completo a todas las funciones.',
+            'price_cents' => 15000, // $150.00
+            'published' => true,
+            'featured' => true,
+            'store_id' => $store->id,
+            'frequency_id' => $monthly->id,
+            'free_days' => 14,
+            'grace_period' => 5,
+            'infinite_duration' => true,
+        ]);
+
+        Plan::create([
+            'name' => 'Plan Premium',
+            'description' => 'Acceso completo con soporte prioritario.',
+            'price_cents' => 100000, // $1000.00
+            'published' => true,
+            'featured' => true,
+            'store_id' => $store->id,
+            'frequency_id' => $yearly->id,
+            'free_days' => 30,
+            'grace_period' => 10,
+            'infinite_duration' => true,
+        ]);
+
     }
 }

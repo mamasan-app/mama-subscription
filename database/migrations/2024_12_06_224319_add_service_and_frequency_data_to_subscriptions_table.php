@@ -17,11 +17,10 @@ return new class extends Migration {
             $table->unsignedInteger('service_price_cents')->default(0)->after('service_description');
 
             // Agregar columnas desnormalizadas para datos de la frecuencia
-            $table->string('frequency_name')->nullable()->after('service_price_cents');
-            $table->integer('frequency_days')->nullable()->after('frequency_name');
 
-            // Agregar relación opcional con la frecuencia si es necesario
-            $table->foreignId('frequency_id')->nullable()->after('service_id')->constrained('frequencies')->onDelete('cascade');
+            $table->integer('frequency_days')->nullable()->after('service_description');
+
+
         });
     }
 
@@ -36,7 +35,6 @@ return new class extends Migration {
                 'service_name',
                 'service_description',
                 'service_price_cents',
-                'frequency_name',
                 'frequency_days',
             ]);
 

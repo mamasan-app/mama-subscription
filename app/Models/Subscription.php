@@ -36,6 +36,7 @@ class Subscription extends Model
         'service_free_days',
         'service_grace_period',
         'service_id',
+        'frequency_days',
     ];
 
 
@@ -174,5 +175,10 @@ class Subscription extends Model
     public function formattedPrice(): string
     {
         return MoneyFormatter::make($this->getPrice())->format();
+    }
+
+    public function transactions()
+    {
+        return $this->morphMany(Transaction::class, 'from');
     }
 }

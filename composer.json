@@ -22,6 +22,7 @@
         "norbybaru/passwordless-auth": "^1.2",
         "spatie/laravel-medialibrary": "^11.9",
         "spatie/laravel-permission": "^6.9",
+        "spatie/laravel-webhook-client": "^3.4",
         "stripe/stripe-php": "^16.1"
     },
     "require-dev": {

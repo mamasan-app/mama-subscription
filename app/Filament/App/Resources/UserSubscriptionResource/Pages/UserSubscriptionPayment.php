@@ -4,6 +4,9 @@ namespace App\Filament\App\Resources\UserSubscriptionResource\Pages;
 
 use App\Filament\App\Resources\UserSubscriptionResource;
 use App\Models\Subscription;
+use App\Models\Transaction;
+use App\Enums\TransactionStatusEnum;
+use App\Enums\TransactionTypeEnum;
 use Filament\Pages\Actions\Action;
 use Filament\Resources\Pages\Page;
 use Filament\Notifications\Notification;
@@ -14,7 +17,8 @@ use Stripe\Checkout\Session as StripeSession;
 use Stripe\Customer;
 use Stripe\Product;
 use Stripe\Price;
-use Stripe\Subscription as StripeSubscription;
+use Exception;
+
 
 class UserSubscriptionPayment extends Page
 {
@@ -40,7 +44,7 @@ class UserSubscriptionPayment extends Page
                 ->body('Tu suscripción se activó correctamente.')
                 ->success()
                 ->send();
-        } else {
+        } elseif ($filter = request()->query('success') === "0") {
             Notification::make()
                 ->title('Pago cancelado')
                 ->body('No se pudo completar el pago de tu suscripción. Inténtalo nuevamente.')
@@ -77,17 +81,44 @@ class UserSubscriptionPayment extends Page
             $product = Product::retrieve($this->subscription->service->stripe_product_id);
         }
 
-        // 3. Crear el precio en Stripe
+        // 3. Determinar el intervalo y el intervalo_count basados en frequency_days
+        $frequency_days = $this->subscription->frequency_days;
+        $interval = null;
+        $interval_count = null;
+
+        if ($frequency_days < 7) {
+            // Frecuencia menor a 7 días: usa días
+            $interval = 'day';
+            $interval_count = $frequency_days;
+        } elseif ($frequency_days % 7 === 0 && $frequency_days < 28) {
+            // Múltiplo de 7 pero menor a 28 días: usa semanas
+            $interval = 'week';
+            $interval_count = $frequency_days / 7;
+        } elseif ($frequency_days % 30 === 0) {
+            // Múltiplo de 30 días: usa meses
+            $interval = 'month';
+            $interval_count = $frequency_days / 30;
+        } elseif ($frequency_days % 365 === 0) {
+            // Múltiplo de 365 días: usa años
+            $interval = 'year';
+            $interval_count = $frequency_days / 365;
+        } else {
+            // Si no es compatible con las reglas, arroja una excepción o maneja el caso
+            throw new Exception('La frecuencia no es compatible con los intervalos permitidos por Stripe.');
+        }
+
+        // 4. Crear el precio en Stripe
         $price = Price::create([
             'product' => $product->id,
             'unit_amount' => $this->subscription->service_price_cents,
             'currency' => 'usd',
             'recurring' => [
-                'interval' => 'month',
+                'interval' => $interval,
+                'interval_count' => $interval_count,
             ],
         ]);
 
-        // 4. Crear la Checkout Session
+        // 5. Crear la Checkout Session
         $session = StripeSession::create([
             'customer' => $customer->id,
             'payment_method_types' => ['card'],
@@ -108,8 +139,24 @@ class UserSubscriptionPayment extends Page
             ]),
         ]);
 
+        Transaction::create([
+            'from_type' => get_class($this->subscription->user), // Origen: Usuario
+            'from_id' => $this->subscription->user->id,
+            'to_type' => get_class($this->subscription->service->store), // Destino: Tienda del plan
+            'to_id' => $this->subscription->service->store->id,
+            'type' => TransactionTypeEnum::Subscription->value,
+            'status' => TransactionStatusEnum::Pending->value,
+            'date' => now(),
+            'amount_cents' => $this->subscription->service_price_cents,
+            'metadata' => [
+                'checkout_session' => $session->toArray(),
+            ],
+        ]);
+
+        // 6. Redirigir a la URL de Stripe Checkout
         return redirect($session->url);
     }
+
 
     public function submitBolivaresPayment(array $data)
     {

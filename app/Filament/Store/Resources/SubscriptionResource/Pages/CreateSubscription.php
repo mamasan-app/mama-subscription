@@ -10,6 +10,7 @@ use Filament\Facades\Filament;
 use App\Models\User;
 use Filament\Notifications\Notification;
 use App\Models\Plan;
+use App\Models\Frequency;
 
 class CreateSubscription extends CreateRecord
 {
@@ -26,9 +27,9 @@ class CreateSubscription extends CreateRecord
 
         // Asignar el store_id a la suscripción
         $data['store_id'] = $currentStore->id;
-        $plan = Plan::find($data['service_id']);
 
-
+        // Obtener el Plan relacionado
+        $plan = Plan::with('frequency')->find($data['service_id']); // Asegúrate de cargar la relación 'frequency'
 
         if (!$plan) {
             throw new \Exception('El servicio seleccionado no se encontró.');
@@ -42,9 +43,11 @@ class CreateSubscription extends CreateRecord
         $servicePriceCents = $plan->price_cents;
 
         // Obtener datos de la frecuencia
-        $frequency = $plan->frequency;
-        $frequencyName = $frequency ? $frequency->nombre : null;
-        $frequencyDays = $frequency ? $frequency->cantidad_dias : null;
+        $frequencyDays = $plan->getFrequencyDays();
+
+        if ($frequencyDays === 0) {
+            throw new \Exception('La frecuencia asociada al plan no es válida.');
+        }
 
         // Calcular fechas importantes
         $nowInCaracas = Carbon::now('America/Caracas');
@@ -64,11 +67,10 @@ class CreateSubscription extends CreateRecord
         $data['service_free_days'] = $freeDays;
         $data['service_grace_period'] = $gracePeriod;
 
-
         // Datos desnormalizados de la Frecuencia
-        $data['frequency_name'] = $frequencyName;
         $data['frequency_days'] = $frequencyDays;
 
         return $data;
     }
+
 }
