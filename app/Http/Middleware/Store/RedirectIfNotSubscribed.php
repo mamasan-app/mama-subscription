@@ -28,7 +28,7 @@ class RedirectIfNotSubscribed
         $store = Filament::getTenant();  // Obtener la tienda actual
 
         // Verificar si el panel actual es el panel de tiendas
-        if (Filament::getCurrentPanel()?->getId() !== StorePanelPanelProvider::PANEL_ID) {
+        if (Filament::getCurrentPanel()?->getId() !== 'store') {
             return $next($request);
         }
 

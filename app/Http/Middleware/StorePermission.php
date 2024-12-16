@@ -34,7 +34,7 @@ class StorePermission
         }
 
         // Verificar si estamos en el panel de tiendas
-        if (Filament::getCurrentPanel()?->getId() !== StorePanelPanelProvider::PANEL_ID) {
+        if (Filament::getCurrentPanel()?->getId() !== 'store') {
             return $next($request);
         }
 
