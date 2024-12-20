@@ -30,7 +30,7 @@ class UserSubscriptionPayment extends Page
     public $phone;
     public $identity;
     public $amount;
-    public $otp;
+    public $otp = null;
 
     public function mount($record): void
     {
@@ -139,6 +139,7 @@ class UserSubscriptionPayment extends Page
             ]),
         ]);
 
+
         Transaction::create([
             'from_type' => get_class($this->subscription->user), // Origen: Usuario
             'from_id' => $this->subscription->user->id,
@@ -151,6 +152,7 @@ class UserSubscriptionPayment extends Page
             'metadata' => [
                 'checkout_session' => $session->toArray(),
             ],
+            'subscription_id' => $this->subscription->id,
         ]);
 
         // 6. Redirigir a la URL de Stripe Checkout
@@ -167,7 +169,7 @@ class UserSubscriptionPayment extends Page
         try {
             $otpResponse = $this->generateOtp();
 
-            if ($otpResponse['status'] !== 'success') {
+            if (!isset($otpResponse['success']) || !$otpResponse['success']) {
                 Notification::make()
                     ->title('Error')
                     ->body('No se pudo generar el OTP. Intente nuevamente.')
@@ -176,7 +178,14 @@ class UserSubscriptionPayment extends Page
                 return;
             }
 
-            $this->dispatchBrowserEvent('open-otp-modal');
+            // OTP generado correctamente
+            $this->otp = true;
+
+            Notification::make()
+                ->title('OTP Generado')
+                ->body('Se ha enviado un código OTP a tu teléfono.')
+                ->success()
+                ->send();
         } catch (\Exception $e) {
             Notification::make()
                 ->title('Error Interno')
@@ -186,6 +195,7 @@ class UserSubscriptionPayment extends Page
         }
     }
 
+
     public function confirmOtp(array $data)
     {
         $this->otp = $data['otp'];
@@ -193,7 +203,7 @@ class UserSubscriptionPayment extends Page
         try {
             $paymentResponse = $this->processImmediateDebit();
 
-            if ($paymentResponse['status'] === 'success') {
+            if ($paymentResponse['code'] === 'ACCP') {
                 Notification::make()
                     ->title('Pago Completado')
                     ->body('El pago se procesó exitosamente.')
@@ -294,7 +304,8 @@ class UserSubscriptionPayment extends Page
                 ->action(function (array $data) {
                     $this->confirmOtp($data);
                 })
-                ->hidden(fn() => !$this->otp),
+                ->visible(fn() => $this->otp !== null), // Solo visible cuando $otp no es null
+
         ];
     }
 }

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Money\Money;
 
 class Subscription extends Model
@@ -177,8 +178,9 @@ class Subscription extends Model
         return MoneyFormatter::make($this->getPrice())->format();
     }
 
-    public function transactions()
+    public function transactions(): HasMany
     {
-        return $this->morphMany(Transaction::class, 'from');
+        return $this->hasMany(Transaction::class, 'subscription_id');
     }
+
 }

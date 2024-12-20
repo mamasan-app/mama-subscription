@@ -47,4 +47,9 @@ class Transaction extends Model
         return $this->amount_cents / 100;  // Convertir de centavos a dólares
     }
 
+    public function subscription()
+    {
+        return $this->belongsTo(Subscription::class, 'subscription_id');
+    }
+
 }
