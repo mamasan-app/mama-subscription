@@ -3,12 +3,11 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MBConsultaController;
+use App\Http\Controllers\MBNotificaController;
 
-
-Route::post('/MBConsulta', [MBConsultaController::class, 'validarUsuario'])
+Route::post('/MBnotifica', [MBNotificaController::class, 'notificarTransaccion'])
     ->withoutMiddleware([\Illuminate\Auth\Middleware\Authenticate::class]);
 
 
-Route::get('/MBConsulta', function () {
-    return response()->json(['status' => 'Ruta funcionando']);
-});
+Route::post('/MBconsulta', [MBConsultaController::class, 'validarUsuario'])
+    ->withoutMiddleware([\Illuminate\Auth\Middleware\Authenticate::class]);
