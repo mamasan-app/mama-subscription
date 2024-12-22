@@ -91,6 +91,9 @@ return [
         'pages' => [
             'login' => \Filament\Http\Livewire\Auth\Login::class,
         ],
+        'except' => [
+            'api/*',
+        ],
     ],
 
 ];

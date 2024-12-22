@@ -68,10 +68,10 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
     {
         parent::boot();
 
-        // Asignar un ULID a la columna 'code' antes de crear el usuario
+        // Asignar un código numérico de 8 dígitos a la columna 'code' antes de crear el usuario
         static::creating(function ($user) {
             if (empty($user->code)) {
-                $user->code = (string) Str::ulid();
+                $user->code = str_pad(random_int(0, 99999999), 8, '0', STR_PAD_LEFT);
             }
         });
     }
