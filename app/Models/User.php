@@ -11,10 +11,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use Filament\Models\Contracts\FilamentUser;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 use NorbyBaru\Passwordless\CanUsePasswordlessAuthenticatable;
 use NorbyBaru\Passwordless\Traits\PasswordlessAuthenticatable;
 
@@ -38,6 +38,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
         'address',
         'selfie_path',
         'ci_picture_path',
+        'code',
     ];
 
     /**
@@ -62,6 +63,19 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
             'password' => 'hashed',
         ];
     }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Asignar un ULID a la columna 'code' antes de crear el usuario
+        static::creating(function ($user) {
+            if (empty($user->code)) {
+                $user->code = (string) Str::ulid();
+            }
+        });
+    }
+
 
     public function name(): Attribute
     {
