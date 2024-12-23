@@ -16,7 +16,7 @@ class MBConsultaController extends Controller
         $authorizationHeader = $request->header('Authorization');
         if (!$authorizationHeader || $authorizationHeader !== config('banking.token_key')) {
             Log::warning('Token de autorización inválido o ausente', ['header' => $authorizationHeader]);
-            return response()->json(['status' => false, 'error' => 'Token inválido'], 401);
+            return response()->json(['status' => false]);
         }
 
         // Validar que los datos necesarios estén presentes
@@ -28,19 +28,19 @@ class MBConsultaController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Error en la validación de datos', ['error' => $e->getMessage()]);
-            return response()->json(['status' => false, 'error' => 'Datos inválidos'], 400);
+            return response()->json(['status' => false]);
         }
 
         // Log para confirmar que los datos fueron validados
         Log::info('Validación de datos completada', ['data' => $request->all()]);
 
         // Lista de IPs permitidas
-        $whitelistedIps = ['45.175.213.98', '200.74.203.91', '190.202.123.66'];
+        $whitelistedIps = ['45.175.213.98', '200.74.203.91', '190.202.123.66', '190.6.60.37'];
 
         //// Validar IP
         if (!in_array($request->ip(), $whitelistedIps)) {
             Log::warning('IP no permitida', ['ip' => $request->ip()]);
-            return response()->json(['status' => false, 'error' => 'IP no permitida'], 403);
+            return response()->json(['status' => false]);
         }
 
         // Lógica de validación del cliente
@@ -49,7 +49,7 @@ class MBConsultaController extends Controller
             Log::info('Resultado de la consulta del cliente', ['IdCliente' => $request->IdCliente, 'exists' => $clienteValido]);
         } catch (\Exception $e) {
             Log::error('Error al consultar la base de datos', ['error' => $e->getMessage()]);
-            return response()->json(['status' => false, 'error' => 'Error interno del servidor'], 500);
+            return response()->json(['status' => false]);
         }
 
         // Respuesta según la validación
