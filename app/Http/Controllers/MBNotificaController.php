@@ -38,7 +38,7 @@ class MBNotificaController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Error en la validación de datos', ['error' => $e->getMessage()]);
-            return response()->json(['abono' => false], 400);
+            return response()->json(['abono' => false]);
         }
         Log::info('Validación de datos completada', ['data' => $request->all()]);
 
@@ -50,7 +50,7 @@ class MBNotificaController extends Controller
         $bancoValido = collect(BankEnum::cases())->first(fn($enum) => $enum->code() === $codigoBanco);
         if (!$bancoValido) {
             Log::warning('Código de banco inválido', ['BancoEmisor' => $codigoBanco]);
-            return response()->json(['abono' => false, 'error' => 'Código de banco inválido'], 400);
+            return response()->json(['abono' => false]);
         }
 
 
@@ -58,7 +58,7 @@ class MBNotificaController extends Controller
         $codigoRedValido = NetworkCodeEnum::tryFrom($request->CodigoRed) !== null;
         if (!$codigoRedValido) {
             Log::warning('Código de red inválido', ['CodigoRed' => $request->CodigoRed]);
-            return response()->json(['abono' => false, 'error' => 'Código de red inválido'], 400);
+            return response()->json(['abono' => false]);
         }
 
         // Validación adicional (puedes extender este bloque según lo que necesites)
