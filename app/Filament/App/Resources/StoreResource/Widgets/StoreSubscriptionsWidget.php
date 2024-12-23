@@ -8,6 +8,7 @@ use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Subscription;
+use Filament\Tables\Actions\Action;
 
 class StoreSubscriptionsWidget extends BaseWidget
 {
@@ -31,20 +32,15 @@ class StoreSubscriptionsWidget extends BaseWidget
                     ->label('ID')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('plan.name')
+                Tables\Columns\TextColumn::make('service_name')
                     ->label('Plan')
                     ->sortable()
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
-                    ->badge()
-                    ->color(fn($state) => match ($state) {
-                        'active' => 'success',
-                        'inactive' => 'warning',
-                        'canceled' => 'danger',
-                        default => 'secondary',
-                    }),
+                    ->sortable()
+                    ->formatStateUsing(fn($state) => $state?->getLabel()),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Fecha de Creación')
@@ -60,7 +56,15 @@ class StoreSubscriptionsWidget extends BaseWidget
                 // Puedes añadir filtros aquí si es necesario
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                Action::make('Pagar')
+                    ->url(fn(Subscription $record): string => \App\Filament\App\Resources\UserSubscriptionResource\Pages\UserSubscriptionPayment::getUrl(['record' => $record]))
+                    ->color('success')
+                    ->icon('heroicon-o-currency-dollar')
+                    ->label('Pagar')
+                    ->button()
+                    ->visible(fn(Subscription $record) => $record->transactions()->count() === 0),
+
+
             ]);
     }
 

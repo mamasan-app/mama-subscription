@@ -30,7 +30,7 @@ class UserSubscriptionPayment extends Page
 
     public function getTitle(): string
     {
-        return 'Detalle';
+        return 'Primer Pago';
     }
 
     public Subscription $subscription;

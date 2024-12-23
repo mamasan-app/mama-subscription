@@ -62,14 +62,11 @@ class RolePermissionSeeder extends Seeder
         ]);
 
         $customerRole = Role::firstOrCreate(['name' => 'customer']);
+        
         $customerRole->givePermissionTo([
             'view subscriptions',
+            'create subscriptions',
             'edit subscriptions',
-        ]);
-
-        $customerRole->givePermissionTo([
-            'edit subscriptions',
-            'view subscriptions',
         ]);
     }
 }

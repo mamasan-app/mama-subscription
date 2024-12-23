@@ -20,4 +20,20 @@ class ViewStore extends ViewRecord
             StoreSubscriptionsWidget::class,
         ];
     }
+
+    /**
+     * Configura las acciones disponibles en la vista.
+     */
+    protected function getActions(): array
+    {
+        return [
+            Actions\Action::make('Crear Suscripción')
+                ->url(fn() => \App\Filament\App\Resources\UserSubscriptionResource::getUrl('create', [
+                    'store_id' => $this->record->id,
+                ]))
+                ->color('primary')
+                ->icon('heroicon-o-plus')
+                ->label('Crear Suscripción'),
+        ];
+    }
 }
