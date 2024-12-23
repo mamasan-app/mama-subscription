@@ -28,6 +28,11 @@ class UserSubscriptionPayment extends Page
     protected static string $resource = UserSubscriptionResource::class;
     protected static string $view = 'filament.pages.user-subscription-payment';
 
+    public function getTitle(): string
+    {
+        return 'Detalle';
+    }
+
     public Subscription $subscription;
     public $bank;
     public $phone;

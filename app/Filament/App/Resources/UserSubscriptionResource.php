@@ -17,6 +17,8 @@ class UserSubscriptionResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $modelLabel = 'Suscripciones';
+
     public static function form(Form $form): Form
     {
         return $form->schema([
