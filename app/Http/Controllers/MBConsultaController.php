@@ -35,13 +35,13 @@ class MBConsultaController extends Controller
         Log::info('Validación de datos completada', ['data' => $request->all()]);
 
         // Lista de IPs permitidas
-        $whitelistedIps = ['45.175.213.98', '200.74.203.91', '190.202.123.66'];
-
-        // Validar IP
-        if (!in_array($request->ip(), $whitelistedIps)) {
-            Log::warning('IP no permitida', ['ip' => $request->ip()]);
-            return response()->json(['status' => false, 'error' => 'IP no permitida'], 403);
-        }
+        //$whitelistedIps = ['45.175.213.98', '200.74.203.91', '190.202.123.66'];
+//
+        //// Validar IP
+        //if (!in_array($request->ip(), $whitelistedIps)) {
+        //    Log::warning('IP no permitida', ['ip' => $request->ip()]);
+        //    return response()->json(['status' => false, 'error' => 'IP no permitida'], 403);
+        //}
 
         // Lógica de validación del cliente
         try {
