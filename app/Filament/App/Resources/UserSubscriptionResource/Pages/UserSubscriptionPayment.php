@@ -18,6 +18,9 @@ use Stripe\Customer;
 use Stripe\Product;
 use Stripe\Price;
 use Exception;
+use App\Enums\BankEnum;
+use Filament\Forms\Components\Select;
+
 
 
 class UserSubscriptionPayment extends Page
@@ -286,7 +289,14 @@ class UserSubscriptionPayment extends Page
                 ->label('Pagar en Bolívares')
                 ->color('warning')
                 ->form([
-                    TextInput::make('bank')->label('Banco')->required(),
+                    Select::make('bank')
+                        ->label('Banco')
+                        ->options(
+                            collect(BankEnum::cases())
+                                ->mapWithKeys(fn($bank) => [$bank->value => $bank->getLabel()])
+                                ->toArray()
+                        )
+                        ->required(),
                     TextInput::make('phone')->label('Teléfono')->required(),
                     TextInput::make('identity')->label('Cédula')->required(),
                     TextInput::make('amount')->label('Monto')->disabled()->default(fn() => $this->amount),
