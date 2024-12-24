@@ -60,10 +60,17 @@ class StripeWebhookController extends Controller
         $subscriptionId = $session->subscription;
 
         // Buscar la suscripción local con el ID proporcionado en el metadata
-        $localSubscription = \App\Models\Subscription::find($session->metadata->subscription_id);
+        if (!isset($session->metadata->subscription_id)) {
+            Log::warning("Checkout session sin metadata de subscription_id: {$session->id}");
+            return;
+        }
+
+        $localSubscriptionId = $session->metadata->subscription_id;
+
+        $localSubscription = \App\Models\Subscription::find($localSubscriptionId);
 
         if (!$localSubscription) {
-            Log::warning("No se encontró la suscripción local para el ID: {$session->metadata->subscription_id}");
+            Log::warning("No se encontró la suscripción local para el ID: {$localSubscriptionId}");
             return;
         }
 
@@ -74,6 +81,7 @@ class StripeWebhookController extends Controller
 
         Log::info("Suscripción actualizada con stripe_subscription_id: {$subscriptionId}");
     }
+
 
 
     protected function handlePaymentSucceeded($invoice)
