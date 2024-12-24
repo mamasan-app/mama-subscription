@@ -21,7 +21,7 @@ class StripeWebhookController extends Controller
             $event = \Stripe\Webhook::constructEvent(
                 $request->getContent(),
                 $signature,
-                config('stripe.webhook_secret') // Asegúrate de tener esto en tu .env
+                config('stripe.webhook_secret')
             );
         } catch (\Exception $e) {
             Log::error('Stripe webhook signature verification failed', ['exception' => $e->getMessage()]);
@@ -29,16 +29,52 @@ class StripeWebhookController extends Controller
         }
 
         // Manejar los eventos específicos
-        if ($event->type === 'invoice.payment_succeeded') {
-            $this->handlePaymentSucceeded($event->data->object);
-        } elseif ($event->type === 'invoice.payment_failed') {
-            $this->handlePaymentFailed($event->data->object);
-        } elseif ($event->type === 'subscription.updated') {
-            $this->handleSubscriptionUpdated($event->data->object);
+        Log::info("Evento recibido: {$event->type}");
+
+        switch ($event->type) {
+            case 'checkout.session.completed':
+                $this->handleCheckoutSessionCompleted($event->data->object);
+                break;
+            case 'invoice.payment_succeeded':
+                $this->handlePaymentSucceeded($event->data->object);
+                break;
+            case 'invoice.payment_failed':
+                $this->handlePaymentFailed($event->data->object);
+                break;
+            case 'subscription.updated':
+                $this->handleSubscriptionUpdated($event->data->object);
+                break;
         }
 
         return response()->json(['status' => 'success']);
     }
+
+    protected function handleCheckoutSessionCompleted($session)
+    {
+        // Verificar si el checkout session tiene una suscripción asociada
+        if (!isset($session->subscription)) {
+            Log::warning("Checkout session sin suscripción asociada: {$session->id}");
+            return;
+        }
+
+        $subscriptionId = $session->subscription;
+
+        // Buscar la suscripción local con el ID proporcionado en el metadata
+        $localSubscription = \App\Models\Subscription::find($session->metadata->subscription_id);
+
+        if (!$localSubscription) {
+            Log::warning("No se encontró la suscripción local para el ID: {$session->metadata->subscription_id}");
+            return;
+        }
+
+        // Actualizar el stripe_subscription_id en la suscripción local
+        $localSubscription->update([
+            'stripe_subscription_id' => $subscriptionId,
+        ]);
+
+        Log::info("Suscripción actualizada con stripe_subscription_id: {$subscriptionId}");
+    }
+
 
     protected function handlePaymentSucceeded($invoice)
     {
@@ -113,6 +149,7 @@ class StripeWebhookController extends Controller
             'status' => $subscription->status,
         ]);
     }
+
 
 }
 

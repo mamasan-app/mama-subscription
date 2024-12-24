@@ -154,6 +154,9 @@ class UserSubscriptionPayment extends Page
                 'record' => $this->subscription->id,
                 'success' => false,
             ]),
+            'metadata' => [
+                'subscription_id' => $this->subscription->id, // Enlazar al modelo local
+            ],
         ]);
 
         if (isset($session->subscription)) {
