@@ -38,6 +38,7 @@ class Subscription extends Model
         'service_grace_period',
         'service_id',
         'frequency_days',
+        'stripe_subscription_id',
     ];
 
 
@@ -46,6 +47,7 @@ class Subscription extends Model
      *
      * @var array
      */
+
     protected $casts = [
         'status' => SubscriptionStatusEnum::class,
         'trial_ends_at' => 'datetime',
@@ -178,9 +180,24 @@ class Subscription extends Model
         return MoneyFormatter::make($this->getPrice())->format();
     }
 
-    public function transactions(): HasMany
+
+    public function payments(): HasMany
     {
-        return $this->hasMany(Transaction::class, 'subscription_id');
+        return $this->hasMany(Payment::class, 'subscription_id');
+    }
+
+    public function allTransactions(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->payments->flatMap->transactions
+        );
+    }
+
+    public function stripeSubscriptionId(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->stripe_subscription_id,
+        );
     }
 
 }

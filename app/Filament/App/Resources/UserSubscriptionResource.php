@@ -82,8 +82,7 @@ class UserSubscriptionResource extends Resource
                     ->icon('heroicon-o-currency-dollar')
                     ->label('Pagar')
                     ->button()
-                    ->visible(fn(Subscription $record) => $record->transactions()->count() === 0), // Mostrar solo si no hay transacciones
-
+                    ->visible(fn(Subscription $record) => $record->payments->flatMap->transactions->isEmpty()), // Mostrar solo si no hay transacciones
             ]);
 
     }

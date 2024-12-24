@@ -23,6 +23,7 @@ class Transaction extends Model
         'date',
         'amount_cents',
         'metadata',
+        'payment_id', // Agregar este campo
     ];
 
     protected $casts = [
@@ -47,9 +48,12 @@ class Transaction extends Model
         return $this->amount_cents / 100;  // Convertir de centavos a dólares
     }
 
-    public function subscription()
+    /**
+     * Relación con Payment.
+     */
+    public function payment()
     {
-        return $this->belongsTo(Subscription::class, 'subscription_id');
+        return $this->belongsTo(Payment::class);
     }
-
 }
+

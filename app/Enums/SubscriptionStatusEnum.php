@@ -18,6 +18,8 @@ enum SubscriptionStatusEnum: string
 
     case Expired = 'expired';
 
+    case Pending = 'pending'; // Nuevo estado para "incomplete" de Stripe
+
     public function getLabel(): ?string
     {
         return match ($this) {
@@ -28,6 +30,7 @@ enum SubscriptionStatusEnum: string
             self::Unpaid => 'No pagada',
             self::Cancelled => 'Cancelada',
             self::Expired => 'Expirada',
+            self::Pending => 'Pendiente', // Etiqueta para el nuevo estado
         };
     }
 
@@ -35,6 +38,7 @@ enum SubscriptionStatusEnum: string
     {
         return match ($this) {
             self::OnTrial, self::Active => 'success',
+            self::Pending => 'warning', // Color para estado pendiente
             default => 'danger',
         };
     }

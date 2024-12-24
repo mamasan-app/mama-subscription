@@ -126,6 +126,15 @@ class UserSubscriptionPayment extends Page
             ],
         ]);
 
+        $gracePeriod = $this->subscription->service->grace_period ?? 0; // Obtener el período de gracia en días, por defecto 0
+
+        $payment = $this->subscription->payments()->create([
+            'status' => 'pending',
+            'amount_cents' => $this->subscription->service_price_cents,
+            'due_date' => now()->addDays($gracePeriod), // Sumar el período de gracia a la fecha actual
+        ]);
+
+
         // 5. Crear la Checkout Session
         $session = StripeSession::create([
             'customer' => $customer->id,
@@ -147,11 +156,16 @@ class UserSubscriptionPayment extends Page
             ]),
         ]);
 
+        if (isset($session->subscription)) {
+            $this->subscription->update([
+                'stripe_subscription_id' => $session->subscription,
+            ]);
+        }
 
-        Transaction::create([
-            'from_type' => get_class($this->subscription->user), // Origen: Usuario
+        $payment->transactions()->create([
+            'from_type' => get_class($this->subscription->user),
             'from_id' => $this->subscription->user->id,
-            'to_type' => get_class($this->subscription->service->store), // Destino: Tienda del plan
+            'to_type' => get_class($this->subscription->service->store),
             'to_id' => $this->subscription->service->store->id,
             'type' => TransactionTypeEnum::Subscription->value,
             'status' => TransactionStatusEnum::Pending->value,
@@ -160,7 +174,6 @@ class UserSubscriptionPayment extends Page
             'metadata' => [
                 'checkout_session' => $session->toArray(),
             ],
-            'subscription_id' => $this->subscription->id,
         ]);
 
         // 6. Redirigir a la URL de Stripe Checkout
