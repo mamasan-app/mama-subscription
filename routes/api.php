@@ -8,7 +8,7 @@ use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\CheckoutWebhookController;
 
 Route::post('/webhooks/stripe/checkout', [CheckoutWebhookController::class, 'handle']);
-Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle']);
+//Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle']);
 
 
 
