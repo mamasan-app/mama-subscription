@@ -155,6 +155,7 @@ class UserSubscriptionPayment extends Page
                 'success' => false,
             ]),
             'metadata' => [
+                'payment_id' => $payment->id,
                 'subscription_id' => $this->subscription->id, // Enlazar al modelo local
             ],
         ]);

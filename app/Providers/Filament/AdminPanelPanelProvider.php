@@ -19,6 +19,8 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use App\Filament\Admin\Pages\Auth\EditProfile;
+use App\Filament\Admin\Widgets\StripeBalanceStats;
+
 
 class AdminPanelPanelProvider extends PanelProvider
 {
@@ -42,6 +44,7 @@ class AdminPanelPanelProvider extends PanelProvider
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
+                StripeBalanceStats::class,
             ])
             ->middleware([
                 EncryptCookies::class,

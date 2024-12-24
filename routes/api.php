@@ -5,6 +5,12 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MBConsultaController;
 use App\Http\Controllers\MBNotificaController;
 use App\Http\Controllers\StripeWebhookController;
+use App\Http\Controllers\StripeBalanceWebhookController;
+
+Route::post('/webhook/stripe/balance', [StripeBalanceWebhookController::class, 'handle']);
+Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle']);
+
+
 
 Route::post('/MBnotifica', [MBNotificaController::class, 'notificarTransaccion'])
     ->withoutMiddleware([\Illuminate\Auth\Middleware\Authenticate::class]);
@@ -12,5 +18,3 @@ Route::post('/MBnotifica', [MBNotificaController::class, 'notificarTransaccion']
 
 Route::post('/MBconsulta', [MBConsultaController::class, 'validarUsuario'])
     ->withoutMiddleware([\Illuminate\Auth\Middleware\Authenticate::class]);
-
-Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle']);

@@ -10,6 +10,7 @@ class Payment extends Model
     use HasFactory;
 
     protected $fillable = [
+        'stripe_payment_id',
         'subscription_id',
         'status',
         'amount_cents',
