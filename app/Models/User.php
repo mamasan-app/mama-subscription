@@ -39,6 +39,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
         'selfie_path',
         'ci_picture_path',
         'code',
+        'stripe_customer_id',
     ];
 
     /**
@@ -74,8 +75,24 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
                 $user->code = str_pad(random_int(0, 99999999), 8, '0', STR_PAD_LEFT);
             }
         });
-    }
 
+        //static::created(function (User $user) {
+        //    if (is_null($user->stripe_customer_id)) {
+        //        try {
+        //            \Stripe\Stripe::setApiKey(config('stripe.secret_key'));
+//
+        //            $customer = \Stripe\Customer::create([
+        //                'email' => $user->email,
+        //                'name' => "{$user->first_name} {$user->last_name}",
+        //            ]);
+//
+        //            $user->update(['stripe_customer_id' => $customer->id]);
+        //        } catch (\Exception $e) {
+        //            \Log::error('Error al crear el cliente en Stripe: ' . $e->getMessage());
+        //        }
+        //    }
+        //});
+    }
 
     public function name(): Attribute
     {

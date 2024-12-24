@@ -29,6 +29,7 @@ class Plan extends Model
         'grace_period',
         'infinite_duration',
         'duration',
+        'stripe_product_id',
     ];
 
     protected $casts = [

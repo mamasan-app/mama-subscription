@@ -35,8 +35,8 @@ class StripeBalanceStats extends BaseWidget
         }
 
         return [
-            Stat::make('Balance Disponible', "$" . number_format($availableBalance, 2)),
-            Stat::make('Balance Pendiente', "$" . number_format($pendingBalance, 2)),
+            Stat::make('Balance Disponible en Stripe', "$" . number_format($availableBalance, 2)),
+            Stat::make('Balance Pendiente en Stripe', "$" . number_format($pendingBalance, 2)),
         ];
     }
 }

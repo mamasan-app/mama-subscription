@@ -4,7 +4,7 @@ namespace App\Filament\App\Resources\UserSubscriptionResource\Pages;
 
 use App\Filament\App\Resources\UserSubscriptionResource;
 use App\Models\Subscription;
-use App\Models\Transaction;
+use App\Models\User;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionTypeEnum;
 use Filament\Pages\Actions\Action;
@@ -20,6 +20,7 @@ use Stripe\Price;
 use Exception;
 use App\Enums\BankEnum;
 use Filament\Forms\Components\Select;
+use App\Services\StripeService;
 
 
 
@@ -61,70 +62,25 @@ class UserSubscriptionPayment extends Page
         }
     }
 
-    protected function createStripeSession()
+    public function createStripeSession(StripeService $stripeService)
     {
-        Stripe::setApiKey(config('stripe.secret_key'));
+        // Obtener o crear el cliente en Stripe
+        $customer = $stripeService->getOrCreateCustomer($this->subscription->user);
 
-        // 1. Crear un cliente en Stripe si no existe
-        if (!$this->subscription->user->stripe_customer_id) {
-            $customer = Customer::create([
-                'email' => $this->subscription->user->email,
-                'name' => $this->subscription->user->name,
-            ]);
+        // Obtener o crear el producto en Stripe
+        $product = $stripeService->getOrCreateProduct($this->subscription->service);
 
-            $this->subscription->user->update(['stripe_customer_id' => $customer->id]);
-        } else {
-            $customer = Customer::retrieve($this->subscription->user->stripe_customer_id);
-        }
-
-        // 2. Crear un producto en Stripe si no existe
-        if (!$this->subscription->service->stripe_product_id) {
-            $product = Product::create([
-                'name' => $this->subscription->service_name,
-                'description' => $this->subscription->service_description,
-            ]);
-
-            $this->subscription->service->update(['stripe_product_id' => $product->id]);
-        } else {
-            $product = Product::retrieve($this->subscription->service->stripe_product_id);
-        }
-
-        // 3. Determinar el intervalo y el intervalo_count basados en frequency_days
+        // Determinar el intervalo y el intervalo_count
         $frequency_days = $this->subscription->frequency_days;
-        $interval = null;
-        $interval_count = null;
+        [$interval, $intervalCount] = $this->getIntervalDetails($frequency_days);
 
-        if ($frequency_days < 7) {
-            // Frecuencia menor a 7 días: usa días
-            $interval = 'day';
-            $interval_count = $frequency_days;
-        } elseif ($frequency_days % 7 === 0 && $frequency_days < 28) {
-            // Múltiplo de 7 pero menor a 28 días: usa semanas
-            $interval = 'week';
-            $interval_count = $frequency_days / 7;
-        } elseif ($frequency_days % 30 === 0) {
-            // Múltiplo de 30 días: usa meses
-            $interval = 'month';
-            $interval_count = $frequency_days / 30;
-        } elseif ($frequency_days % 365 === 0) {
-            // Múltiplo de 365 días: usa años
-            $interval = 'year';
-            $interval_count = $frequency_days / 365;
-        } else {
-            // Si no es compatible con las reglas, arroja una excepción o maneja el caso
-            throw new Exception('La frecuencia no es compatible con los intervalos permitidos por Stripe.');
-        }
-
-        // 4. Crear el precio en Stripe
-        $price = Price::create([
-            'product' => $product->id,
-            'unit_amount' => $this->subscription->service_price_cents,
-            'currency' => 'usd',
-            'recurring' => [
-                'interval' => $interval,
-                'interval_count' => $interval_count,
-            ],
-        ]);
+        // Crear el precio en Stripe
+        $price = $stripeService->createPrice(
+            $product,
+            $this->subscription->service_price_cents,
+            $interval,
+            $intervalCount
+        );
 
         $gracePeriod = $this->subscription->service->grace_period ?? 0; // Obtener el período de gracia en días, por defecto 0
 
@@ -134,31 +90,23 @@ class UserSubscriptionPayment extends Page
             'due_date' => now()->addDays($gracePeriod), // Sumar el período de gracia a la fecha actual
         ]);
 
-
-        // 5. Crear la Checkout Session
-        $session = StripeSession::create([
-            'customer' => $customer->id,
-            'payment_method_types' => ['card'],
-            'line_items' => [
-                [
-                    'price' => $price->id,
-                    'quantity' => 1,
-                ],
-            ],
-            'mode' => 'subscription',
-            'success_url' => static::getResource()::getUrl('payment', [
+        // Crear la sesión de Stripe Checkout
+        $session = $stripeService->createCheckoutSession(
+            $customer,
+            $price,
+            static::getResource()::getUrl('payment', [
                 'record' => $this->subscription->id,
                 'success' => true,
             ]),
-            'cancel_url' => static::getResource()::getUrl('payment', [
+            static::getResource()::getUrl('payment', [
                 'record' => $this->subscription->id,
                 'success' => false,
             ]),
-            'metadata' => [
-                'payment_id' => $payment->id,
-                'subscription_id' => $this->subscription->id, // Enlazar al modelo local
-            ],
-        ]);
+            [
+                'payment_id' => $this->subscription->id,
+                'subscription_id' => $this->subscription->id,
+            ]
+        );
 
         if (isset($session->subscription)) {
             $this->subscription->update([
@@ -180,10 +128,23 @@ class UserSubscriptionPayment extends Page
             ],
         ]);
 
-        // 6. Redirigir a la URL de Stripe Checkout
         return redirect($session->url);
     }
 
+    private function getIntervalDetails($frequency_days)
+    {
+        if ($frequency_days < 7) {
+            return ['day', $frequency_days];
+        } elseif ($frequency_days % 7 === 0 && $frequency_days < 28) {
+            return ['week', $frequency_days / 7];
+        } elseif ($frequency_days % 30 === 0) {
+            return ['month', $frequency_days / 30];
+        } elseif ($frequency_days % 365 === 0) {
+            return ['year', $frequency_days / 365];
+        }
+
+        throw new Exception('La frecuencia no es compatible con los intervalos permitidos por Stripe.');
+    }
 
     public function submitBolivaresPayment(array $data)
     {
@@ -304,7 +265,8 @@ class UserSubscriptionPayment extends Page
                 ->label('Pagar en USD')
                 ->color('success')
                 ->action(function () {
-                    $this->createStripeSession();
+                    $stripeService = app(StripeService::class); // Inyectar StripeService
+                    $this->createStripeSession($stripeService);
                 }),
 
             Action::make('payInBolivares')
