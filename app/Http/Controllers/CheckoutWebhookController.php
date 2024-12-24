@@ -5,6 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Models\Subscription;
+use App\Enums\TransactionTypeEnum; // Enum para tipos de transacción
+use App\Enums\TransactionStatusEnum; // Enum para estatus de transacción
+use Filament\Notifications\Notification; // Para las notificaciones
+use Stripe\Webhook; // Para manejar los webhooks de Stripe
+use Stripe\Exception\SignatureVerificationException;
 
 class CheckoutWebhookController extends Controller
 {
@@ -62,18 +67,88 @@ class CheckoutWebhookController extends Controller
     protected function handleAsyncPaymentSucceeded($session)
     {
         Log::info('Async payment succeeded', ['session' => $session]);
-        // Implementar lógica adicional si es necesario.
+
+        $subscriptionId = $session->metadata->subscription_id ?? null;
+
+        if ($subscriptionId) {
+            $subscription = Subscription::find($subscriptionId);
+            if ($subscription) {
+                $subscription->update([
+                    'stripe_subscription_id' => $session->subscription,
+                    'status' => 'active',
+                ]);
+
+                // Registrar transacción exitosa
+                $subscription->transactions()->create([
+                    'type' => TransactionTypeEnum::Subscription->value,
+                    'status' => TransactionStatusEnum::Succeeded->value,
+                    'amount_cents' => $session->amount_total,
+                    'metadata' => $session,
+                ]);
+
+                // Notificar al usuario
+                Notification::make()
+                    ->title('Pago exitoso')
+                    ->body('Tu suscripción ha sido activada con éxito.')
+                    ->success()
+                    ->send();
+            }
+        }
     }
+
 
     protected function handleAsyncPaymentFailed($session)
     {
         Log::error('Async payment failed', ['session' => $session]);
-        // Implementar notificación o lógica de manejo de fallos.
+
+        $subscriptionId = $session->metadata->subscription_id ?? null;
+
+        if ($subscriptionId) {
+            $subscription = Subscription::find($subscriptionId);
+            if ($subscription) {
+                $subscription->update([
+                    'status' => 'payment_failed',
+                ]);
+
+                // Registrar transacción fallida
+                $subscription->transactions()->create([
+                    'type' => TransactionTypeEnum::Subscription->value,
+                    'status' => TransactionStatusEnum::Failed->value,
+                    'amount_cents' => $session->amount_total,
+                    'metadata' => $session,
+                ]);
+
+                // Notificar al usuario
+                Notification::make()
+                    ->title('Pago fallido')
+                    ->body('No se pudo completar el pago de tu suscripción. Por favor, intenta nuevamente.')
+                    ->danger()
+                    ->send();
+            }
+        }
     }
 
     protected function handleSessionExpired($session)
     {
         Log::warning('Checkout session expired', ['session' => $session]);
-        // Manejar la expiración, como liberar productos reservados o notificar al usuario.
+
+        $subscriptionId = $session->metadata->subscription_id ?? null;
+
+        if ($subscriptionId) {
+            $subscription = Subscription::find($subscriptionId);
+            if ($subscription) {
+                $subscription->update([
+                    'status' => 'expired',
+                ]);
+
+                // Notificar al usuario
+                Notification::make()
+                    ->title('Sesión expirada')
+                    ->body('La sesión de pago ha expirado. Por favor, intenta nuevamente.')
+                    ->warning()
+                    ->send();
+            }
+        }
     }
+
 }

@@ -82,14 +82,6 @@ class UserSubscriptionPayment extends Page
             $intervalCount
         );
 
-        $gracePeriod = $this->subscription->service->grace_period ?? 0; // Obtener el período de gracia en días, por defecto 0
-
-        $payment = $this->subscription->payments()->create([
-            'status' => 'pending',
-            'amount_cents' => $this->subscription->service_price_cents,
-            'due_date' => now()->addDays($gracePeriod), // Sumar el período de gracia a la fecha actual
-        ]);
-
         // Crear la sesión de Stripe Checkout
         $session = $stripeService->createCheckoutSession(
             $customer,
@@ -113,20 +105,6 @@ class UserSubscriptionPayment extends Page
                 'stripe_subscription_id' => $session->subscription,
             ]);
         }
-
-        $payment->transactions()->create([
-            'from_type' => get_class($this->subscription->user),
-            'from_id' => $this->subscription->user->id,
-            'to_type' => get_class($this->subscription->service->store),
-            'to_id' => $this->subscription->service->store->id,
-            'type' => TransactionTypeEnum::Subscription->value,
-            'status' => TransactionStatusEnum::Pending->value,
-            'date' => now(),
-            'amount_cents' => $this->subscription->service_price_cents,
-            'metadata' => [
-                'checkout_session' => $session->toArray(),
-            ],
-        ]);
 
         return redirect($session->url);
     }

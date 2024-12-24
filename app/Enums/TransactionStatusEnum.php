@@ -9,31 +9,35 @@ use Filament\Support\Contracts\HasLabel;
 
 enum TransactionStatusEnum: string implements HasColor, HasLabel
 {
-    case Pending = 'pending';
-
-    case Approved = 'approved';
-
-    case Declined = 'declined';
-
-    case Returned = 'returned';
+    case RequiresPaymentMethod = 'requires_payment_method';
+    case RequiresConfirmation = 'requires_confirmation';
+    case RequiresAction = 'requires_action';
+    case Processing = 'processing';
+    case Succeeded = 'succeeded';
+    case Canceled = 'canceled';
+    case Failed = 'failed';
 
     public function getLabel(): ?string
     {
         return match ($this) {
-            self::Approved => 'Aprobada',
-            self::Declined => 'Rechazada',
-            self::Returned => 'Devuelta',
-            default => 'Pendiente',
+            self::RequiresPaymentMethod => 'Requiere método de pago',
+            self::RequiresConfirmation => 'Requiere confirmación',
+            self::RequiresAction => 'Requiere acción',
+            self::Processing => 'Procesando',
+            self::Succeeded => 'Completada',
+            self::Canceled => 'Cancelada',
+            self::Failed => 'Fallida',
         };
     }
 
     public function getColor(): string|array|null
     {
         return match ($this) {
-            self::Approved => 'success',
-            self::Declined => 'danger',
-            self::Returned => 'info', // o 'secondary'
-            default => 'warning',
+            self::Succeeded => 'success',
+            self::Processing => 'info',
+            self::Canceled => 'danger',
+            self::Failed => 'danger',
+            self::RequiresPaymentMethod, self::RequiresConfirmation, self::RequiresAction => 'warning',
         };
     }
 }

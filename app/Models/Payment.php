@@ -4,13 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Enums\PaymentStatusEnum;
 
 class Payment extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'stripe_payment_id',
+        'stripe_invoice_id', // ID de la Invoice de Stripe
         'subscription_id',
         'status',
         'amount_cents',
@@ -19,6 +20,7 @@ class Payment extends Model
     ];
 
     protected $casts = [
+        'status' => PaymentStatusEnum::class,
         'due_date' => 'date',
         'paid_date' => 'date',
     ];
@@ -53,9 +55,25 @@ class Payment extends Model
     public function markAsPaid(): void
     {
         $this->update([
-            'status' => 'completed',
+            'status' => PaymentStatusEnum::Completed,
             'paid_date' => now(),
         ]);
+    }
+
+    /**
+     * Marcar el pago como vencido.
+     */
+    public function markAsOverdue(): void
+    {
+        $this->update(['status' => PaymentStatusEnum::Pending]);
+    }
+
+    /**
+     * Marcar el pago como cancelado.
+     */
+    public function markAsCancelled(): void
+    {
+        $this->update(['status' => PaymentStatusEnum::Cancelled]);
     }
 
     /**
@@ -65,5 +83,43 @@ class Payment extends Model
     {
         return $this->amount_cents / 100;
     }
-}
 
+    /**
+     * Verificar si el pago está asociado con una invoice de Stripe.
+     */
+    public function hasStripeInvoice(): bool
+    {
+        return !is_null($this->stripe_invoice_id);
+    }
+
+    /**
+     * Sincronizar el estado del pago con una invoice de Stripe.
+     *
+     * @param \Stripe\Invoice $invoice
+     */
+    public function syncWithStripeInvoice($invoice): void
+    {
+        $this->update([
+            'stripe_invoice_id' => $invoice->id,
+            'status' => $this->mapStripeInvoiceStatus($invoice->status),
+            'paid_date' => $invoice->status === 'paid' ? now() : null,
+        ]);
+    }
+
+    /**
+     * Mapear el estado de una invoice de Stripe a un estado local.
+     *
+     * @param string $stripeStatus
+     * @return PaymentStatusEnum
+     */
+    protected function mapStripeInvoiceStatus(string $stripeStatus): PaymentStatusEnum
+    {
+        return match ($stripeStatus) {
+            'paid' => PaymentStatusEnum::Completed,
+            'open', 'draft' => PaymentStatusEnum::Pending,
+            'overdue' => PaymentStatusEnum::Uncollectible,
+            'void' => PaymentStatusEnum::Cancelled,
+            default => PaymentStatusEnum::Unknown,
+        };
+    }
+}
