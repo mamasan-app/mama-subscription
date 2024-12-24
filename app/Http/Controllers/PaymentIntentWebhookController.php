@@ -13,7 +13,7 @@ class PaymentIntentWebhookController extends Controller
     {
         $payload = $request->getContent();
         $sigHeader = $request->header('Stripe-Signature');
-        $secret = config('stripe.webhook_secret');
+        $secret = config('stripe.webhook_payment_intent');
 
         try {
             $event = \Stripe\Webhook::constructEvent($payload, $sigHeader, $secret);
