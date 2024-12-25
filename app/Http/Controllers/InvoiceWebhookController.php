@@ -45,6 +45,9 @@ class InvoiceWebhookController extends Controller
             case 'invoice.voided':
                 $this->handleInvoiceVoided($event->data->object);
                 break;
+            case 'invoice.paid':
+                $this->handleInvoicePaid($event->data->object);
+                break;
             default:
                 Log::info("Unhandled event type: {$event->type}");
         }
@@ -90,19 +93,53 @@ class InvoiceWebhookController extends Controller
     {
         Log::info('Invoice created', ['invoice' => $invoice]);
 
-        $subscriptionId = $invoice->subscription;
+        $subscriptionId = $invoice->subscription ?? null;
+        if (!$subscriptionId) {
+            Log::error('No subscription ID found in invoice');
+            return response('No subscription ID', 400);
+        }
+
         $subscription = Subscription::where('stripe_subscription_id', $subscriptionId)->first();
 
-        if ($subscription) {
+        if (!$subscription) {
+            Log::error("Subscription not found for Stripe subscription ID: {$subscriptionId}");
+            return response('Subscription not found', 400);
+        }
+
+        try {
             Payment::create([
                 'stripe_invoice_id' => $invoice->id,
                 'subscription_id' => $subscription->id,
                 'status' => 'pending',
-                'amount_cents' => $invoice->amount_due,
+                'amount_cents' => $invoice->amount_due ?? 0,
                 'due_date' => isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null,
             ]);
+            Log::info("Payment created successfully for invoice ID: {$invoice->id}");
+        } catch (\Exception $e) {
+            Log::error("Failed to create payment for invoice ID: {$invoice->id}. Error: {$e->getMessage()}");
+            return response('Error creating payment', 500);
         }
     }
+
+
+    protected function handleInvoicePaid($invoice)
+    {
+        Log::info('Invoice paid', ['invoice' => $invoice]);
+
+        $payment = Payment::where('stripe_invoice_id', $invoice->id)->first();
+
+        if ($payment) {
+            $payment->update([
+                'status' => 'completed',
+                'paid_date' => now(),
+            ]);
+            Log::info("Payment status updated to 'completed' for invoice ID: {$invoice->id}");
+        } else {
+            Log::warning("Payment not found for invoice ID: {$invoice->id}");
+        }
+    }
+
+
 
     protected function handleInvoiceUpdated($invoice)
     {
