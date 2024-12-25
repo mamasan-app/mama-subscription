@@ -49,7 +49,6 @@ class StripeWebhookController extends Controller
                 $this->handleSessionExpired($eventData);
                 break;
 
-            // Invoice events
             case 'invoice.created':
                 $this->handleInvoiceCreated($eventData);
                 break;
@@ -61,32 +60,6 @@ class StripeWebhookController extends Controller
                 break;
             case 'invoice.payment_failed':
                 $this->handleInvoicePaymentFailed($eventData);
-                break;
-            case 'invoice.upcoming':
-                $this->handleInvoiceUpcoming($eventData);
-                break;
-            case 'invoice.overdue':
-                $this->handleInvoiceOverdue($eventData);
-                break;
-            case 'invoice.voided':
-                $this->handleInvoiceVoided($eventData);
-                break;
-
-            // Payment Intent events
-            case 'payment_intent.succeeded':
-                $this->handlePaymentIntentSucceeded($eventData);
-                break;
-            case 'payment_intent.payment_failed':
-                $this->handlePaymentIntentFailed($eventData);
-                break;
-            case 'payment_intent.canceled':
-                $this->handlePaymentIntentCanceled($eventData);
-                break;
-            case 'payment_intent.created':
-                $this->handlePaymentIntentCreated($eventData);
-                break;
-            case 'payment_intent.processing':
-                $this->handlePaymentIntentProcessing($eventData);
                 break;
 
             default:
@@ -201,40 +174,6 @@ class StripeWebhookController extends Controller
         }
     }
 
-    // Invoice handlers
-    protected function handleInvoiceUpcoming($invoice)
-    {
-        Log::info('Invoice upcoming', ['invoice' => $invoice]);
-
-        // Notificar al usuario
-        $subscription = Subscription::where('stripe_subscription_id', $invoice->subscription)->first();
-        if ($subscription) {
-            // Aquí podrías enviar un correo o notificación al usuario.
-            Log::info("Notificando factura próxima para suscripción: {$subscription->id}");
-        }
-    }
-
-    protected function handleInvoiceOverdue($invoice)
-    {
-        Log::warning('Invoice overdue', ['invoice' => $invoice]);
-
-        $payment = Payment::where('stripe_invoice_id', $invoice->id)->first();
-        if ($payment) {
-            $payment->markAsOverdue();
-        }
-    }
-
-    protected function handleInvoiceVoided($invoice)
-    {
-        Log::warning('Invoice voided', ['invoice' => $invoice]);
-
-        $payment = Payment::where('stripe_invoice_id', $invoice->id)->first();
-        if ($payment) {
-            $payment->markAsVoid();
-        }
-    }
-
-    // Otros métodos (created, updated, payment_succeeded, payment_failed) permanecen igual.
 
     protected function handleInvoiceCreated($invoice)
     {
@@ -264,24 +203,6 @@ class StripeWebhookController extends Controller
         );
 
         Log::info("Payment created or updated for invoice ID: {$invoice->id}");
-    }
-
-
-    protected function handleInvoicePaid($invoice)
-    {
-        Log::info('Invoice paid', ['invoice' => $invoice]);
-
-        $payment = Payment::where('stripe_invoice_id', $invoice->id)->first();
-
-        if ($payment) {
-            $payment->update([
-                'status' => 'completed',
-                'paid_date' => now(),
-            ]);
-            Log::info("Payment status updated to 'completed' for invoice ID: {$invoice->id}");
-        } else {
-            Log::warning("Payment not found for invoice ID: {$invoice->id}");
-        }
     }
 
     protected function handleInvoiceUpdated($invoice)
@@ -321,64 +242,6 @@ class StripeWebhookController extends Controller
         }
     }
 
-    // Payment Intent handlers
-    protected function handlePaymentIntentSucceeded($paymentIntent)
-    {
-        Log::info('Payment Intent succeeded', ['payment_intent' => $paymentIntent]);
-
-        $payment = Payment::where('stripe_invoice_id', $paymentIntent->invoice)->first();
-
-        if ($payment) {
-            Transaction::createFromPaymentIntent($paymentIntent, $payment);
-            $payment->markAsPaid();
-        }
-    }
-
-    protected function handlePaymentIntentFailed($paymentIntent)
-    {
-        Log::error('Payment Intent failed', ['payment_intent' => $paymentIntent]);
-
-        $payment = Payment::where('stripe_invoice_id', $paymentIntent->invoice)->first();
-
-        if ($payment) {
-            Transaction::createFromPaymentIntent($paymentIntent, $payment);
-            $payment->update(['status' => 'failed']);
-        }
-    }
-
-    protected function handlePaymentIntentCanceled($paymentIntent)
-    {
-        Log::info('Payment Intent canceled', ['payment_intent' => $paymentIntent]);
-
-        $payment = Payment::where('stripe_invoice_id', $paymentIntent->invoice)->first();
-
-        if ($payment) {
-            Transaction::createFromPaymentIntent($paymentIntent, $payment);
-            $payment->update(['status' => 'canceled']);
-        }
-    }
-
-    protected function handlePaymentIntentCreated($paymentIntent)
-    {
-        Log::info('Payment Intent created', ['payment_intent' => $paymentIntent]);
-        $payment = Payment::where('stripe_invoice_id', $paymentIntent->invoice)->first();
-
-        if ($payment) {
-            Transaction::createFromPaymentIntent($paymentIntent, $payment);
-            $payment->markAsPaid();
-        }
-    }
-
-    protected function handlePaymentIntentProcessing($paymentIntent)
-    {
-        Log::info('Payment Intent processing', ['payment_intent' => $paymentIntent]);
-
-        $payment = Payment::where('stripe_invoice_id', $paymentIntent->invoice)->first();
-
-        if ($payment) {
-            $payment->update(['status' => 'processing']);
-        }
-    }
 }
 
 
