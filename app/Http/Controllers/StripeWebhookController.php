@@ -184,7 +184,6 @@ class StripeWebhookController extends Controller
         }
     }
 
-
     protected function handleInvoiceCreated($invoice)
     {
         Log::info('Invoice created event received', [
