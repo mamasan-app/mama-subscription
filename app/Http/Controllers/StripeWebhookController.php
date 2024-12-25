@@ -83,9 +83,19 @@ class StripeWebhookController extends Controller
                     'stripe_subscription_id' => $session->subscription,
                     'status' => 'active',
                 ]);
+
+                Log::info('Subscription updated', [
+                    'subscription_id' => $subscription->id,
+                    'stripe_subscription_id' => $session->subscription,
+                ]);
+            } else {
+                Log::error('Subscription not found', ['subscription_id' => $subscriptionId]);
             }
+        } else {
+            Log::error('Subscription ID missing in session metadata', ['session' => $session]);
         }
     }
+
 
     protected function handleAsyncPaymentSucceeded($session)
     {
