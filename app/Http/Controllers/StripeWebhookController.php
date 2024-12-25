@@ -192,17 +192,36 @@ class StripeWebhookController extends Controller
             return;
         }
 
-        Payment::updateOrCreate(
-            ['stripe_invoice_id' => $invoice->id],
-            [
-                'subscription_id' => $subscription->id,
-                'status' => 'pending',
-                'amount_cents' => $invoice->amount_due ?? 0,
-                'due_date' => isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null,
-            ]
-        );
+        try {
+            $payment = Payment::where('stripe_invoice_id', $invoice->id)->first();
 
-        Log::info("Payment created or updated for invoice ID: {$invoice->id}");
+            if (!$payment) {
+                $payment = Payment::create([
+                    'stripe_invoice_id' => $invoice->id,
+                    'subscription_id' => $subscription->id,
+                    'status' => 'pending',
+                    'amount_cents' => $invoice->amount_due ?? 0,
+                    'due_date' => isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null,
+                ]);
+            } else {
+                $payment->update([
+                    'subscription_id' => $subscription->id,
+                    'status' => 'pending',
+                    'amount_cents' => $invoice->amount_due ?? 0,
+                    'due_date' => isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null,
+                ]);
+            }
+
+            Log::info("Payment created or updated for invoice ID: {$invoice->id}", [
+                'payment_id' => $payment->id,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error creating or updating payment', [
+                'invoice_id' => $invoice->id,
+                'exception' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
     }
 
     protected function handleInvoiceUpdated($invoice)
