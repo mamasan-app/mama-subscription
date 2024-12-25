@@ -243,29 +243,27 @@ class StripeWebhookController extends Controller
         $subscriptionId = $invoice->subscription ?? null;
         if (!$subscriptionId) {
             Log::error('No subscription ID found in invoice');
-            return response('No subscription ID', 400);
+            return;
         }
 
         $subscription = Subscription::where('stripe_subscription_id', $subscriptionId)->first();
 
         if (!$subscription) {
             Log::error("Subscription not found for Stripe subscription ID: {$subscriptionId}");
-            return response('Subscription not found', 400);
+            return;
         }
 
-        try {
-            Payment::create([
-                'stripe_invoice_id' => $invoice->id,
+        Payment::updateOrCreate(
+            ['stripe_invoice_id' => $invoice->id],
+            [
                 'subscription_id' => $subscription->id,
                 'status' => 'pending',
                 'amount_cents' => $invoice->amount_due ?? 0,
                 'due_date' => isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null,
-            ]);
-            Log::info("Payment created successfully for invoice ID: {$invoice->id}");
-        } catch (\Exception $e) {
-            Log::error("Failed to create payment for invoice ID: {$invoice->id}. Error: {$e->getMessage()}");
-            return response('Error creating payment', 500);
-        }
+            ]
+        );
+
+        Log::info("Payment created or updated for invoice ID: {$invoice->id}");
     }
 
 
@@ -285,8 +283,6 @@ class StripeWebhookController extends Controller
             Log::warning("Payment not found for invoice ID: {$invoice->id}");
         }
     }
-
-
 
     protected function handleInvoiceUpdated($invoice)
     {
@@ -310,10 +306,7 @@ class StripeWebhookController extends Controller
         $payment = Payment::where('stripe_invoice_id', $invoice->id)->first();
 
         if ($payment) {
-            $payment->update([
-                'status' => 'completed',
-                'paid_date' => now(),
-            ]);
+            $payment->markAsPaid();
         }
     }
 
@@ -324,9 +317,7 @@ class StripeWebhookController extends Controller
         $payment = Payment::where('stripe_invoice_id', $invoice->id)->first();
 
         if ($payment) {
-            $payment->update([
-                'status' => 'failed',
-            ]);
+            $payment->update(['status' => 'failed']);
         }
     }
 
