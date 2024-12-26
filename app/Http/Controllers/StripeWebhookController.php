@@ -93,7 +93,7 @@ class StripeWebhookController extends Controller
             }
         } else {
             Log::error('Subscription ID missing in session metadata', ['session' => $session]);
-        }ñ
+        }
     }
 
 
