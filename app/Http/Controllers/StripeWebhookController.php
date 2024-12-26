@@ -333,7 +333,17 @@ class StripeWebhookController extends Controller
     {
         Log::info('Payment Intent succeeded', ['payment_intent' => $paymentIntent]);
 
-        $this->updateTransactionStatus($paymentIntent, TransactionStatusEnum::Succeeded);
+        $invoiceId = $paymentIntent->invoice ?? null;
+        if ($invoiceId) {
+            $payment = Payment::where('stripe_invoice_id', $invoiceId)->first();
+
+            if ($payment) {
+                $this->updateTransactionStatus($paymentIntent, TransactionStatusEnum::Succeeded);
+            } else {
+                Transaction::createFromPaymentIntent($paymentIntent, $payment);
+                $this->updateTransactionStatus($paymentIntent, TransactionStatusEnum::Succeeded);
+            }
+        }
     }
 
     protected function handlePaymentIntentFailed($paymentIntent)
