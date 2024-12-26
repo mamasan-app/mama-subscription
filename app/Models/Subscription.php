@@ -193,11 +193,4 @@ class Subscription extends Model
         );
     }
 
-    public function stripeSubscriptionId(): Attribute
-    {
-        return Attribute::make(
-            get: fn() => $this->stripe_subscription_id,
-        );
-    }
-
 }

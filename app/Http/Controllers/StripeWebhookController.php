@@ -93,7 +93,7 @@ class StripeWebhookController extends Controller
             }
         } else {
             Log::error('Subscription ID missing in session metadata', ['session' => $session]);
-        }
+        }ñ
     }
 
 
@@ -203,7 +203,7 @@ class StripeWebhookController extends Controller
 
         // Buscar la suscripción en la base de datos
         Log::info('Searching for subscription', ['stripe_subscription_id' => $subscriptionId]);
-        $subscription = Subscription::where('stripe_subscription_id', $subscriptionId)->first();
+        $subscription = Subscription::where('stripe_subscription_id', $invoice->subscription)->first();
 
         if (!$subscription) {
             Log::error('Subscription not found in database', [
