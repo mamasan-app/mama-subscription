@@ -194,16 +194,13 @@ class StripeWebhookController extends Controller
         ]);
 
         $subscriptionId = $invoice->subscription ?? null;
+
         if (!$subscriptionId) {
-            Log::error('No subscription ID found in invoice', [
-                'invoice_id' => $invoice->id ?? 'N/A',
-            ]);
+            Log::error('No subscription ID found in invoice', ['invoice_id' => $invoice->id ?? 'N/A']);
             return;
         }
 
-        // Buscar la suscripción en la base de datos
-        Log::info('Searching for subscription', ['stripe_subscription_id' => $subscriptionId]);
-        $subscription = Subscription::where('stripe_subscription_id', $invoice->subscription)->first();
+        $subscription = Subscription::where('stripe_subscription_id', $subscriptionId)->first();
 
         if (!$subscription) {
             Log::error('Subscription not found in database', [
@@ -219,46 +216,26 @@ class StripeWebhookController extends Controller
         ]);
 
         try {
-            // Buscar si ya existe un registro de Payment
-            Log::info('Searching for existing payment', [
-                'stripe_invoice_id' => $invoice->id,
-            ]);
-            $payment = Payment::where('stripe_invoice_id', $invoice->id)->first();
+            $payment = Payment::updateOrCreate(
+                ['stripe_invoice_id' => $invoice->id],
+                [
+                    'subscription_id' => $subscription->id,
+                    'status' => 'pending',
+                    'amount_cents' => $invoice->amount_due ?? 0,
+                    'due_date' => isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null,
+                ]
+            );
 
-            if (!$payment) {
-                Log::info('No existing payment found. Creating new payment...', [
-                    'stripe_invoice_id' => $invoice->id,
-                ]);
-                $payment = Payment::create([
-                    'stripe_invoice_id' => $invoice->id,
-                    'subscription_id' => $subscription->id,
-                    'status' => 'pending',
-                    'amount_cents' => $invoice->amount_due ?? 0,
-                    'due_date' => isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null,
-                ]);
-                Log::info('Payment created successfully', ['payment_id' => $payment->id]);
-            } else {
-                Log::info('Existing payment found. Updating payment...', [
-                    'payment_id' => $payment->id,
-                    'stripe_invoice_id' => $invoice->id,
-                ]);
-                $payment->update([
-                    'subscription_id' => $subscription->id,
-                    'status' => 'pending',
-                    'amount_cents' => $invoice->amount_due ?? 0,
-                    'due_date' => isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null,
-                ]);
-                Log::info('Payment updated successfully', ['payment_id' => $payment->id]);
-            }
+            Log::info('Payment processed', ['payment_id' => $payment->id]);
         } catch (\Exception $e) {
             Log::error('Exception occurred while creating or updating payment', [
                 'invoice_id' => $invoice->id,
                 'exception_message' => $e->getMessage(),
-                'exception_trace' => $e->getTraceAsString(),
             ]);
             throw $e;
         }
     }
+
 
     protected function handleInvoiceUpdated($invoice)
     {
