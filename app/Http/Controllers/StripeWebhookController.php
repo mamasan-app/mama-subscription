@@ -62,6 +62,22 @@ class StripeWebhookController extends Controller
                 $this->handleInvoicePaymentFailed($eventData);
                 break;
 
+            case 'payment_intent.created':
+                $this->handlePaymentIntentCreated($eventData);
+                break;
+            case 'payment_intent.processing':
+                $this->handlePaymentIntentProcessing($eventData);
+                break;
+            case 'payment_intent.succeeded':
+                $this->handlePaymentIntentSucceeded($eventData);
+                break;
+            case 'payment_intent.payment_failed':
+                $this->handlePaymentIntentFailed($eventData);
+                break;
+            case 'payment_intent.canceled':
+                $this->handlePaymentIntentCanceled($eventData);
+                break;
+
             default:
                 Log::info("Unhandled event type: {$eventType}");
         }
@@ -254,7 +270,7 @@ class StripeWebhookController extends Controller
         }
     }
 
-    
+
 
     protected function handleInvoicePaymentSucceeded($invoice)
     {
@@ -275,6 +291,67 @@ class StripeWebhookController extends Controller
 
         if ($payment) {
             $payment->update(['status' => 'failed']);
+        }
+    }
+
+
+    protected function handlePaymentIntentCreated($paymentIntent)
+    {
+        Log::info('Payment Intent created', ['payment_intent' => $paymentIntent]);
+
+        $invoiceId = $paymentIntent->invoice ?? null;
+        if ($invoiceId) {
+            $payment = Payment::where('stripe_invoice_id', $invoiceId)->first();
+
+            if ($payment) {
+                Transaction::createFromPaymentIntent($paymentIntent, $payment);
+            }
+        }
+    }
+
+    protected function handlePaymentIntentProcessing($paymentIntent)
+    {
+        Log::info('Payment Intent processing', ['payment_intent' => $paymentIntent]);
+
+        $this->updateTransactionStatus($paymentIntent, TransactionStatusEnum::Processing);
+    }
+
+    protected function handlePaymentIntentSucceeded($paymentIntent)
+    {
+        Log::info('Payment Intent succeeded', ['payment_intent' => $paymentIntent]);
+
+        $this->updateTransactionStatus($paymentIntent, TransactionStatusEnum::Succeeded);
+    }
+
+    protected function handlePaymentIntentFailed($paymentIntent)
+    {
+        Log::error('Payment Intent failed', ['payment_intent' => $paymentIntent]);
+
+        $this->updateTransactionStatus($paymentIntent, TransactionStatusEnum::Failed);
+    }
+
+    protected function handlePaymentIntentCanceled($paymentIntent)
+    {
+        Log::warning('Payment Intent canceled', ['payment_intent' => $paymentIntent]);
+
+        $this->updateTransactionStatus($paymentIntent, TransactionStatusEnum::Canceled);
+    }
+
+    protected function updateTransactionStatus($paymentIntent, TransactionStatusEnum $status)
+    {
+        $invoiceId = $paymentIntent->invoice ?? null;
+        if ($invoiceId) {
+            $payment = Payment::where('stripe_invoice_id', $invoiceId)->first();
+
+            if ($payment) {
+                $transaction = Transaction::where('stripe_payment_id', $paymentIntent->id)->first();
+
+                if ($transaction) {
+                    $transaction->update(['status' => $status]);
+                } else {
+                    Transaction::createFromPaymentIntent($paymentIntent, $payment);
+                }
+            }
         }
     }
 
