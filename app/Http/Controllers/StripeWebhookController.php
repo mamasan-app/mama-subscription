@@ -9,6 +9,7 @@ use App\Models\Subscription;
 use App\Models\Transaction;
 use App\Enums\TransactionTypeEnum;
 use App\Enums\TransactionStatusEnum;
+use App\Enums\PaymentStatusEnum;
 use Filament\Notifications\Notification;
 use Stripe\Webhook;
 use Stripe\Exception\SignatureVerificationException;
@@ -262,13 +263,25 @@ class StripeWebhookController extends Controller
         $payment = Payment::where('stripe_invoice_id', $invoice->id)->first();
 
         if ($payment) {
-            $payment->update([
-                'status' => $invoice->status,
-                'amount_cents' => $invoice->amount_due,
-                'due_date' => isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null,
-            ]);
+            try {
+                // Usa el método fromStripeStatus para mapear el estado.
+                $status = PaymentStatusEnum::fromStripeStatus($invoice->status);
+
+                $payment->update([
+                    'status' => $status,
+                    'amount_cents' => $invoice->amount_due,
+                    'due_date' => isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Error al procesar el estado de la factura', [
+                    'invoice_id' => $invoice->id,
+                    'status' => $invoice->status,
+                    'exception_message' => $e->getMessage(),
+                ]);
+            }
         }
     }
+
 
 
 
