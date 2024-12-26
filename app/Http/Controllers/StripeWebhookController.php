@@ -141,7 +141,7 @@ class StripeWebhookController extends Controller
             if ($subscription) {
                 $subscription->update([
                     'status' => 'payment_failed',
-                ]);ñ
+                ]);
                 // Registrar transacción fallida
                 $subscription->transactions()->create([
                     'type' => TransactionTypeEnum::Subscription->value,
