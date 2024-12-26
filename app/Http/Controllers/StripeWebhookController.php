@@ -216,6 +216,8 @@ class StripeWebhookController extends Controller
         ]);
 
         try {
+            $dueDate = isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : now()->addDays(7); // Por ejemplo, 7 días desde ahora
+            
             $payment = Payment::updateOrCreate(
                 ['stripe_invoice_id' => $invoice->id],
                 [
