@@ -31,7 +31,7 @@ enum PaymentStatusEnum: string implements HasLabel
     {
         return match ($stripeStatus) {
             'paid' => self::Completed,
-            'pending_payment', 'unpaid' => self::Pending,
+            'pending_payment', 'unpaid' => self::Pending, // Cambia a un solo caso o usa un array de coincidencias.
             'failed' => self::Failed,
             'void' => self::Cancelled,
             'uncollectible' => self::Uncollectible,
