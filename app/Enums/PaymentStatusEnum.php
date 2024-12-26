@@ -26,4 +26,17 @@ enum PaymentStatusEnum: string implements HasLabel
             self::Uncollectible => 'Incobrable',
         };
     }
+
+    public static function fromStripeStatus(string $stripeStatus): self
+    {
+        return match ($stripeStatus) {
+            'paid' => self::Completed,
+            'pending_payment', 'unpaid' => self::Pending,
+            'failed' => self::Failed,
+            'void' => self::Cancelled,
+            'uncollectible' => self::Uncollectible,
+            default => self::Unknown,
+        };
+    }
+
 }

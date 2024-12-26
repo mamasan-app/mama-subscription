@@ -9,6 +9,7 @@ use App\Models\Subscription;
 use App\Models\Transaction;
 use App\Enums\TransactionTypeEnum;
 use App\Enums\TransactionStatusEnum;
+use App\Enums\PaymentStatusEnum;
 use Filament\Notifications\Notification;
 use Stripe\Webhook;
 use Stripe\Exception\SignatureVerificationException;
@@ -35,7 +36,6 @@ class StripeWebhookController extends Controller
         Log::info("Stripe Webhook received: {$eventType}");
 
         switch ($eventType) {
-            // Checkout events
             case 'checkout.session.completed':
                 $this->handleSessionCompleted($eventData);
                 break;
@@ -48,7 +48,6 @@ class StripeWebhookController extends Controller
             case 'checkout.session.expired':
                 $this->handleSessionExpired($eventData);
                 break;
-
             case 'invoice.created':
                 $this->handleInvoiceCreated($eventData);
                 break;
@@ -61,7 +60,12 @@ class StripeWebhookController extends Controller
             case 'invoice.payment_failed':
                 $this->handleInvoicePaymentFailed($eventData);
                 break;
-
+            case 'invoice.voided':
+                $this->handleInvoiceVoided($eventData);
+                break;
+            case 'invoice.upcoming':
+                $this->handleUpcomingInvoice($eventData);
+                break;
             default:
                 Log::info("Unhandled event type: {$eventType}");
         }
@@ -69,7 +73,64 @@ class StripeWebhookController extends Controller
         return response('Webhook handled', 200);
     }
 
-    // Checkout handlers
+    // Métodos auxiliares
+    private function updateOrCreatePayment($invoice, $status)
+    {
+        $subscriptionId = $invoice->subscription ?? null;
+
+        if (!$subscriptionId) {
+            Log::error('No subscription ID found in invoice', ['invoice_id' => $invoice->id ?? 'N/A']);
+            return null;
+        }
+
+        $subscription = Subscription::where('stripe_subscription_id', $subscriptionId)->first();
+
+        if (!$subscription) {
+            Log::error('Subscription not found', [
+                'stripe_subscription_id' => $subscriptionId,
+                'invoice_id' => $invoice->id ?? 'N/A',
+            ]);
+            return null;
+        }
+
+        $dueDate = isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null;
+
+        return Payment::updateOrCreate(
+            ['stripe_invoice_id' => $invoice->id],
+            [
+                'subscription_id' => $subscription->id,
+                'status' => $status,
+                'amount_cents' => $invoice->amount_due ?? 0,
+                'due_date' => $dueDate,
+            ]
+        );
+    }
+
+    private function sendNotification($title, $body, $type = 'info')
+    {
+        $notification = Notification::make()
+            ->title($title)
+            ->body($body);
+
+        switch ($type) {
+            case 'success':
+                $notification->success();
+                break;
+            case 'warning':
+                $notification->warning();
+                break;
+            case 'danger':
+                $notification->danger();
+                break;
+            default:
+                $notification->info();
+                break;
+        }
+
+        $notification->send();
+    }
+
+    // Métodos de manejo de eventos
     protected function handleSessionCompleted($session)
     {
         Log::info('Checkout session completed', ['session' => $session]);
@@ -88,6 +149,8 @@ class StripeWebhookController extends Controller
                     'subscription_id' => $subscription->id,
                     'stripe_subscription_id' => $session->subscription,
                 ]);
+
+                $this->sendNotification('Pago exitoso', 'Tu suscripción ha sido activada con éxito.', 'success');
             } else {
                 Log::error('Subscription not found', ['subscription_id' => $subscriptionId]);
             }
@@ -95,7 +158,6 @@ class StripeWebhookController extends Controller
             Log::error('Subscription ID missing in session metadata', ['session' => $session]);
         }
     }
-
 
     protected function handleAsyncPaymentSucceeded($session)
     {
@@ -111,7 +173,6 @@ class StripeWebhookController extends Controller
                     'status' => 'active',
                 ]);
 
-                // Registrar transacción exitosa
                 $subscription->transactions()->create([
                     'type' => TransactionTypeEnum::Subscription->value,
                     'status' => TransactionStatusEnum::Succeeded->value,
@@ -119,16 +180,10 @@ class StripeWebhookController extends Controller
                     'metadata' => $session,
                 ]);
 
-                // Notificar al usuario
-                Notification::make()
-                    ->title('Pago exitoso')
-                    ->body('Tu suscripción ha sido activada con éxito.')
-                    ->success()
-                    ->send();
+                $this->sendNotification('Pago exitoso', 'Tu suscripción ha sido activada con éxito.', 'success');
             }
         }
     }
-
 
     protected function handleAsyncPaymentFailed($session)
     {
@@ -139,11 +194,8 @@ class StripeWebhookController extends Controller
         if ($subscriptionId) {
             $subscription = Subscription::find($subscriptionId);
             if ($subscription) {
-                $subscription->update([
-                    'status' => 'payment_failed',
-                ]);
+                $subscription->update(['status' => 'payment_failed']);
 
-                // Registrar transacción fallida
                 $subscription->transactions()->create([
                     'type' => TransactionTypeEnum::Subscription->value,
                     'status' => TransactionStatusEnum::Failed->value,
@@ -151,16 +203,15 @@ class StripeWebhookController extends Controller
                     'metadata' => $session,
                 ]);
 
-                // Notificar al usuario
-                Notification::make()
-                    ->title('Pago fallido')
-                    ->body('No se pudo completar el pago de tu suscripción. Por favor, intenta nuevamente.')
-                    ->danger()
-                    ->send();
+                $this->sendNotification(
+                    'Pago fallido',
+                    'No se pudo completar el pago de tu suscripción. Por favor, intenta nuevamente.',
+                    'danger'
+                );
             }
         }
     }
-
+    
     protected function handleSessionExpired($session)
     {
         Log::warning('Checkout session expired', ['session' => $session]);
@@ -186,71 +237,23 @@ class StripeWebhookController extends Controller
 
     protected function handleInvoiceCreated($invoice)
     {
-        Log::info('Invoice created event received', [
-            'invoice_id' => $invoice->id ?? 'N/A',
-            'subscription_id' => $invoice->subscription ?? 'N/A',
-            'amount_due' => $invoice->amount_due ?? 0,
-            'due_date' => $invoice->due_date ?? 'N/A',
-        ]);
+        Log::info('Invoice created', ['invoice' => $invoice]);
 
-        $subscriptionId = $invoice->subscription ?? null;
+        $payment = $this->updateOrCreatePayment($invoice, PaymentStatusEnum::Pending->value);
 
-        if (!$subscriptionId) {
-            Log::error('No subscription ID found in invoice', ['invoice_id' => $invoice->id ?? 'N/A']);
-            return;
-        }
-
-        $subscription = Subscription::where('stripe_subscription_id', $subscriptionId)->first();
-
-        if (!$subscription) {
-            Log::error('Subscription not found in database', [
-                'stripe_subscription_id' => $subscriptionId,
-                'invoice_id' => $invoice->id ?? 'N/A',
-            ]);
-            return;
-        }
-
-        Log::info('Subscription found', [
-            'subscription_id' => $subscription->id,
-            'stripe_subscription_id' => $subscription->stripe_subscription_id,
-        ]);
-
-        try {
-            $dueDate = isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : now()->addDays(7); // Por ejemplo, 7 días desde ahora
-
-            $payment = Payment::updateOrCreate(
-                ['stripe_invoice_id' => $invoice->id],
-                [
-                    'subscription_id' => $subscription->id,
-                    'status' => 'pending',
-                    'amount_cents' => $invoice->amount_due ?? 0,
-                    'due_date' => $dueDate,
-                ]
-            );
-
-            Log::info('Payment processed', ['payment_id' => $payment->id]);
-        } catch (\Exception $e) {
-            Log::error('Exception occurred while creating or updating payment', [
-                'invoice_id' => $invoice->id,
-                'exception_message' => $e->getMessage(),
-            ]);
-            throw $e;
+        if ($payment) {
+            Log::info('Payment created', ['payment_id' => $payment->id]);
         }
     }
-
 
     protected function handleInvoiceUpdated($invoice)
     {
         Log::info('Invoice updated', ['invoice' => $invoice]);
 
-        $payment = Payment::where('stripe_invoice_id', $invoice->id)->first();
+        $payment = $this->updateOrCreatePayment($invoice, PaymentStatusEnum::fromStripeStatus($invoice->status)->value);
 
         if ($payment) {
-            $payment->update([
-                'status' => $invoice->status,
-                'amount_cents' => $invoice->amount_due,
-                'due_date' => isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null,
-            ]);
+            Log::info('Payment updated', ['payment_id' => $payment->id]);
         }
     }
 
@@ -262,6 +265,7 @@ class StripeWebhookController extends Controller
 
         if ($payment) {
             $payment->markAsPaid();
+            $this->sendNotification('Factura pagada', 'Tu factura ha sido pagada exitosamente.', 'success');
         }
     }
 
@@ -272,10 +276,32 @@ class StripeWebhookController extends Controller
         $payment = Payment::where('stripe_invoice_id', $invoice->id)->first();
 
         if ($payment) {
-            $payment->update(['status' => 'failed']);
+            $payment->update(['status' => PaymentStatusEnum::Failed->value]);
+            $this->sendNotification('Pago fallido', 'El pago de tu factura ha fallado.', 'danger');
         }
     }
 
+    protected function handleInvoiceVoided($invoice)
+    {
+        Log::info('Invoice voided', ['invoice' => $invoice]);
+
+        $payment = Payment::where('stripe_invoice_id', $invoice->id)->first();
+
+        if ($payment) {
+            $payment->update(['status' => PaymentStatusEnum::Cancelled->value]);
+        }
+    }
+
+    protected function handleUpcomingInvoice($invoice)
+    {
+        Log::info('Upcoming invoice', ['invoice' => $invoice]);
+
+        $this->sendNotification(
+            'Factura próxima a vencerse',
+            'Tu factura está próxima a vencerse. Por favor, asegúrate de realizar el pago.',
+            'warning'
+        );
+    }
 }
 
 
