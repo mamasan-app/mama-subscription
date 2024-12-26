@@ -9,7 +9,6 @@ use App\Models\Subscription;
 use App\Models\Transaction;
 use App\Enums\TransactionTypeEnum;
 use App\Enums\TransactionStatusEnum;
-use App\Enums\PaymentStatusEnum;
 use Filament\Notifications\Notification;
 use Stripe\Webhook;
 use Stripe\Exception\SignatureVerificationException;
@@ -97,6 +96,7 @@ class StripeWebhookController extends Controller
         }
     }
 
+
     protected function handleAsyncPaymentSucceeded($session)
     {
         Log::info('Async payment succeeded', ['session' => $session]);
@@ -110,7 +110,6 @@ class StripeWebhookController extends Controller
                     'stripe_subscription_id' => $session->subscription,
                     'status' => 'active',
                 ]);
-    
 
                 // Registrar transacción exitosa
                 $subscription->transactions()->create([
@@ -130,6 +129,7 @@ class StripeWebhookController extends Controller
         }
     }
 
+
     protected function handleAsyncPaymentFailed($session)
     {
         Log::error('Async payment failed', ['session' => $session]);
@@ -142,6 +142,7 @@ class StripeWebhookController extends Controller
                 $subscription->update([
                     'status' => 'payment_failed',
                 ]);
+
                 // Registrar transacción fallida
                 $subscription->transactions()->create([
                     'type' => TransactionTypeEnum::Subscription->value,
@@ -242,22 +243,18 @@ class StripeWebhookController extends Controller
     {
         Log::info('Invoice updated', ['invoice' => $invoice]);
 
-        // Mapear el estado de Stripe al enum PaymentStatusEnum
-        $status = PaymentStatusEnum::fromStripeStatus($invoice->status);
-
         $payment = Payment::where('stripe_invoice_id', $invoice->id)->first();
 
         if ($payment) {
             $payment->update([
-                'status' => $status->value, // Usamos el valor del enum
+                'status' => $invoice->status,
                 'amount_cents' => $invoice->amount_due,
                 'due_date' => isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null,
             ]);
-        } else {
-            Log::warning('Payment not found for Stripe invoice', ['invoice_id' => $invoice->id]);
         }
     }
 
+    
 
     protected function handleInvoicePaymentSucceeded($invoice)
     {
