@@ -310,15 +310,33 @@ class StripeWebhookController extends Controller
 
     protected function handlePaymentIntentCreated($paymentIntent)
     {
-        Log::info('Payment Intent created', ['payment_intent' => $paymentIntent]);
+        Log::info('Payment Intent succeeded', ['payment_intent' => $paymentIntent]);
 
         $invoiceId = $paymentIntent->invoice ?? null;
+
         if ($invoiceId) {
             $payment = Payment::where('stripe_invoice_id', $invoiceId)->first();
 
-            if ($payment) {
-                Transaction::createFromPaymentIntent($paymentIntent, $payment);
+            if (!$payment) {
+                Log::error('Payment no encontrado para PaymentIntent', ['invoice_id' => $invoiceId]);
+                return;
             }
+
+            // Crear o actualizar la transacción
+            Transaction::updateOrCreate(
+                ['stripe_payment_id' => $paymentIntent->id],
+                [
+                    'payment_id' => $payment->id,
+                    'type' => TransactionTypeEnum::Subscription->value,
+                    'status' => TransactionStatusEnum::Processing->value,
+                    'amount_cents' => $paymentIntent->amount_received,
+                    'metadata' => $paymentIntent,
+                ]
+            );
+
+            Log::info('Transacción creada/actualizada con éxito', ['payment_intent_id' => $paymentIntent->id]);
+        } else {
+            Log::error('Invoice ID no encontrado en PaymentIntent', ['payment_intent' => $paymentIntent]);
         }
     }
 
@@ -334,17 +352,33 @@ class StripeWebhookController extends Controller
         Log::info('Payment Intent succeeded', ['payment_intent' => $paymentIntent]);
 
         $invoiceId = $paymentIntent->invoice ?? null;
+
         if ($invoiceId) {
             $payment = Payment::where('stripe_invoice_id', $invoiceId)->first();
 
-            if ($payment) {
-                $this->updateTransactionStatus($paymentIntent, TransactionStatusEnum::Succeeded);
-            } else {
-                Transaction::createFromPaymentIntent($paymentIntent, $payment);
-                $this->updateTransactionStatus($paymentIntent, TransactionStatusEnum::Succeeded);
+            if (!$payment) {
+                Log::error('Payment no encontrado para PaymentIntent', ['invoice_id' => $invoiceId]);
+                return;
             }
+
+            // Crear o actualizar la transacción
+            Transaction::updateOrCreate(
+                ['stripe_payment_id' => $paymentIntent->id],
+                [
+                    'payment_id' => $payment->id,
+                    'type' => TransactionTypeEnum::Subscription->value,
+                    'status' => TransactionStatusEnum::Succeeded->value,
+                    'amount_cents' => $paymentIntent->amount_received,
+                    'metadata' => $paymentIntent,
+                ]
+            );
+
+            Log::info('Transacción creada/actualizada con éxito', ['payment_intent_id' => $paymentIntent->id]);
+        } else {
+            Log::error('Invoice ID no encontrado en PaymentIntent', ['payment_intent' => $paymentIntent]);
         }
     }
+
 
     protected function handlePaymentIntentFailed($paymentIntent)
     {
