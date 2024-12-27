@@ -25,6 +25,7 @@ class Transaction extends Model
         'metadata',
         'payment_id',
         'stripe_payment_id', // Nuevo campo agregado
+        'stripe_invoice_id',
     ];
 
     protected $casts = [

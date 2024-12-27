@@ -227,13 +227,8 @@ class StripeWebhookController extends Controller
             return;
         }
 
-        Log::info('Subscription found', [
-            'subscription_id' => $subscription->id,
-            'stripe_subscription_id' => $subscription->stripe_subscription_id,
-        ]);
-
         try {
-            $dueDate = isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : now()->addDays(7); // Por ejemplo, 7 días desde ahora
+            $dueDate = isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : now()->addDays(7);
 
             $payment = Payment::updateOrCreate(
                 ['stripe_invoice_id' => $invoice->id],
@@ -245,7 +240,11 @@ class StripeWebhookController extends Controller
                 ]
             );
 
-            Log::info('Payment processed', ['payment_id' => $payment->id]);
+            // Actualizar las transacciones con el nuevo payment_id
+            Transaction::where('stripe_invoice_id', $invoice->id)
+                ->update(['payment_id' => $payment->id]);
+
+            Log::info('Payment y transacciones actualizados', ['payment_id' => $payment->id]);
         } catch (\Exception $e) {
             Log::error('Exception occurred while creating or updating payment', [
                 'invoice_id' => $invoice->id,
@@ -254,6 +253,7 @@ class StripeWebhookController extends Controller
             throw $e;
         }
     }
+
 
 
     protected function handleInvoiceUpdated($invoice)
@@ -317,11 +317,6 @@ class StripeWebhookController extends Controller
         if ($invoiceId) {
             $payment = Payment::where('stripe_invoice_id', $invoiceId)->first();
 
-            if (!$payment) {
-                Log::error('Payment no encontrado para PaymentIntent', ['invoice_id' => $invoiceId]);
-                return;
-            }
-
             // Crear o actualizar la transacción
             Transaction::updateOrCreate(
                 ['stripe_payment_id' => $paymentIntent->id],
@@ -331,6 +326,7 @@ class StripeWebhookController extends Controller
                     'status' => TransactionStatusEnum::Processing->value,
                     'amount_cents' => $paymentIntent->amount_received,
                     'metadata' => $paymentIntent,
+                    'stripe_invoice_id' => $invoiceId,
                 ]
             );
 
@@ -356,11 +352,6 @@ class StripeWebhookController extends Controller
         if ($invoiceId) {
             $payment = Payment::where('stripe_invoice_id', $invoiceId)->first();
 
-            if (!$payment) {
-                Log::error('Payment no encontrado para PaymentIntent', ['invoice_id' => $invoiceId]);
-                return;
-            }
-
             // Crear o actualizar la transacción
             Transaction::updateOrCreate(
                 ['stripe_payment_id' => $paymentIntent->id],
@@ -370,6 +361,7 @@ class StripeWebhookController extends Controller
                     'status' => TransactionStatusEnum::Succeeded->value,
                     'amount_cents' => $paymentIntent->amount_received,
                     'metadata' => $paymentIntent,
+                    'stripe_invoice_id' => $invoiceId,
                 ]
             );
 
