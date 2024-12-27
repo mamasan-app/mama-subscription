@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->foreignId('subscription_id')->constrained()->onDelete('cascade'); // Relación con suscripciones
             $table->string('status'); // pendiente, completado, fallido
             $table->integer('amount_cents'); // monto en centavos de dólar
-            $table->date('due_date'); // Fecha de vencimiento
+            $table->date('due_date')->nullable(); // Fecha de vencimiento
             $table->date('paid_date')->nullable(); // Fecha de pago
             $table->timestamps(); // Incluye created_at (fecha de creación) y updated_at
         });

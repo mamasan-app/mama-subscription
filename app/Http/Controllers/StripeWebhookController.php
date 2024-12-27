@@ -331,7 +331,7 @@ class StripeWebhookController extends Controller
         if ($invoiceId) {
             $payment = Payment::where('stripe_invoice_id', $invoiceId)->first();
 
-            $customer = User::where('stripe_customer_id', $customerId)->firts();
+            $customer = User::where('stripe_customer_id', $customerId)->first();
 
             Transaction::create([
                 'from_type' => get_class($customer), // Valor temporal hasta que se cree el invoice
@@ -345,7 +345,7 @@ class StripeWebhookController extends Controller
                 'metadata' => $paymentIntent->toArray(),
                 'payment_id' => $payment ? $payment->id : null,
                 'stripe_payment_id' => $paymentIntent->id,
-                'stripe_invoice_id' => $invoiceId,
+
             ]);
 
 
