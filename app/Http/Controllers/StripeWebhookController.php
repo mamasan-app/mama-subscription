@@ -345,7 +345,7 @@ class StripeWebhookController extends Controller
                 'metadata' => $paymentIntent->toArray(),
                 'payment_id' => $payment ? $payment->id : null,
                 'stripe_payment_id' => $paymentIntent->id,
-
+                'stripe_invoice_id' => $invoiceId,
             ]);
 
 
