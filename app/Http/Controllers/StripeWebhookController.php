@@ -373,21 +373,24 @@ class StripeWebhookController extends Controller
             $payment = Payment::where('stripe_invoice_id', $invoiceId)->first();
 
             $customer = User::where('stripe_customer_id', $customerId)->firts();
-
-            Transaction::create([
-                'from_type' => get_class($customer), // Valor temporal hasta que se cree el invoice
-                'from_id' => $customer ? $customer->id : null, // Asignar el ID del cliente si está disponible
-                'to_type' => null, // Valor temporal hasta que se cree el invoice
-                'to_id' => null, // Valor temporal hasta que se cree el invoice
-                'type' => TransactionTypeEnum::Subscription->value,
-                'status' => Transaction::mapStripeStatusToLocal($paymentIntent->status),
-                'date' => now(),
-                'amount_cents' => $paymentIntent->amount,
-                'metadata' => $paymentIntent->toArray(),
-                'payment_id' => $payment ? $payment->id : null,
-                'stripe_payment_id' => $paymentIntent->id,
-                'stripe_invoice_id' => $invoiceId,
-            ]);
+            if($payment){
+                $this->updateTransactionStatus($paymentIntent, TransactionStatusEnum::Succeeded);
+            }else{
+                Transaction::create([
+                    'from_type' => get_class($customer), // Valor temporal hasta que se cree el invoice
+                    'from_id' => $customer ? $customer->id : null, // Asignar el ID del cliente si está disponible
+                    'to_type' => null, // Valor temporal hasta que se cree el invoice
+                    'to_id' => null, // Valor temporal hasta que se cree el invoice
+                    'type' => TransactionTypeEnum::Subscription->value,
+                    'status' => Transaction::mapStripeStatusToLocal($paymentIntent->status),
+                    'date' => now(),
+                    'amount_cents' => $paymentIntent->amount,
+                    'metadata' => $paymentIntent->toArray(),
+                    'payment_id' => $payment ? $payment->id : null,
+                    'stripe_payment_id' => $paymentIntent->id,
+                    'stripe_invoice_id' => $invoiceId,
+                ]);
+            }
 
             Log::info('Transacción creada/actualizada con éxito', ['payment_intent_id' => $paymentIntent->id]);
         } else {
