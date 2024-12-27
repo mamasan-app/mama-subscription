@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Payment;
 use App\Models\Subscription;
 use App\Models\Transaction;
+use App\Models\User;
 use App\Enums\TransactionTypeEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\PaymentStatusEnum;
@@ -240,11 +241,22 @@ class StripeWebhookController extends Controller
                 ]
             );
 
-            // Actualizar las transacciones con el nuevo payment_id
-            Transaction::where('stripe_invoice_id', $invoice->id)
-                ->update(['payment_id' => $payment->id]);
+            // Obtener todas las transacciones asociadas al invoice
+            $transactions = Transaction::where('stripe_invoice_id', $invoice->id)->get();
 
-            Log::info('Payment y transacciones actualizados', ['payment_id' => $payment->id]);
+            foreach ($transactions as $transaction) {
+                $transaction->update([
+                    'payment_id' => $payment->id,
+                    'to_type' => $subscription->service && $subscription->service->store ? get_class($subscription->service->store) : null,
+                    'to_id' => $subscription->service && $subscription->service->store ? $subscription->service->store->id : null,
+                ]);
+            }
+
+
+            Log::info('Payment y transacciones actualizados', [
+                'payment_id' => $payment->id,
+                'transaction_count' => $transactions->count(),
+            ]);
         } catch (\Exception $e) {
             Log::error('Exception occurred while creating or updating payment', [
                 'invoice_id' => $invoice->id,
@@ -253,6 +265,7 @@ class StripeWebhookController extends Controller
             throw $e;
         }
     }
+
 
 
 
@@ -313,22 +326,28 @@ class StripeWebhookController extends Controller
         Log::info('Payment Intent succeeded', ['payment_intent' => $paymentIntent]);
 
         $invoiceId = $paymentIntent->invoice ?? null;
+        $customerId = $paymentIntent->customer;
 
         if ($invoiceId) {
             $payment = Payment::where('stripe_invoice_id', $invoiceId)->first();
 
-            // Crear o actualizar la transacción
-            Transaction::updateOrCreate(
-                ['stripe_payment_id' => $paymentIntent->id],
-                [
-                    'payment_id' => $payment->id,
-                    'type' => TransactionTypeEnum::Subscription->value,
-                    'status' => TransactionStatusEnum::Processing->value,
-                    'amount_cents' => $paymentIntent->amount_received,
-                    'metadata' => $paymentIntent,
-                    'stripe_invoice_id' => $invoiceId,
-                ]
-            );
+            $customer = User::where('stripe_customer_id', $customerId)->firts();
+
+            Transaction::create([
+                'from_type' => get_class($customer), // Valor temporal hasta que se cree el invoice
+                'from_id' => $customer ? $customer->id : null, // Asignar el ID del cliente si está disponible
+                'to_type' => null, // Valor temporal hasta que se cree el invoice
+                'to_id' => null, // Valor temporal hasta que se cree el invoice
+                'type' => TransactionTypeEnum::Subscription->value,
+                'status' => Transaction::mapStripeStatusToLocal($paymentIntent->status),
+                'date' => now(),
+                'amount_cents' => $paymentIntent->amount,
+                'metadata' => $paymentIntent->toArray(),
+                'payment_id' => $payment ? $payment->id : null,
+                'stripe_payment_id' => $paymentIntent->id,
+                'stripe_invoice_id' => $invoiceId,
+            ]);
+
 
             Log::info('Transacción creada/actualizada con éxito', ['payment_intent_id' => $paymentIntent->id]);
         } else {
@@ -348,22 +367,27 @@ class StripeWebhookController extends Controller
         Log::info('Payment Intent succeeded', ['payment_intent' => $paymentIntent]);
 
         $invoiceId = $paymentIntent->invoice ?? null;
+        $customerId = $paymentIntent->customer;
 
         if ($invoiceId) {
             $payment = Payment::where('stripe_invoice_id', $invoiceId)->first();
 
-            // Crear o actualizar la transacción
-            Transaction::updateOrCreate(
-                ['stripe_payment_id' => $paymentIntent->id],
-                [
-                    'payment_id' => $payment->id,
-                    'type' => TransactionTypeEnum::Subscription->value,
-                    'status' => TransactionStatusEnum::Succeeded->value,
-                    'amount_cents' => $paymentIntent->amount_received,
-                    'metadata' => $paymentIntent,
-                    'stripe_invoice_id' => $invoiceId,
-                ]
-            );
+            $customer = User::where('stripe_customer_id', $customerId)->firts();
+
+            Transaction::create([
+                'from_type' => get_class($customer), // Valor temporal hasta que se cree el invoice
+                'from_id' => $customer ? $customer->id : null, // Asignar el ID del cliente si está disponible
+                'to_type' => null, // Valor temporal hasta que se cree el invoice
+                'to_id' => null, // Valor temporal hasta que se cree el invoice
+                'type' => TransactionTypeEnum::Subscription->value,
+                'status' => Transaction::mapStripeStatusToLocal($paymentIntent->status),
+                'date' => now(),
+                'amount_cents' => $paymentIntent->amount,
+                'metadata' => $paymentIntent->toArray(),
+                'payment_id' => $payment ? $payment->id : null,
+                'stripe_payment_id' => $paymentIntent->id,
+                'stripe_invoice_id' => $invoiceId,
+            ]);
 
             Log::info('Transacción creada/actualizada con éxito', ['payment_intent_id' => $paymentIntent->id]);
         } else {
