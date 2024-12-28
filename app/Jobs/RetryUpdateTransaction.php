@@ -20,6 +20,9 @@ class RetryUpdateTransaction implements ShouldQueue
     public $status;
     public $attempts;
 
+    public $tries = 5;
+
+
     /**
      * Create a new job instance.
      *
@@ -39,34 +42,50 @@ class RetryUpdateTransaction implements ShouldQueue
      */
     public function handle()
     {
-        $invoiceId = $this->paymentIntent->invoice ?? null;
+        try {
+            $invoiceId = $this->paymentIntent->invoice ?? null;
 
-        if ($invoiceId) {
+            if (!$invoiceId) {
+                Log::error('Invoice ID missing from PaymentIntent on retry', [
+                    'payment_intent_id' => $this->paymentIntent->id,
+                ]);
+                return;
+            }
+
             $payment = Payment::where('stripe_invoice_id', $invoiceId)->first();
 
-            if ($payment) {
-                $transactions = Transaction::where('stripe_invoice_id', $invoiceId)->get();
+            if (!$payment) {
+                Log::warning('Payment not found, re-scheduling retry', [
+                    'invoice_id' => $invoiceId,
+                ]);
 
-                foreach ($transactions as $transaction) {
-                    $transaction->update(['status' => $this->status]);
-
-                    Log::info('Transaction updated (retry)', [
-                        'transaction_id' => $transaction->id,
-                        'status' => $this->status,
-                    ]);
-                }
-            } else {
-                // Si el intento falla nuevamente, vuelve a reintentar hasta un máximo de 5 veces
-                if ($this->attempts < 5) {
-                    Log::warning('Payment not found, re-scheduling retry', ['invoice_id' => $invoiceId, 'attempt' => $this->attempts]);
-                    RetryUpdateTransaction::dispatch($this->paymentIntent, $this->status, $this->attempts + 1)
-                        ->delay(now()->addSeconds(30));
-                } else {
-                    Log::error('Payment not found after maximum retries', ['invoice_id' => $invoiceId]);
-                }
+                RetryUpdateTransaction::dispatch($this->paymentIntent, $this->status)
+                    ->delay(now()->addSeconds(30));
+                return;
             }
-        } else {
-            Log::error('Invoice ID missing from PaymentIntent on retry', ['payment_intent_id' => $this->paymentIntent->id]);
+
+            // Actualizar transacciones en bulk
+            $updated = Transaction::where('stripe_invoice_id', $invoiceId)
+                ->where('status', '!=', $this->status->value)
+                ->update(['status' => $this->status]);
+
+            if ($updated) {
+                Log::info('Transactions updated (bulk)', [
+                    'invoice_id' => $invoiceId,
+                    'new_status' => $this->status,
+                ]);
+            } else {
+                Log::info('No transactions required update', [
+                    'invoice_id' => $invoiceId,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception during transaction update', [
+                'message' => $e->getMessage(),
+                'payment_intent_id' => $this->paymentIntent->id,
+            ]);
+            throw $e;
         }
     }
+
 }

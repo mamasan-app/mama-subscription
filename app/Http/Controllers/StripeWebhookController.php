@@ -398,33 +398,44 @@ class StripeWebhookController extends Controller
     }
 
 
+
     protected function updateTransactionStatus($paymentIntent, TransactionStatusEnum $status)
     {
         $invoiceId = $paymentIntent->invoice ?? null;
 
         if ($invoiceId) {
-            $payment = Payment::where('stripe_invoice_id', $invoiceId)->first();
+            // Busca todas las transacciones relacionadas con el invoice
+            $transactions = Transaction::where('stripe_invoice_id', $invoiceId)->get();
 
-            if ($payment) {
-                $transactions = Transaction::where('stripe_invoice_id', $invoiceId)->get();
+            if ($transactions->isEmpty()) {
+                Log::info('No transactions found for invoice, scheduling retry', ['invoice_id' => $invoiceId]);
 
-                foreach ($transactions as $transaction) {
-                    $transaction->update(['status' => $status]);
-                    Log::info('Transaction updated', [
-                        'transaction_id' => $transaction->id,
-                        'status' => $status,
-                    ]);
-                }
-            } else {
-                // Despachar el Job para reintentar en 30 segundos
-                Log::warning('Payment not found, scheduling retry', ['invoice_id' => $invoiceId]);
+                // Encolar un trabajo para reintentar más tarde
                 RetryUpdateTransaction::dispatch($paymentIntent, $status)
                     ->delay(now()->addSeconds(30));
+
+                return;
+            }
+
+            // Actualiza todas las transacciones asociadas
+            foreach ($transactions as $transaction) {
+                $transaction->update(['status' => $status]);
+
+                Log::info('Transaction updated', [
+                    'transaction_id' => $transaction->id,
+                    'status' => $status,
+                ]);
             }
         } else {
-            Log::error('Invoice ID missing from PaymentIntent', ['payment_intent_id' => $paymentIntent->id]);
+            Log::error('Invoice ID missing from PaymentIntent, scheduling retry', ['payment_intent_id' => $paymentIntent->id]);
+
+            // Encolar un trabajo para reintentar más tarde si falta el invoice ID
+            RetryUpdateTransaction::dispatch($paymentIntent, $status)
+                ->delay(now()->addSeconds(30));
         }
     }
+
+
 
 
 
