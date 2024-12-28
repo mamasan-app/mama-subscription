@@ -366,21 +366,39 @@ class StripeWebhookController extends Controller
 
     protected function handlePaymentIntentSucceeded($paymentIntent)
     {
-        Log::info('Payment Intent succeeded', ['payment_intent' => $paymentIntent]);
+        Log::info('Handling payment_intent.succeeded', ['payment_intent' => $paymentIntent]);
 
         $invoiceId = $paymentIntent->invoice ?? null;
-        $customerId = $paymentIntent->customer;
 
         if ($invoiceId) {
-            $payment = Payment::where('stripe_invoice_id', $invoiceId)->first();
-            if ($payment) {
-                $this->updateTransactionStatus($paymentIntent, TransactionStatusEnum::Succeeded);
+            $transactions = Transaction::where('stripe_invoice_id', $invoiceId)->get();
+
+            if ($transactions->isEmpty()) {
+                Log::info('No transactions found for invoice, scheduling retry', ['invoice_id' => $invoiceId]);
+
+                // Encolar un trabajo para reintentar más tarde
+                RetryUpdateTransaction::dispatch($paymentIntent, TransactionStatusEnum::Succeeded)
+                    ->delay(now()->addSeconds(30));
+
+                return;
             }
-            Log::info('Transacción creada/actualizada con éxito', ['payment_intent_id' => $paymentIntent->id]);
+
+            // Actualiza todas las transacciones asociadas
+            foreach ($transactions as $transaction) {
+                $transaction->update(['status' => TransactionStatusEnum::Succeeded->value]);
+
+                Log::info('Transaction updated', [
+                    'transaction_id' => $transaction->id,
+                    'status' => TransactionStatusEnum::Succeeded->value,
+                ]);
+            }
+
+            Log::info('Transaction updated to succeeded', ['transaction_id' => $transaction->id]);
         } else {
-            Log::error('Invoice ID no encontrado en PaymentIntent', ['payment_intent' => $paymentIntent]);
+            Log::error('Invoice ID missing from PaymentIntent', ['payment_intent_id' => $paymentIntent->id]);
         }
     }
+
 
 
     protected function handlePaymentIntentFailed($paymentIntent)
@@ -411,8 +429,7 @@ class StripeWebhookController extends Controller
                 Log::info('No transactions found for invoice, scheduling retry', ['invoice_id' => $invoiceId]);
 
                 // Encolar un trabajo para reintentar más tarde
-                RetryUpdateTransaction::dispatch($paymentIntent, $status)
-                    ->delay(now()->addSeconds(30));
+
 
                 return;
             }
