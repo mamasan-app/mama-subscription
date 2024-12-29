@@ -8,6 +8,7 @@ use App\Models\Payment;
 use App\Models\Subscription;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\Store;
 use App\Enums\TransactionTypeEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\PaymentStatusEnum;
@@ -269,8 +270,6 @@ class StripeWebhookController extends Controller
     }
 
 
-
-
     protected function handleInvoiceUpdated($invoice)
     {
         Log::info('Invoice updated', ['invoice' => $invoice]);
@@ -297,9 +296,6 @@ class StripeWebhookController extends Controller
         }
     }
 
-
-
-
     protected function handleInvoicePaymentSucceeded($invoice)
     {
         Log::info('Invoice payment succeeded', ['invoice' => $invoice]);
@@ -322,7 +318,6 @@ class StripeWebhookController extends Controller
         }
     }
 
-
     protected function handlePaymentIntentCreated($paymentIntent)
     {
         Log::info('Payment Intent succeeded', ['payment_intent' => $paymentIntent]);
@@ -334,23 +329,40 @@ class StripeWebhookController extends Controller
 
         if ($invoiceId && !$transaction) {
             $payment = Payment::where('stripe_invoice_id', $invoiceId)->first();
-
             $customer = User::where('stripe_customer_id', $customerId)->first();
-
-            Transaction::create([
-                'from_type' => get_class($customer), // Valor temporal hasta que se cree el invoice
-                'from_id' => $customer ? $customer->id : null, // Asignar el ID del cliente si está disponible
-                'to_type' => null, // Valor temporal hasta que se cree el invoice
-                'to_id' => null, // Valor temporal hasta que se cree el invoice
-                'type' => TransactionTypeEnum::Subscription->value,
-                'status' => Transaction::mapStripeStatusToLocal($paymentIntent->status),
-                'date' => now(),
-                'amount_cents' => $paymentIntent->amount,
-                'metadata' => $paymentIntent->toArray(),
-                'payment_id' => $payment ? $payment->id : null,
-                'stripe_payment_id' => $paymentIntent->id,
-                'stripe_invoice_id' => $invoiceId,
-            ]);
+            if ($payment) {
+                $subscription = Subscription::where('id', $payment->subscription_id)->first();
+                $store = Store::where('id', $subscription->store_id)->first();
+                Transaction::create([
+                    'from_type' => get_class($customer), // Valor temporal hasta que se cree el invoice
+                    'from_id' => $customer ? $customer->id : null, // Asignar el ID del cliente si está disponible
+                    'to_type' => get_class($store), // Valor temporal hasta que se cree el invoice
+                    'to_id' => $store, // Valor temporal hasta que se cree el invoice
+                    'type' => TransactionTypeEnum::Subscription->value,
+                    'status' => Transaction::mapStripeStatusToLocal($paymentIntent->status),
+                    'date' => now(),
+                    'amount_cents' => $paymentIntent->amount,
+                    'metadata' => $paymentIntent->toArray(),
+                    'payment_id' => $payment ? $payment->id : null,
+                    'stripe_payment_id' => $paymentIntent->id,
+                    'stripe_invoice_id' => $invoiceId,
+                ]);
+            } else {
+                Transaction::create([
+                    'from_type' => get_class($customer), // Valor temporal hasta que se cree el invoice
+                    'from_id' => $customer ? $customer->id : null, // Asignar el ID del cliente si está disponible
+                    'to_type' => null, // Valor temporal hasta que se cree el invoice
+                    'to_id' => null, // Valor temporal hasta que se cree el invoice
+                    'type' => TransactionTypeEnum::Subscription->value,
+                    'status' => Transaction::mapStripeStatusToLocal($paymentIntent->status),
+                    'date' => now(),
+                    'amount_cents' => $paymentIntent->amount,
+                    'metadata' => $paymentIntent->toArray(),
+                    'payment_id' => $payment ? $payment->id : null,
+                    'stripe_payment_id' => $paymentIntent->id,
+                    'stripe_invoice_id' => $invoiceId,
+                ]);
+            }
             Log::info('Transacción creada/actualizada con éxito', ['payment_intent_id' => $paymentIntent->id]);
         } else {
             Log::error('Invoice ID no encontrado en PaymentIntent', ['payment_intent' => $paymentIntent]);
@@ -370,13 +382,30 @@ class StripeWebhookController extends Controller
 
         $invoiceId = $paymentIntent->invoice ?? null;
         $customerId = $paymentIntent->customer;
+        $payment = Payment::where('stripe_invoice_id', $invoiceId)->first();
 
         if ($invoiceId) {
-            $payment = Payment::where('stripe_invoice_id', $invoiceId)->first();
-            if ($payment) {
+            $transaction = Transaction::where('stripe_invoice_id', $invoiceId)->first();
+            $customer = User::where('stripe_customer_id', $customerId)->first();
+            if ($transaction) {
                 $this->updateTransactionStatus($paymentIntent, TransactionStatusEnum::Succeeded);
+                Log::info('Transacción creada/actualizada con éxito', ['payment_intent_id' => $paymentIntent->id]);
+            } else {
+                Transaction::create([
+                    'from_type' => get_class($customer), // Valor temporal hasta que se cree el invoice
+                    'from_id' => $customer ? $customer->id : null, // Asignar el ID del cliente si está disponible
+                    'to_type' => null, // Valor temporal hasta que se cree el invoice
+                    'to_id' => null, // Valor temporal hasta que se cree el invoice
+                    'type' => TransactionTypeEnum::Subscription->value,
+                    'status' => Transaction::mapStripeStatusToLocal($paymentIntent->status),
+                    'date' => now(),
+                    'amount_cents' => $paymentIntent->amount,
+                    'metadata' => $paymentIntent->toArray(),
+                    'payment_id' => $payment ? $payment->id : null,
+                    'stripe_payment_id' => $paymentIntent->id,
+                    'stripe_invoice_id' => $invoiceId,
+                ]);
             }
-            Log::info('Transacción creada/actualizada con éxito', ['payment_intent_id' => $paymentIntent->id]);
         } else {
             Log::error('Invoice ID no encontrado en PaymentIntent', ['payment_intent' => $paymentIntent]);
         }
