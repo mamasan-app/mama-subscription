@@ -54,7 +54,7 @@ class UserSubscriptionPayment extends Page
                 ->success()
                 ->send();
 
-            redirect()->route('filament.resources.user-subscriptions.index');
+            redirect(UserSubscriptionResource::getUrl('index'));
 
         } elseif ($filter = request()->query('success') === "0") {
             Notification::make()
