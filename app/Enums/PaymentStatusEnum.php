@@ -14,6 +14,8 @@ enum PaymentStatusEnum: string implements HasLabel
     case Cancelled = 'cancelled'; // La factura fue anulada.
     case Unknown = 'unknown'; // Estado desconocido o no manejado.
     case Uncollectible = 'uncollectible'; // La factura es incobrable.
+    case Finalized = 'finalized'; // La factura ha sido finalizada y está lista.
+
 
     public function getLabel(): ?string
     {
@@ -24,6 +26,7 @@ enum PaymentStatusEnum: string implements HasLabel
             self::Cancelled => 'Cancelado',
             self::Unknown => 'Desconocido',
             self::Uncollectible => 'Incobrable',
+            self::Finalized => 'Finalizada',
         };
     }
 
@@ -35,6 +38,7 @@ enum PaymentStatusEnum: string implements HasLabel
             'failed' => self::Failed,
             'void' => self::Cancelled,
             'uncollectible' => self::Uncollectible,
+            'finalized' => self::Finalized,
             default => self::Unknown,
         };
     }

@@ -66,6 +66,13 @@ class StripeWebhookController extends Controller
             case 'invoice.payment_failed':
                 $this->handleInvoicePaymentFailed($eventData);
                 break;
+            case 'invoice.upcoming':
+                $this->handleInvoiceUpcoming($eventData);
+                break;
+            case 'invoice.finalized':
+                $this->handleInvoiceFinalized($eventData);
+                break;
+
 
             case 'payment_intent.created':
                 $this->handlePaymentIntentCreated($eventData);
@@ -318,6 +325,63 @@ class StripeWebhookController extends Controller
         }
     }
 
+    protected function handleInvoiceUpcoming($invoice)
+    {
+        Log::info('Invoice upcoming', ['invoice_id' => $invoice->id, 'due_date' => $invoice->due_date]);
+
+        $subscriptionId = $invoice->subscription ?? null;
+
+        if (!$subscriptionId) {
+            Log::warning('No subscription ID found in upcoming invoice', ['invoice_id' => $invoice->id]);
+            return;
+        }
+
+        $subscription = Subscription::where('stripe_subscription_id', $subscriptionId)->first();
+
+        if ($subscription) {
+            Notification::make()
+                ->title('Factura próxima a vencerse')
+                ->body('Tienes una factura próxima a vencerse. Fecha límite: ' . now()->setTimestamp($invoice->due_date)->toDateTimeString())
+                ->warning()
+                ->send();
+        } else {
+            Log::warning('Subscription not found for upcoming invoice', ['subscription_id' => $subscriptionId]);
+        }
+    }
+
+
+    protected function handleInvoiceFinalized($invoice)
+    {
+        Log::info('Invoice finalized', ['invoice_id' => $invoice->id]);
+
+        $subscriptionId = $invoice->subscription ?? null;
+
+        if (!$subscriptionId) {
+            Log::warning('No subscription ID found in finalized invoice', ['invoice_id' => $invoice->id]);
+            return;
+        }
+
+        $subscription = Subscription::where('stripe_subscription_id', $subscriptionId)->first();
+
+        if ($subscription) {
+            $payment = Payment::updateOrCreate(
+                ['stripe_invoice_id' => $invoice->id],
+                [
+                    'subscription_id' => $subscription->id,
+                    'status' => PaymentStatusEnum::Finalized->value, // Usando el enum para el estado.
+                    'amount_cents' => $invoice->amount_due ?? 0,
+                    'due_date' => isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null,
+                ]
+            );
+
+            Log::info('Payment updated for finalized invoice', ['payment_id' => $payment->id]);
+        } else {
+            Log::warning('Subscription not found for finalized invoice', ['subscription_id' => $subscriptionId]);
+        }
+    }
+
+
+    //Payment Intent
     protected function handlePaymentIntentCreated($paymentIntent)
     {
         Log::info('Payment Intent succeeded', ['payment_intent' => $paymentIntent]);
@@ -414,16 +478,64 @@ class StripeWebhookController extends Controller
 
     protected function handlePaymentIntentFailed($paymentIntent)
     {
-        Log::error('Payment Intent failed', ['payment_intent' => $paymentIntent]);
+        $invoiceId = $paymentIntent->invoice ?? null;
+        $customerId = $paymentIntent->customer;
+        $payment = Payment::where('stripe_invoice_id', $invoiceId)->first();
 
-        $this->updateTransactionStatus($paymentIntent, TransactionStatusEnum::Failed);
+        if ($invoiceId) {
+            $transaction = Transaction::where('stripe_invoice_id', $invoiceId)->first();
+            $customer = User::where('stripe_customer_id', $customerId)->first();
+            if ($transaction) {
+                $this->updateTransactionStatus($paymentIntent, TransactionStatusEnum::Succeeded);
+                Log::info('Transacción creada/actualizada con éxito', ['payment_intent_id' => $paymentIntent->id]);
+            } else {
+                Transaction::create([
+                    'from_type' => get_class($customer), // Valor temporal hasta que se cree el invoice
+                    'from_id' => $customer ? $customer->id : null, // Asignar el ID del cliente si está disponible
+                    'to_type' => null, // Valor temporal hasta que se cree el invoice
+                    'to_id' => null, // Valor temporal hasta que se cree el invoice
+                    'type' => TransactionTypeEnum::Subscription->value,
+                    'status' => Transaction::mapStripeStatusToLocal($paymentIntent->status),
+                    'date' => now(),
+                    'amount_cents' => $paymentIntent->amount,
+                    'metadata' => $paymentIntent->toArray(),
+                    'payment_id' => $payment ? $payment->id : null,
+                    'stripe_payment_id' => $paymentIntent->id,
+                    'stripe_invoice_id' => $invoiceId,
+                ]);
+            }
+        }
     }
 
     protected function handlePaymentIntentCanceled($paymentIntent)
     {
-        Log::warning('Payment Intent canceled', ['payment_intent' => $paymentIntent]);
+        $invoiceId = $paymentIntent->invoice ?? null;
+        $customerId = $paymentIntent->customer;
+        $payment = Payment::where('stripe_invoice_id', $invoiceId)->first();
 
-        $this->updateTransactionStatus($paymentIntent, TransactionStatusEnum::Canceled);
+        if ($invoiceId) {
+            $transaction = Transaction::where('stripe_invoice_id', $invoiceId)->first();
+            $customer = User::where('stripe_customer_id', $customerId)->first();
+            if ($transaction) {
+                $this->updateTransactionStatus($paymentIntent, TransactionStatusEnum::Succeeded);
+                Log::info('Transacción creada/actualizada con éxito', ['payment_intent_id' => $paymentIntent->id]);
+            } else {
+                Transaction::create([
+                    'from_type' => get_class($customer), // Valor temporal hasta que se cree el invoice
+                    'from_id' => $customer ? $customer->id : null, // Asignar el ID del cliente si está disponible
+                    'to_type' => null, // Valor temporal hasta que se cree el invoice
+                    'to_id' => null, // Valor temporal hasta que se cree el invoice
+                    'type' => TransactionTypeEnum::Subscription->value,
+                    'status' => Transaction::mapStripeStatusToLocal($paymentIntent->status),
+                    'date' => now(),
+                    'amount_cents' => $paymentIntent->amount,
+                    'metadata' => $paymentIntent->toArray(),
+                    'payment_id' => $payment ? $payment->id : null,
+                    'stripe_payment_id' => $paymentIntent->id,
+                    'stripe_invoice_id' => $invoiceId,
+                ]);
+            }
+        }
     }
 
 
