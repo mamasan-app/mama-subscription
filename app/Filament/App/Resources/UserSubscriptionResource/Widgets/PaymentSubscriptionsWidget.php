@@ -29,29 +29,32 @@ class PaymentSubscriptionsWidget extends BaseWidget
                 $this->getQuery()
             )
             ->columns([
-                //Tables\Columns\TextColumn::make('id')
-                //    ->label('ID')
-                //    ->sortable(),
-//
-                //Tables\Columns\TextColumn::make('service_name')
-                //    ->label('Plan')
-                //    ->sortable()
-                //    ->searchable(),
-//
-                //Tables\Columns\TextColumn::make('status')
-                //    ->label('Estado')
-                //    ->sortable()
-                //    ->formatStateUsing(fn($state) => $state?->getLabel()),
-//
-                //Tables\Columns\TextColumn::make('created_at')
-                //    ->label('Fecha de Creación')
-                //    ->dateTime()
-                //    ->sortable(),
-//
-                //Tables\Columns\TextColumn::make('updated_at')
-                //    ->label('Última Actualización')
-                //    ->dateTime()
-                //    ->sortable(),
+                Tables\Columns\TextColumn::make('id')
+                    ->label('ID')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('subscription.id')
+                    ->label('ID Suscripción')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Estado')
+                    ->sortable()
+                    ->formatStateUsing(fn($state) => $state->getLabel()),
+
+                Tables\Columns\TextColumn::make('amount_cents')
+                    ->label('Monto')
+                    ->formatStateUsing(fn($amount) => '$' . number_format($amount / 100, 2)),
+
+                Tables\Columns\TextColumn::make('due_date')
+                    ->label('Fecha de Vencimiento')
+                    ->dateTime()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('paid_date')
+                    ->label('Fecha de Pago')
+                    ->dateTime()
+                    ->sortable(),
             ])
             ->filters([
                 // Puedes añadir filtros aquí si es necesario

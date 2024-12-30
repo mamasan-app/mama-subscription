@@ -53,6 +53,9 @@ class UserSubscriptionPayment extends Page
                 ->body('Tu suscripción se activó correctamente.')
                 ->success()
                 ->send();
+
+            return redirect()->route('filament.resources.user-subscriptions.index');
+
         } elseif ($filter = request()->query('success') === "0") {
             Notification::make()
                 ->title('Pago cancelado')
