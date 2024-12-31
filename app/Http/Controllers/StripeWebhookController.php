@@ -241,32 +241,38 @@ class StripeWebhookController extends Controller
         try {
             $dueDate = isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null;
 
-            $payment = Payment::updateOrCreate(
-                ['stripe_invoice_id' => $invoice->id],
-                [
-                    'subscription_id' => $subscription->id,
-                    'status' => 'pending',
-                    'amount_cents' => $invoice->amount_due ?? 0,
-                    'due_date' => $dueDate,
-                ]
-            );
+            $payment = Payment::where('stripe_invoice_id', $invoice->id)->first();
 
-            // Obtener todas las transacciones asociadas al invoice
-            $transactions = Transaction::where('stripe_invoice_id', $invoice->id)->get();
+            if (!$payment) {
+                $payment = Payment::updateOrCreate(
+                    ['stripe_invoice_id' => $invoice->id],
+                    [
+                        'subscription_id' => $subscription->id,
+                        'status' => 'pending',
+                        'amount_cents' => $invoice->amount_due ?? 0,
+                        'due_date' => $dueDate,
+                    ]
+                );
 
-            foreach ($transactions as $transaction) {
-                $transaction->update([
+                // Obtener todas las transacciones asociadas al invoice
+                $transactions = Transaction::where('stripe_invoice_id', $invoice->id)->get();
+
+                foreach ($transactions as $transaction) {
+                    $transaction->update([
+                        'payment_id' => $payment->id,
+                        'to_type' => $subscription->service && $subscription->service->store ? get_class($subscription->service->store) : null,
+                        'to_id' => $subscription->service && $subscription->service->store ? $subscription->service->store->id : null,
+                    ]);
+                }
+
+
+                Log::info('Payment y transacciones actualizados', [
                     'payment_id' => $payment->id,
-                    'to_type' => $subscription->service && $subscription->service->store ? get_class($subscription->service->store) : null,
-                    'to_id' => $subscription->service && $subscription->service->store ? $subscription->service->store->id : null,
+                    'transaction_count' => $transactions->count(),
                 ]);
+
             }
 
-
-            Log::info('Payment y transacciones actualizados', [
-                'payment_id' => $payment->id,
-                'transaction_count' => $transactions->count(),
-            ]);
         } catch (\Exception $e) {
             Log::error('Exception occurred while creating or updating payment', [
                 'invoice_id' => $invoice->id,
@@ -300,6 +306,44 @@ class StripeWebhookController extends Controller
                     'exception_message' => $e->getMessage(),
                 ]);
             }
+        } else {
+            $subscriptionId = $invoice->subscription ?? null;
+
+            if (!$subscriptionId) {
+                Log::error('No subscription ID found in invoice', ['invoice_id' => $invoice->id ?? 'N/A']);
+                return;
+            }
+
+            $subscription = Subscription::where('stripe_subscription_id', $subscriptionId)->first();
+
+            $dueDate = isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null;
+
+            $payment = Payment::updateOrCreate(
+                ['stripe_invoice_id' => $invoice->id],
+                [
+                    'subscription_id' => $subscription->id,
+                    'status' => 'pending',
+                    'amount_cents' => $invoice->amount_due ?? 0,
+                    'due_date' => $dueDate,
+                ]
+            );
+
+            // Obtener todas las transacciones asociadas al invoice
+            $transactions = Transaction::where('stripe_invoice_id', $invoice->id)->get();
+
+            foreach ($transactions as $transaction) {
+                $transaction->update([
+                    'payment_id' => $payment->id,
+                    'to_type' => $subscription->service && $subscription->service->store ? get_class($subscription->service->store) : null,
+                    'to_id' => $subscription->service && $subscription->service->store ? $subscription->service->store->id : null,
+                ]);
+            }
+
+
+            Log::info('Payment y transacciones actualizados', [
+                'payment_id' => $payment->id,
+                'transaction_count' => $transactions->count(),
+            ]);
         }
     }
 
@@ -311,6 +355,40 @@ class StripeWebhookController extends Controller
 
         if ($payment) {
             $payment->markAsPaid();
+        } else {
+            $subscriptionId = $invoice->subscription ?? null;
+
+            if (!$subscriptionId) {
+                Log::error('No subscription ID found in invoice', ['invoice_id' => $invoice->id ?? 'N/A']);
+                return;
+            }
+
+            $subscription = Subscription::where('stripe_subscription_id', $subscriptionId)->first();
+
+            $dueDate = isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null;
+
+            $payment = Payment::updateOrCreate(
+                ['stripe_invoice_id' => $invoice->id],
+                [
+                    'subscription_id' => $subscription->id,
+                    'status' => 'pending',
+                    'amount_cents' => $invoice->amount_due ?? 0,
+                    'due_date' => $dueDate,
+                ]
+            );
+
+            // Obtener todas las transacciones asociadas al invoice
+            $transactions = Transaction::where('stripe_invoice_id', $invoice->id)->get();
+
+            foreach ($transactions as $transaction) {
+                $transaction->update([
+                    'payment_id' => $payment->id,
+                    'to_type' => $subscription->service && $subscription->service->store ? get_class($subscription->service->store) : null,
+                    'to_id' => $subscription->service && $subscription->service->store ? $subscription->service->store->id : null,
+                ]);
+            }
+
+            $payment->markAsPaid();
         }
     }
 
@@ -321,6 +399,41 @@ class StripeWebhookController extends Controller
         $payment = Payment::where('stripe_invoice_id', $invoice->id)->first();
 
         if ($payment) {
+            $payment->update(['status' => 'failed']);
+        } else {
+
+            $subscriptionId = $invoice->subscription ?? null;
+
+            if (!$subscriptionId) {
+                Log::error('No subscription ID found in invoice', ['invoice_id' => $invoice->id ?? 'N/A']);
+                return;
+            }
+
+            $subscription = Subscription::where('stripe_subscription_id', $subscriptionId)->first();
+
+            $dueDate = isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null;
+
+            $payment = Payment::updateOrCreate(
+                ['stripe_invoice_id' => $invoice->id],
+                [
+                    'subscription_id' => $subscription->id,
+                    'status' => 'pending',
+                    'amount_cents' => $invoice->amount_due ?? 0,
+                    'due_date' => $dueDate,
+                ]
+            );
+
+            // Obtener todas las transacciones asociadas al invoice
+            $transactions = Transaction::where('stripe_invoice_id', $invoice->id)->get();
+
+            foreach ($transactions as $transaction) {
+                $transaction->update([
+                    'payment_id' => $payment->id,
+                    'to_type' => $subscription->service && $subscription->service->store ? get_class($subscription->service->store) : null,
+                    'to_id' => $subscription->service && $subscription->service->store ? $subscription->service->store->id : null,
+                ]);
+            }
+
             $payment->update(['status' => 'failed']);
         }
     }
