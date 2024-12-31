@@ -452,15 +452,22 @@ class StripeWebhookController extends Controller
         $subscription = Subscription::where('stripe_subscription_id', $subscriptionId)->first();
 
         if ($subscription) {
-            Notification::make()
-                ->title('Factura próxima a vencerse')
-                ->body('Tienes una factura próxima a vencerse. Fecha límite: ' . now()->setTimestamp($invoice->due_date)->toDateTimeString())
-                ->warning()
-                ->send();
+            // Obtener el usuario asociado a la suscripción
+            $user = $subscription->user;
+
+            if ($user) {
+                // Enviar notificación al usuario
+                $user->notify(new \App\Notifications\InvoiceUpcomingNotification($invoice));
+
+                Log::info('Notification sent to user', ['user_id' => $user->id, 'invoice_id' => $invoice->id]);
+            } else {
+                Log::warning('No user found for subscription', ['subscription_id' => $subscriptionId]);
+            }
         } else {
             Log::warning('Subscription not found for upcoming invoice', ['subscription_id' => $subscriptionId]);
         }
     }
+
 
 
     protected function handleInvoiceFinalized($invoice)
