@@ -456,8 +456,11 @@ class StripeWebhookController extends Controller
             $user = $subscription->user;
 
             if ($user) {
+                // Validar que `due_date` no sea null
+                $dueDate = $invoice->due_date ? now()->setTimestamp($invoice->due_date)->toDateTimeString() : 'Sin fecha límite';
+
                 // Enviar notificación al usuario
-                $user->notify(new \App\Notifications\InvoiceUpcomingNotification($invoice));
+                $user->notify(new \App\Notifications\InvoiceUpcomingNotification($invoice, $dueDate));
 
                 Log::info('Notification sent to user', ['user_id' => $user->id, 'invoice_id' => $invoice->id]);
             } else {
@@ -467,6 +470,7 @@ class StripeWebhookController extends Controller
             Log::warning('Subscription not found for upcoming invoice', ['subscription_id' => $subscriptionId]);
         }
     }
+
 
 
 
