@@ -311,20 +311,19 @@ class StripeWebhookController extends Controller
     protected function handleInvoicePaymentSucceeded($invoice)
     {
         Log::info('Invoice payment succeeded', ['invoice' => $invoice]);
+        $subscriptionId = $invoice->subscription ?? null;
 
         $payment = Payment::where('stripe_invoice_id', $invoice->id)->first();
+        $subscription = Subscription::where('stripe_subscription_id', $subscriptionId)->first();
 
         if ($payment) {
             $payment->markAsPaid();
         } else {
-            $subscriptionId = $invoice->subscription ?? null;
 
             if (!$subscriptionId) {
                 Log::error('No subscription ID found in invoice', ['invoice_id' => $invoice->id ?? 'N/A']);
                 return;
             }
-
-            $subscription = Subscription::where('stripe_subscription_id', $subscriptionId)->first();
 
             $dueDate = isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null;
 
