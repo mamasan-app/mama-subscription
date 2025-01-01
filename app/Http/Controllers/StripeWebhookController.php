@@ -9,6 +9,7 @@ use App\Models\Subscription;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Store;
+use App\Models\Plan;
 use App\Enums\TransactionTypeEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\PaymentStatusEnum;
@@ -106,6 +107,7 @@ class StripeWebhookController extends Controller
 
         if ($subscriptionId) {
             $subscription = Subscription::find($subscriptionId);
+
             if ($subscription) {
                 $subscription->update([
                     'stripe_subscription_id' => $session->subscription,
@@ -116,6 +118,36 @@ class StripeWebhookController extends Controller
                     'subscription_id' => $subscription->id,
                     'stripe_subscription_id' => $session->subscription,
                 ]);
+
+                $plan = Plan::find($subscription->service_id);
+
+                if ($plan) {
+                    // Verifica si el plan es finito
+                    if (!$plan->infinite_duration) {
+                        $endDate = now()->addDays($plan->duration)->toDateString();
+
+                        try {
+                            // Actualiza la suscripción en Stripe
+                            \Stripe\Subscription::update($session->subscription, [
+                                'cancel_at' => strtotime($endDate),
+                            ]);
+
+                            Log::info('Stripe subscription updated with cancel_at', [
+                                'stripe_subscription_id' => $session->subscription,
+                                'cancel_at' => $endDate,
+                            ]);
+                        } catch (\Exception $e) {
+                            Log::error('Failed to update Stripe subscription', [
+                                'stripe_subscription_id' => $session->subscription,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
+                    }
+                } else {
+                    Log::error('Plan not found for subscription', [
+                        'service_id' => $subscription->service_id,
+                    ]);
+                }
             } else {
                 Log::error('Subscription not found', ['subscription_id' => $subscriptionId]);
             }
@@ -123,6 +155,7 @@ class StripeWebhookController extends Controller
             Log::error('Subscription ID missing in session metadata', ['session' => $session]);
         }
     }
+
 
 
     protected function handleAsyncPaymentSucceeded($session)
