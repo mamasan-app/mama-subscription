@@ -37,20 +37,36 @@ class StripeService
     public function getOrCreateProduct($service)
     {
         if (!$service->stripe_product_id) {
+            // Crear el producto en Stripe
             $product = Product::create([
                 'name' => $service->name,
                 'description' => $service->description,
+                'metadata' => [
+                    'retry_count' => $service->grace_period,   // Número máximo de reintentos
+                    'retry_interval' => 1, // Intervalo fijo de 1 día
+                ],
             ]);
 
+            // Actualizar el producto en tu base de datos
             $service->update(['stripe_product_id' => $product->id]);
         } else {
+            // Recuperar el producto desde Stripe
             $product = Product::retrieve($service->stripe_product_id);
+
+            // Actualizar metadata si cambió el período de gracia
+            if ($product->metadata->retry_count != $service->grace_period) {
+                $product->metadata = [
+                    'retry_count' => $service->grace_period,
+                    'retry_interval' => 1, // Siempre 1 día
+                ];
+                $product->save();
+            }
         }
 
         return $product;
     }
 
-    public function createPrice($product, $amountCents, $interval, $intervalCount)
+    public function createPrice($product, $amountCents, $interval, $intervalCount, $gracePeriod)
     {
         return Price::create([
             'product' => $product->id,
@@ -59,6 +75,10 @@ class StripeService
             'recurring' => [
                 'interval' => $interval,
                 'interval_count' => $intervalCount,
+            ],
+            'metadata' => [
+                'retry_count' => $gracePeriod,   // Número máximo de reintentos
+                'retry_interval' => 1,          // Intervalo fijo de 1 día
             ],
         ]);
     }
@@ -77,7 +97,11 @@ class StripeService
             'mode' => 'subscription',
             'success_url' => $successUrl,
             'cancel_url' => $cancelUrl,
-            'metadata' => $metadata,
+            'metadata' => array_merge($metadata, [
+                'retry_count' => $price->metadata->retry_count ?? null,  // Número máximo de reintentos
+                'retry_interval' => $price->metadata->retry_interval ?? null, // Intervalo en días
+            ]),
         ]);
     }
+
 }

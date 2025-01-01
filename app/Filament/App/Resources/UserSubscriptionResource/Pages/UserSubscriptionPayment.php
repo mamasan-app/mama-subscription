@@ -72,7 +72,8 @@ class UserSubscriptionPayment extends Page
             $product,
             $this->subscription->service_price_cents,
             $interval,
-            $intervalCount
+            $intervalCount,
+            $this->subscription->service_grace_period,
         );
 
         // Crear la sesión de Stripe Checkout

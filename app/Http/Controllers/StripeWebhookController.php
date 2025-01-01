@@ -360,49 +360,73 @@ class StripeWebhookController extends Controller
 
     protected function handleInvoicePaymentFailed($invoice)
     {
-        Log::error('Invoice payment failed', ['invoice' => $invoice]);
+        Log::info('Handling invoice.payment_failed', ['invoice_id' => $invoice->id]);
 
+        $subscriptionId = $invoice->subscription ?? null;
+        $attemptCount = $invoice->attempt_count ?? 0;
+
+        if (!$subscriptionId) {
+            Log::error('No subscription ID found in invoice', ['invoice_id' => $invoice->id]);
+            return;
+        }
+
+        // Buscar la suscripción local
+        $subscription = Subscription::where('stripe_subscription_id', $subscriptionId)->first();
+
+        if (!$subscription) {
+            Log::error('Subscription not found for invoice', ['invoice_id' => $invoice->id]);
+            return;
+        }
+
+        // Actualizar el estado del pago
         $payment = Payment::where('stripe_invoice_id', $invoice->id)->first();
 
         if ($payment) {
             $payment->update(['status' => 'failed']);
         } else {
-
-            $subscriptionId = $invoice->subscription ?? null;
-
-            if (!$subscriptionId) {
-                Log::error('No subscription ID found in invoice', ['invoice_id' => $invoice->id ?? 'N/A']);
-                return;
-            }
-
-            $subscription = Subscription::where('stripe_subscription_id', $subscriptionId)->first();
-
             $dueDate = isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null;
 
             $payment = Payment::updateOrCreate(
                 ['stripe_invoice_id' => $invoice->id],
                 [
                     'subscription_id' => $subscription->id,
-                    'status' => 'pending',
+                    'status' => 'failed',
                     'amount_cents' => $invoice->amount_due ?? 0,
                     'due_date' => $dueDate,
                 ]
             );
-
-            // Obtener todas las transacciones asociadas al invoice
-            $transactions = Transaction::where('stripe_invoice_id', $invoice->id)->get();
-
-            foreach ($transactions as $transaction) {
-                $transaction->update([
-                    'payment_id' => $payment->id,
-                    'to_type' => $subscription->service && $subscription->service->store ? get_class($subscription->service->store) : null,
-                    'to_id' => $subscription->service && $subscription->service->store ? $subscription->service->store->id : null,
-                ]);
-            }
-
-            $payment->update(['status' => 'failed']);
         }
+
+        // Actualizar transacciones relacionadas
+        $transactions = Transaction::where('stripe_invoice_id', $invoice->id)->get();
+
+        foreach ($transactions as $transaction) {
+            $transaction->update([
+                'payment_id' => $payment->id,
+                'to_type' => $subscription->service && $subscription->service->store ? get_class($subscription->service->store) : null,
+                'to_id' => $subscription->service && $subscription->service->store ? $subscription->service->store->id : null,
+            ]);
+        }
+
+        // Recuperar el período de gracia desde la suscripción
+        $gracePeriod = $subscription->service_grace_period;
+
+        // Despachar el Job para manejar el reintento o cancelación
+        \App\Jobs\RetryInvoicePayment::dispatch(
+            $invoice->id,
+            $gracePeriod,
+            $attemptCount,
+            $subscriptionId
+        )->delay(now()->addDay()); // Reintenta después de 1 día
+
+        Log::info('RetryInvoicePayment job dispatched', [
+            'invoice_id' => $invoice->id,
+            'subscription_id' => $subscriptionId,
+            'attempt_count' => $attemptCount,
+            'grace_period' => $gracePeriod,
+        ]);
     }
+
 
     protected function handleInvoiceUpcoming($invoice)
     {
