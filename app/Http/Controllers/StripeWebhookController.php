@@ -49,6 +49,7 @@ class StripeWebhookController extends Controller
                 $this->handleSessionExpired($eventData);
                 break;
 
+            //Invoice events
             case 'invoice.created':
                 $this->handleInvoiceCreated($eventData);
                 break;
@@ -173,6 +174,7 @@ class StripeWebhookController extends Controller
         }
     }
 
+    //Invoice handlers
     protected function handleInvoiceCreated($invoice)
     {
         Log::info('Invoice created event received', [
@@ -351,10 +353,12 @@ class StripeWebhookController extends Controller
             $payment->markAsPaid();
         }
 
+        $expire_days = $subscription->frequency_days + $subscription->service_grace_period;
+
         $subscription->update([
             'renews_at' => now()->addDays($subscription->frequency_days)->toDateString(),
+            'expires_at' => now()->addDays($expire_days)->toDateString(),
         ]);
-
     }
 
     protected function handleInvoicePaymentFailed($invoice)

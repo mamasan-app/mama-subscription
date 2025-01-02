@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             'last_name' => 'admin',
             'email' => 'admin@gmail.com',
             'password' => '201102',
+            'email_verified_at' => now(),
         ]);
         $admin->assignRole('admin');
 
@@ -33,14 +34,16 @@ class DatabaseSeeder extends Seeder
             'last_name' => 'owner',
             'email' => 'store@gmail.com',
             'password' => '201102',
+            'email_verified_at' => now(),
         ]);
         $owner->assignRole('owner_store');
 
         $customer = User::create([
             'first_name' => 'customer',
             'last_name' => 'customer',
-            'email' => 'customer@gmail.com',
+            'email' => 'moises.liotawork@gmail.com',
             'password' => '201102',
+            'email_verified_at' => now(),
         ]);
         $customer->assignRole('customer');
 
@@ -49,6 +52,7 @@ class DatabaseSeeder extends Seeder
             'last_name' => 'employee',
             'email' => 'employee@gmail.com',
             'password' => '201102',
+            'email_verified_at' => now(),
         ]);
         $employee->assignRole('employee');
         $employee->assignRole('customer');
@@ -73,11 +77,26 @@ class DatabaseSeeder extends Seeder
         $store->users()->attach($employee->id, ['role' => 'customer']);
 
         // Crear frecuencias
+        $daily = Frequency::create(['name' => 'Diaria', 'days_count' => 1]);
         $weekly = Frequency::create(['name' => 'Semanal', 'days_count' => 7]);
         $monthly = Frequency::create(['name' => 'Mensual', 'days_count' => 30]);
         $yearly = Frequency::create(['name' => 'Anual', 'days_count' => 365]);
 
         // Crear planes de suscripción
+        Plan::create([
+            'name' => 'Plan Critico',
+            'description' => 'Acceso limitado a funciones básicas.',
+            'price_cents' => 1000, // $50.00
+            'published' => true,
+            'featured' => false,
+            'store_id' => $store->id,
+            'frequency_id' => $daily->id,
+            'free_days' => 1,
+            'grace_period' => 3,
+            'infinite_duration' => false,
+            'duration' => 6,
+        ]);
+
         Plan::create([
             'name' => 'Plan Básico',
             'description' => 'Acceso limitado a funciones básicas.',
