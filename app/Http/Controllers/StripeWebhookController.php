@@ -110,6 +110,9 @@ class StripeWebhookController extends Controller
     {
         Log::info('Checkout session completed', ['session' => $session]);
 
+        // Configurar la clave API de Stripe
+        \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+
         $subscriptionId = $session->metadata->subscription_id ?? null;
 
         if ($subscriptionId) {
