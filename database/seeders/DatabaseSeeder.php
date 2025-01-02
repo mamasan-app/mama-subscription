@@ -108,7 +108,7 @@ class DatabaseSeeder extends Seeder
             'free_days' => 7,
             'grace_period' => 3,
             'infinite_duration' => false,
-            'duration' => 7,
+            'duration' => 14,
         ]);
 
         Plan::create([
