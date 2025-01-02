@@ -13,6 +13,7 @@ use App\Models\Plan;
 use App\Enums\TransactionTypeEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\PaymentStatusEnum;
+use App\Enums\SubscriptionStatusEnum;
 use App\Jobs\RetryUpdateTransaction;
 use Filament\Notifications\Notification;
 use Stripe\Webhook;
@@ -49,6 +50,17 @@ class StripeWebhookController extends Controller
                 $this->handleSessionExpired($eventData);
                 break;
 
+            //Subscription events
+            case 'customer.subscription.deleted':
+                $this->handleSubscriptionDeleted($eventData);
+                break;
+            case 'customer.subscription.paused':
+                $this->handleSubscriptionPaused($eventData);
+                break;
+            case 'customer.subscription.updated':
+                $this->handleSubscriptionUpdated($eventData);
+                break;
+
             //Invoice events
             case 'invoice.created':
                 $this->handleInvoiceCreated($eventData);
@@ -69,7 +81,7 @@ class StripeWebhookController extends Controller
                 $this->handleInvoiceFinalized($eventData);
                 break;
 
-
+            //Payment Intent events
             case 'payment_intent.created':
                 $this->handlePaymentIntentCreated($eventData);
                 break;
@@ -171,6 +183,61 @@ class StripeWebhookController extends Controller
                     ->warning()
                     ->send();
             }
+        }
+    }
+
+    //Subscription handlers
+    protected function handleSubscriptionUpdated($subscription)
+    {
+        Log::info('Subscription updated in Stripe', ['subscription' => $subscription]);
+
+        $localSubscription = Subscription::where('stripe_subscription_id', $subscription->id)->first();
+
+        if ($localSubscription) {
+            $localSubscription->update([
+                'status' => SubscriptionStatusEnum::from($subscription->status),
+                'renews_at' => isset($subscription->current_period_end) ? now()->setTimestamp($subscription->current_period_end) : null,
+                'expires_at' => isset($subscription->cancel_at) ? now()->setTimestamp($subscription->cancel_at) : null,
+            ]);
+
+            Log::info('Subscription updated in local database', ['subscription_id' => $localSubscription->id]);
+        } else {
+            Log::error('Subscription not found in the database', ['subscription_id' => $subscription->id]);
+        }
+    }
+
+    protected function handleSubscriptionDeleted($subscription)
+    {
+        Log::info('Subscription deleted in Stripe', ['subscription' => $subscription]);
+
+        $localSubscription = Subscription::where('stripe_subscription_id', $subscription->id)->first();
+
+        if ($localSubscription) {
+            $localSubscription->update([
+                'status' => SubscriptionStatusEnum::Cancelled,
+                'ends_at' => now(),
+            ]);
+
+            Log::info('Subscription marked as cancelled in local database', ['subscription_id' => $localSubscription->id]);
+        } else {
+            Log::warning('Subscription not found in the database', ['subscription_id' => $subscription->id]);
+        }
+    }
+
+    protected function handleSubscriptionPaused($subscription)
+    {
+        Log::info('Subscription paused in Stripe', ['subscription' => $subscription]);
+
+        $localSubscription = Subscription::where('stripe_subscription_id', $subscription->id)->first();
+
+        if ($localSubscription) {
+            $localSubscription->update([
+                'status' => SubscriptionStatusEnum::Paused,
+            ]);
+
+            Log::info('Subscription marked as paused in local database', ['subscription_id' => $localSubscription->id]);
+        } else {
+            Log::warning('Subscription not found in the database', ['subscription_id' => $subscription->id]);
         }
     }
 
