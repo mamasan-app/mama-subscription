@@ -49,7 +49,8 @@ class PaymentSubscriptionsWidget extends BaseWidget
                 Tables\Columns\TextColumn::make('paid_date')
                     ->label('Fecha de Pago')
                     ->dateTime()
-                    ->sortable(),
+                    ->sortable()
+                    ->placeholder('No disponible'),
             ])
             ->filters([
 

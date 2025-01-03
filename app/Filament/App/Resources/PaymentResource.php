@@ -66,7 +66,8 @@ class PaymentResource extends Resource
                 Tables\Columns\TextColumn::make('paid_date')
                     ->label('Fecha de Pago')
                     ->dateTime('d/m/Y')
-                    ->sortable(),
+                    ->sortable()
+                    ->placeholder('No disponible'),
             ])
             ->filters([
                 Tables\Filters\Filter::make('Estado: Completado')
@@ -95,74 +96,85 @@ class PaymentResource extends Resource
                         // Pestaña Información del Pago
                         Tab::make('Pago')
                             ->schema([
-                                Group::make()
-                                    ->columns(2)
-                                    ->schema([
-                                        TextEntry::make('stripe_invoice_id')
-                                            ->label('ID de Factura (Stripe)')
-                                            ->placeholder('No disponible'),
-                                        TextEntry::make('amount_cents')
-                                            ->label('Monto (cents)')
-                                            ->getStateUsing(fn($record) => number_format($record->amount_cents / 100, 2) . ' USD'),
-                                        TextEntry::make('status')
-                                            ->label('Estado')
-                                            ->badge()
-                                            ->color(fn($state) => match ($state) {
-                                                'Completed' => 'success',
-                                                'Pending' => 'warning',
-                                                'Cancelled' => 'danger',
-                                                default => 'secondary',
-                                            }),
-                                        TextEntry::make('due_date')
-                                            ->label('Fecha de Vencimiento')
-                                            ->dateTime('d/m/Y'),
-                                        TextEntry::make('paid_date')
-                                            ->label('Fecha de Pago')
-                                            ->dateTime('d/m/Y'),
-                                    ]),
-                            ]),
+                                TextEntry::make('stripe_invoice_id')
+                                    ->label('ID de Factura (Stripe)')
+                                    ->placeholder('No disponible'),
+                                TextEntry::make('amount_cents')
+                                    ->label('Monto')
+                                    ->getStateUsing(fn($record) => number_format($record->amount_cents / 100, 2) . ' USD')
+                                    ->placeholder('No disponible'),
+                                TextEntry::make('status')
+                                    ->label('Estado')
+                                    ->badge()
+                                    ->color(fn($state) => match ($state) {
+                                        'Completado' => 'success',
+                                        'Pendiente' => 'warning',
+                                        'Cancelado' => 'danger',
+                                        default => 'secondary',
+                                    })
+                                    ->placeholder('No disponible'),
+                                TextEntry::make('paid_date')
+                                    ->label('Fecha de Pago')
+                                    ->dateTime('d/m/Y')
+                                    ->placeholder('No disponible'),
+                            ])->columns(2),
+
                         // Pestaña Información de la Suscripción
                         Tab::make('Suscripción')
                             ->schema([
-                                Group::make()
-                                    ->columns(2)
-                                    ->schema([
-                                        TextEntry::make('subscription.service_name')
-                                            ->label('Nombre del Servicio')
-                                            ->placeholder('No disponible'),
-                                        TextEntry::make('subscription.renews_at')
-                                            ->label('Renovación')
-                                            ->dateTime('d/m/Y')
-                                            ->placeholder('No disponible'),
-                                        TextEntry::make('subscription.status')
-                                            ->label('Estado de la Suscripción')
-                                            ->badge()
-                                            ->color(fn($state) => match ($state) {
-                                                'Active' => 'success',
-                                                'OnTrial' => 'info',
-                                                'Cancelled' => 'danger',
-                                                default => 'secondary',
-                                            }),
-                                    ]),
-                            ]),
+                                TextEntry::make('status')
+                                    ->label('Estado')
+                                    ->getStateUsing(fn($record) => $record->status->getLabel())
+                                    ->badge()
+                                    ->color(fn($state) => match ($state) {
+                                        'Activo' => 'success',
+                                        'Cancelado' => 'danger',
+                                        default => 'warning',
+                                    }),
+                                TextEntry::make('trial_ends_at')
+                                    ->label('Fin del Periodo de Prueba')
+                                    ->dateTime()
+                                    ->placeholder('No disponible'),
+                                TextEntry::make('renews_at')
+                                    ->label('Renovación')
+                                    ->dateTime()
+                                    ->placeholder('No disponible'),
+                                TextEntry::make('ends_at')
+                                    ->label('Fecha de Finalización')
+                                    ->dateTime()
+                                    ->placeholder('No disponible'),
+                                TextEntry::make('last_notification_at')
+                                    ->label('Última Notificación')
+                                    ->dateTime()
+                                    ->placeholder('No disponible'),
+                                TextEntry::make('expires_at')
+                                    ->label('Fecha de Expiración')
+                                    ->dateTime()
+                                    ->placeholder('No disponible'),
+                                TextEntry::make('frequency_days')
+                                    ->label('Frecuencia de Pago (días)')
+                                    ->placeholder('No disponible'),
+                            ])->columns(2),
                         // Pestaña Información del Plan
                         Tab::make('Plan')
                             ->schema([
-                                Group::make()
-                                    ->columns(2)
-                                    ->schema([
-                                        TextEntry::make('subscription.service.name')
-                                            ->label('Nombre del Plan')
-                                            ->placeholder('No disponible'),
-                                        TextEntry::make('subscription.service.price_cents')
-                                            ->label('Precio del Plan (cents)')
-                                            ->getStateUsing(fn($record) => number_format($record->subscription->service->price_cents / 100, 2) . ' USD'),
-                                        TextEntry::make('subscription.service.duration')
-                                            ->label('Duración (días)')
-                                            ->placeholder('No disponible'),
-                                    ]),
-                            ]),
-                    ]),
+                                TextEntry::make('service_name')
+                                    ->label('Nombre del Servicio')
+                                    ->placeholder('No disponible'),
+                                TextEntry::make('service_description')
+                                    ->label('Descripción del Servicio')
+                                    ->placeholder('No disponible'),
+                                TextEntry::make('formattedServicePrice')
+                                    ->label('Precio del Servicio')
+                                    ->placeholder('No disponible'),
+                                TextEntry::make('service_free_days')
+                                    ->label('Días Gratis')
+                                    ->placeholder('No disponible'),
+                                TextEntry::make('service_grace_period')
+                                    ->label('Período de Gracia')
+                                    ->placeholder('No disponible'),
+                            ])->columns(2),
+                    ])->columnSpanFull(),
             ]);
     }
 
