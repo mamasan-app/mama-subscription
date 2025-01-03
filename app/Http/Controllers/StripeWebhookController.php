@@ -199,9 +199,14 @@ class StripeWebhookController extends Controller
         if ($localSubscription) {
             $localSubscription->update([
                 'status' => SubscriptionStatusEnum::from($subscription->status),
-                'renews_at' => isset($subscription->current_period_end) ? now()->setTimestamp($subscription->current_period_end) : null,
-                'expires_at' => isset($subscription->cancel_at) ? now()->setTimestamp($subscription->cancel_at) : null,
+                'renews_at' => isset($subscription->current_period_end)
+                    ? now()->setTimestamp($subscription->current_period_end)->subDay()
+                    : null,
+                'expires_at' => isset($subscription->cancel_at)
+                    ? now()->setTimestamp($subscription->cancel_at)->subDay()
+                    : null,
             ]);
+
 
             Log::info('Subscription updated in local database', ['subscription_id' => $localSubscription->id]);
         } else {
