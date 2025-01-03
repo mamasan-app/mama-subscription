@@ -106,12 +106,7 @@ class PaymentResource extends Resource
                                 TextEntry::make('status')
                                     ->label('Estado')
                                     ->badge()
-                                    ->color(fn($state) => match ($state) {
-                                        'Completado' => 'success',
-                                        'Pendiente' => 'warning',
-                                        'Cancelado' => 'danger',
-                                        default => 'secondary',
-                                    })
+                                    ->color(fn($record) => $record->status->getColor())
                                     ->placeholder('No disponible'),
                                 TextEntry::make('paid_date')
                                     ->label('Fecha de Pago')
@@ -126,11 +121,7 @@ class PaymentResource extends Resource
                                     ->label('Estado')
                                     ->getStateUsing(fn($record) => $record->status->getLabel())
                                     ->badge()
-                                    ->color(fn($state) => match ($state) {
-                                        'Activo' => 'success',
-                                        'Cancelado' => 'danger',
-                                        default => 'warning',
-                                    }),
+                                    ->color(fn($record) => $record->status->getColor()),
                                 TextEntry::make('trial_ends_at')
                                     ->label('Fin del Periodo de Prueba')
                                     ->dateTime()

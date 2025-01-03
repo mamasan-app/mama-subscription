@@ -43,4 +43,16 @@ enum PaymentStatusEnum: string implements HasLabel
         };
     }
 
+    public function getColor(): string
+    {
+        return match ($this) {
+            self::Pending => 'warning',
+            self::Completed => 'success',
+            self::Failed, self::Cancelled => 'danger',
+            self::Uncollectible => 'secondary',
+            default => 'secondary',
+        };
+    }
+
+
 }
