@@ -35,14 +35,9 @@ class TransactionsWidget extends BaseWidget
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
-                    ->getStateUsing(fn($record) => $record->status->getLabel())
+                    ->formatStateUsing(fn($record) => $record->status->getLabel())
                     ->badge()
-                    ->color(fn($state) => match ($state) {
-                        'Completado' => 'success',
-                        'Pendiente' => 'warning',
-                        'Fallido', 'Cancelado' => 'danger',
-                        default => 'secondary',
-                    })
+                    ->color(fn($record) => $record->status->getColor())
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('amount_cents')

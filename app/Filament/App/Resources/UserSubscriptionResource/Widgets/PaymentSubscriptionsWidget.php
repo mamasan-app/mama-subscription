@@ -6,6 +6,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use App\Models\Payment;
+use App\Enums\PaymentStatusEnum;
 
 class PaymentSubscriptionsWidget extends BaseWidget
 {
@@ -31,16 +32,11 @@ class PaymentSubscriptionsWidget extends BaseWidget
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
-                    ->getStateUsing(fn($record) => $record->status->getLabel())
+                    ->getStateUsing(fn($record) => PaymentStatusEnum::tryFrom($record->status)?->getLabel() ?? 'Desconocido')
                     ->badge()
-                    ->color(fn($state) => match ($state) {
-                        'Completado' => 'success',
-                        'Pendiente' => 'warning',
-                        'Fallido', 'Cancelado' => 'danger',
-                        'Incobrable' => 'secondary',
-                        default => 'secondary',
-                    })
+                    ->color(fn($record) => PaymentStatusEnum::tryFrom($record->status)?->getColor() ?? 'secondary')
                     ->sortable(),
+
 
                 Tables\Columns\TextColumn::make('amount_cents')
                     ->label('Monto (USD)')
@@ -56,7 +52,10 @@ class PaymentSubscriptionsWidget extends BaseWidget
 
             ])
             ->actions([
-
+                Tables\Actions\Action::make('view')
+                    ->label('Ver')
+                    ->url(fn($record) => route('filament.resources.payments.view', ['record' => $record->id]))
+                    ->icon('heroicon-o-eye')
             ]);
     }
 

@@ -47,7 +47,7 @@ class Transaction extends Model
 
     public function getAmountAttribute(): float
     {
-        return $this->amount_cents / 100;
+        return $this->amount_cents;
     }
 
     /**
