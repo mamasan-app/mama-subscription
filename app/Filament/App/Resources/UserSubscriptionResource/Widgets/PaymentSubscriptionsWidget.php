@@ -5,11 +5,7 @@ namespace App\Filament\App\Resources\UserSubscriptionResource\Widgets;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Subscription;
 use App\Models\Payment;
-use Filament\Tables\Actions\Action;
 
 class PaymentSubscriptionsWidget extends BaseWidget
 {
@@ -39,12 +35,11 @@ class PaymentSubscriptionsWidget extends BaseWidget
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
-                    ->sortable()
-                    ->formatStateUsing(fn($state) => $state->getLabel()),
+                    ->formatStateUsing(fn($state) => ucfirst($state->value)),
 
                 Tables\Columns\TextColumn::make('amount_cents')
                     ->label('Monto')
-                    ->formatStateUsing(fn($amount) => '$' . number_format($amount / 100, 2)),
+                    ->formatStateUsing(fn($amount) => $amount ? '$' . number_format($amount / 100, 2) : 'N/A'),
 
                 Tables\Columns\TextColumn::make('due_date')
                     ->label('Fecha de Vencimiento')
@@ -60,18 +55,13 @@ class PaymentSubscriptionsWidget extends BaseWidget
                 // Puedes añadir filtros aquí si es necesario
             ])
             ->actions([
-                Action::make('Pagar')
-                    ->url(fn(Subscription $record): string => \App\Filament\App\Resources\UserSubscriptionResource\Pages\UserSubscriptionPayment::getUrl(['record' => $record]))
-                    ->color('success')
-                    ->icon('heroicon-o-currency-dollar')
-                    ->label('Pagar')
-                    ->button()
-                    ->visible(fn(Subscription $record) => $record->payments->flatMap->transactions->isEmpty()), // Mostrar solo si no hay transacciones
+                // Define acciones aquí si es necesario
             ]);
     }
 
     protected function getQuery()
     {
+        // Recupera todos los pagos relacionados con la suscripción actual
         return Payment::query()
             ->where('subscription_id', $this->record->id);
     }
