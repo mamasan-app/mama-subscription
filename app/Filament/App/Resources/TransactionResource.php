@@ -108,26 +108,99 @@ class TransactionResource extends Resource
 
                         // Pestaña Información Detallada
                         Tab::make('Información Detallada')
-                            ->schema([
-                                TextEntry::make('metadata_details')
-                                    ->label('Detalles de Metadata')
-                                    ->getStateUsing(function ($record) {
-                                        $metadata = $record->getMetadataAsObject();
-                                        if ($metadata instanceof \App\DTO\StripeMetadata) {
-                                            return "Stripe ID: {$metadata->id}, 
-                                            Monto: {$metadata->amount} {$metadata->currency}, 
-                                            Estado: {$metadata->status}, 
-                                            Creado: {$metadata->created->format('d/m/Y H:i:s')}";
-                                        } elseif ($metadata instanceof \App\DTO\MiBancoMetadata) {
-                                            return "Código: {$metadata->code}, 
-                                            Mensaje: {$metadata->message}, 
-                                            Referencia: {$metadata->reference}, 
-                                            ID: {$metadata->id}";
-                                        }
-                                        return 'No disponible';
-                                    })
-                                    ->placeholder('No disponible'),
-                            ])->columns(1),
+                            ->schema(function ($record) {
+                                $metadata = $record->getMetadataAsObject();
+
+                                if ($metadata instanceof \App\DTO\StripeMetadata) {
+                                    return [
+                                        TextEntry::make('stripe_id')
+                                            ->label('Stripe ID')
+                                            ->getStateUsing(fn() => $metadata->id)
+                                            ->placeholder('No disponible'),
+
+                                        TextEntry::make('stripe_object')
+                                            ->label('Stripe Object')
+                                            ->getStateUsing(fn() => $metadata->object)
+                                            ->placeholder('No disponible'),
+
+                                        TextEntry::make('stripe_amount')
+                                            ->label('Monto (Stripe)')
+                                            ->getStateUsing(fn() => $metadata->amount . ' ' . $metadata->currency)
+                                            ->placeholder('No disponible'),
+
+                                        TextEntry::make('stripe_status')
+                                            ->label('Estado (Stripe)')
+                                            ->getStateUsing(fn() => $metadata->status)
+                                            ->placeholder('No disponible'),
+
+                                        TextEntry::make('stripe_client_secret')
+                                            ->label('Client Secret')
+                                            ->getStateUsing(fn() => $metadata->client_secret)
+                                            ->placeholder('No disponible'),
+
+                                        TextEntry::make('stripe_capture_method')
+                                            ->label('Método de Captura')
+                                            ->getStateUsing(fn() => $metadata->capture_method)
+                                            ->placeholder('No disponible'),
+
+                                        TextEntry::make('stripe_confirmation_method')
+                                            ->label('Método de Confirmación')
+                                            ->getStateUsing(fn() => $metadata->confirmation_method)
+                                            ->placeholder('No disponible'),
+
+                                        TextEntry::make('stripe_created')
+                                            ->label('Fecha de Creación (Stripe)')
+                                            ->getStateUsing(fn() => $metadata->created->format('d/m/Y H:i:s'))
+                                            ->placeholder('No disponible'),
+
+                                        TextEntry::make('stripe_livemode')
+                                            ->label('Modo en Vivo (Stripe)')
+                                            ->getStateUsing(fn() => $metadata->livemode ? 'Sí' : 'No')
+                                            ->placeholder('No disponible'),
+
+                                        TextEntry::make('stripe_payment_method_types')
+                                            ->label('Métodos de Pago (Stripe)')
+                                            ->getStateUsing(fn() => implode(', ', $metadata->payment_method_types))
+                                            ->placeholder('No disponible'),
+
+                                        TextEntry::make('stripe_cancellation_reason')
+                                            ->label('Razón de Cancelación')
+                                            ->getStateUsing(fn() => $metadata->cancellation_reason)
+                                            ->placeholder('No disponible'),
+                                    ];
+                                } elseif ($metadata instanceof \App\DTO\MiBancoMetadata) {
+                                    return [
+                                        TextEntry::make('mibanco_code')
+                                            ->label('Código (MiBanco)')
+                                            ->getStateUsing(fn() => $metadata->code)
+                                            ->placeholder('No disponible'),
+
+                                        TextEntry::make('mibanco_message')
+                                            ->label('Mensaje (MiBanco)')
+                                            ->getStateUsing(fn() => $metadata->message)
+                                            ->placeholder('No disponible'),
+
+                                        TextEntry::make('mibanco_reference')
+                                            ->label('Referencia (MiBanco)')
+                                            ->getStateUsing(fn() => $metadata->reference)
+                                            ->placeholder('No disponible'),
+
+                                        TextEntry::make('mibanco_id')
+                                            ->label('ID (MiBanco)')
+                                            ->getStateUsing(fn() => $metadata->id)
+                                            ->placeholder('No disponible'),
+                                    ];
+                                }
+
+                                return [
+                                    TextEntry::make('metadata_details')
+                                        ->label('Detalles de Metadata')
+                                        ->placeholder('No disponible')
+                                        ->getStateUsing(fn() => 'No se pudo determinar el tipo de metadata.'),
+                                ];
+                            })
+                            ->columns(2),
+
 
                         // Pestaña Información del Pago
                         Tab::make('Pago')
