@@ -72,14 +72,7 @@ class PaymentSubscriptionsWidget extends BaseWidget
 
     protected function getQuery()
     {
-
-        $subscriptionId = $this->record->id;
-
-        $paymentSubscription = Payment::query()
-            ->where('subscription_id', $subscriptionId)
-            ->pluck('id');
-
-        return Subscription::query()
-            ->whereIn('id', $paymentSubscription);
+        return Payment::query()
+            ->where('subscription_id', $this->record->id);
     }
 }
