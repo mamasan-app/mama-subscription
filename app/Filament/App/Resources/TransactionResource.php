@@ -125,7 +125,7 @@ class TransactionResource extends Resource
 
                                         TextEntry::make('stripe_amount')
                                             ->label('Monto (Stripe)')
-                                            ->getStateUsing(fn() => $metadata->amount . ' ' . $metadata->currency)
+                                            ->getStateUsing(fn() => number_format($metadata->amount / 100, 2) . ' USD')
                                             ->placeholder('No disponible'),
 
                                         TextEntry::make('stripe_status')
@@ -136,6 +136,7 @@ class TransactionResource extends Resource
                                         TextEntry::make('stripe_client_secret')
                                             ->label('Client Secret')
                                             ->getStateUsing(fn() => $metadata->client_secret)
+                                            ->extraAttributes(['style' => 'word-wrap: break-word; white-space: normal;'])
                                             ->placeholder('No disponible'),
 
                                         TextEntry::make('stripe_capture_method')
