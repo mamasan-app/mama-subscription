@@ -38,8 +38,8 @@ class PaymentSubscriptionsWidget extends BaseWidget
                     ->formatStateUsing(fn($state) => ucfirst($state->value)),
 
                 Tables\Columns\TextColumn::make('amount_cents')
-                    ->label('Monto')
-                    ->formatStateUsing(fn($amount) => $amount ? '$' . number_format($amount / 100, 2) : 'N/A'),
+                    ->label('Monto (USD)')
+                    ->formatStateUsing(fn($record) => '$' . number_format($record->getAmountInDollarsAttribute(), 2)),
 
                 Tables\Columns\TextColumn::make('due_date')
                     ->label('Fecha de Vencimiento')
@@ -52,10 +52,10 @@ class PaymentSubscriptionsWidget extends BaseWidget
                     ->sortable(),
             ])
             ->filters([
-                // Puedes añadir filtros aquí si es necesario
+
             ])
             ->actions([
-                // Define acciones aquí si es necesario
+
             ]);
     }
 
