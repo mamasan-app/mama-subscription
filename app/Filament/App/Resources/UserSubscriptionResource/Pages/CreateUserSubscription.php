@@ -49,12 +49,12 @@ class CreateUserSubscription extends CreateRecord
         // Calcular fechas importantes
         $nowInCaracas = Carbon::now('America/Caracas');
         $trialEndsAt = $nowInCaracas->clone()->addDays($freeDays);
-        $expiresAt = $nowInCaracas->clone()->addDays($gracePeriod);
+        $expiresAt = $nowInCaracas->clone()->addDays($gracePeriod + $freeDays);
 
         // Llenar datos adicionales
         $data['status'] = SubscriptionStatusEnum::OnTrial->value; // Estado inicial
         $data['trial_ends_at'] = $trialEndsAt;
-        $data['renews_at'] = $trialEndsAt->clone();
+        $data['renews_at'] = $trialEndsAt;
         $data['expires_at'] = $expiresAt;
 
         // Datos desnormalizados del Plan
