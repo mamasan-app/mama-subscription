@@ -117,51 +117,51 @@ class PaymentResource extends Resource
                         // Pestaña Información de la Suscripción
                         Tab::make('Suscripción')
                             ->schema([
-                                TextEntry::make('status')
+                                TextEntry::make('subscription.status')
                                     ->label('Estado')
                                     ->getStateUsing(fn($record) => $record->status->getLabel())
                                     ->badge()
                                     ->color(fn($record) => $record->status->getColor()),
-                                TextEntry::make('trial_ends_at')
+                                TextEntry::make('subscription.trial_ends_at')
                                     ->label('Fin del Periodo de Prueba')
                                     ->dateTime()
                                     ->placeholder('No disponible'),
-                                TextEntry::make('renews_at')
+                                TextEntry::make('subscription.renews_at')
                                     ->label('Renovación')
                                     ->dateTime()
                                     ->placeholder('No disponible'),
-                                TextEntry::make('ends_at')
+                                TextEntry::make('subscription.ends_at')
                                     ->label('Fecha de Finalización')
                                     ->dateTime()
                                     ->placeholder('No disponible'),
-                                TextEntry::make('last_notification_at')
+                                TextEntry::make('subscription.last_notification_at')
                                     ->label('Última Notificación')
                                     ->dateTime()
                                     ->placeholder('No disponible'),
-                                TextEntry::make('expires_at')
+                                TextEntry::make('subscription.expires_at')
                                     ->label('Fecha de Expiración')
                                     ->dateTime()
                                     ->placeholder('No disponible'),
-                                TextEntry::make('frequency_days')
+                                TextEntry::make('subscription.frequency_days')
                                     ->label('Frecuencia de Pago (días)')
                                     ->placeholder('No disponible'),
                             ])->columns(2),
                         // Pestaña Información del Plan
                         Tab::make('Plan')
                             ->schema([
-                                TextEntry::make('service_name')
+                                TextEntry::make('subscription.service_name')
                                     ->label('Nombre del Servicio')
                                     ->placeholder('No disponible'),
-                                TextEntry::make('service_description')
+                                TextEntry::make('subscription.service_description')
                                     ->label('Descripción del Servicio')
                                     ->placeholder('No disponible'),
-                                TextEntry::make('formattedServicePrice')
+                                TextEntry::make('subscription.formattedServicePrice')
                                     ->label('Precio del Servicio')
                                     ->placeholder('No disponible'),
-                                TextEntry::make('service_free_days')
+                                TextEntry::make('subscription.service_free_days')
                                     ->label('Días Gratis')
                                     ->placeholder('No disponible'),
-                                TextEntry::make('service_grace_period')
+                                TextEntry::make('subscription.service_grace_period')
                                     ->label('Período de Gracia')
                                     ->placeholder('No disponible'),
                             ])->columns(2),
