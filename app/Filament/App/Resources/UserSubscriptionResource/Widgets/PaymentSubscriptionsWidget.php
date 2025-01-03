@@ -60,8 +60,8 @@ class PaymentSubscriptionsWidget extends BaseWidget
             ->actions([
                 Tables\Actions\Action::make('view')
                     ->label('Ver')
-                    ->url(fn($record) => route('filament.resources.payments.view', ['record' => $record->id]))
-                    ->icon('heroicon-o-eye')
+                    ->url(fn($record) => route('filament.app.resources.payments.view', ['record' => $record->id]))
+                    ->icon('heroicon-o-eye'),
             ]);
     }
 
