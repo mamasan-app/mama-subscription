@@ -422,13 +422,6 @@ class StripeWebhookController extends Controller
 
             $payment->markAsPaid();
         }
-
-        $expire_days = $subscription->frequency_days + $subscription->service_grace_period;
-
-        $subscription->update([
-            'renews_at' => now()->addDays($subscription->frequency_days)->toDateString(),
-            'expires_at' => now()->addDays($expire_days)->toDateString(),
-        ]);
     }
 
     protected function handleInvoicePaymentFailed($invoice)
