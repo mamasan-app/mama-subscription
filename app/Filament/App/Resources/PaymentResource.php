@@ -5,6 +5,7 @@ namespace App\Filament\App\Resources;
 use App\Filament\App\Resources\PaymentResource\Pages;
 use App\Filament\App\Resources\PaymentResource\RelationManagers;
 use App\Models\Payment;
+use App\Enums\PaymentStatusEnum;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -34,18 +35,54 @@ class PaymentResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('id')
+                    ->label('ID')
+                    ->sortable()
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('subscription.service_name')
+                    ->label('Servicio')
+                    ->sortable()
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('amount_cents')
+                    ->label('Monto (USD)')
+                    ->getStateUsing(fn($record) => number_format($record->amount_cents / 100, 2) . ' USD')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Estado')
+                    ->getStateUsing(fn($record) => $record->status->getLabel())
+                    ->badge()
+                    ->color(fn($state) => match ($state) {
+                        'Completado' => 'success',
+                        'Pendiente' => 'warning',
+                        'Fallido', 'Cancelado' => 'danger',
+                        'Incobrable' => 'secondary',
+                        default => 'secondary',
+                    })
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('paid_date')
+                    ->label('Fecha de Pago')
+                    ->dateTime('d/m/Y')
+                    ->sortable(),
             ])
             ->filters([
-                //
+                Tables\Filters\Filter::make('Estado: Completado')
+                    ->query(fn($query) => $query->where('status', PaymentStatusEnum::Completed->value)),
+
+                Tables\Filters\Filter::make('Estado: Pendiente')
+                    ->query(fn($query) => $query->where('status', PaymentStatusEnum::Pending->value)),
+
+                Tables\Filters\Filter::make('Vencidos')
+                    ->query(fn($query) => $query->where('due_date', '<', now())->whereNull('paid_date')),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+
             ]);
     }
 

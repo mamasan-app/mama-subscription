@@ -29,22 +29,22 @@ class PaymentSubscriptionsWidget extends BaseWidget
                     ->label('ID')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('subscription.id')
-                    ->label('ID Suscripción')
-                    ->sortable(),
-
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
-                    ->formatStateUsing(fn($state) => ucfirst($state->value)),
+                    ->getStateUsing(fn($record) => $record->status->getLabel())
+                    ->badge()
+                    ->color(fn($state) => match ($state) {
+                        'Completado' => 'success',
+                        'Pendiente' => 'warning',
+                        'Fallido', 'Cancelado' => 'danger',
+                        'Incobrable' => 'secondary',
+                        default => 'secondary',
+                    })
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('amount_cents')
                     ->label('Monto (USD)')
                     ->formatStateUsing(fn($record) => '$' . number_format($record->getAmountInDollarsAttribute(), 2)),
-
-                Tables\Columns\TextColumn::make('due_date')
-                    ->label('Fecha de Vencimiento')
-                    ->dateTime()
-                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('paid_date')
                     ->label('Fecha de Pago')
