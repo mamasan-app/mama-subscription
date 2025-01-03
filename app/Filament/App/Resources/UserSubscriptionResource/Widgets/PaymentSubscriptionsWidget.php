@@ -32,9 +32,15 @@ class PaymentSubscriptionsWidget extends BaseWidget
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
-                    ->getStateUsing(fn($record) => PaymentStatusEnum::tryFrom($record->status)?->getLabel() ?? 'Desconocido')
+                    ->getStateUsing(fn($record) => $record->status->getLabel())
                     ->badge()
-                    ->color(fn($record) => PaymentStatusEnum::tryFrom($record->status)?->getColor() ?? 'secondary')
+                    ->color(fn($state) => match ($state) {
+                        'Completado' => 'success',
+                        'Pendiente' => 'warning',
+                        'Fallido', 'Cancelado' => 'danger',
+                        'Incobrable' => 'secondary',
+                        default => 'secondary',
+                    })
                     ->sortable(),
 
 
