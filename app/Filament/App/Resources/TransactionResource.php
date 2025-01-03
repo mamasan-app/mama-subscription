@@ -73,7 +73,7 @@ class TransactionResource extends Resource
                 Tabs::make('Detalles de la Transaccion')
                     ->tabs([
                         // Pestaña Información de la Transaccion
-                        Tab::make('Transaccion')
+                        Tab::make('Informacion General')
                             ->schema([
                                 TextEntry::make('id')
                                     ->label('ID de Transacción'),
@@ -105,6 +105,29 @@ class TransactionResource extends Resource
                                         return 'No disponible';
                                     }),
                             ])->columns(2),
+
+                        // Pestaña Información Detallada
+                        Tab::make('Información Detallada')
+                            ->schema([
+                                TextEntry::make('metadata_details')
+                                    ->label('Detalles de Metadata')
+                                    ->getStateUsing(function ($record) {
+                                        $metadata = $record->getMetadataAsObject();
+                                        if ($metadata instanceof \App\DTO\StripeMetadata) {
+                                            return "Stripe ID: {$metadata->id}, 
+                                            Monto: {$metadata->amount} {$metadata->currency}, 
+                                            Estado: {$metadata->status}, 
+                                            Creado: {$metadata->created->format('d/m/Y H:i:s')}";
+                                        } elseif ($metadata instanceof \App\DTO\MiBancoMetadata) {
+                                            return "Código: {$metadata->code}, 
+                                            Mensaje: {$metadata->message}, 
+                                            Referencia: {$metadata->reference}, 
+                                            ID: {$metadata->id}";
+                                        }
+                                        return 'No disponible';
+                                    })
+                                    ->placeholder('No disponible'),
+                            ])->columns(1),
 
                         // Pestaña Información del Pago
                         Tab::make('Pago')

@@ -10,10 +10,4 @@ class ViewTransaction extends ViewRecord
 {
     protected static string $resource = TransactionResource::class;
 
-    protected function getHeaderActions(): array
-    {
-        return [
-            Actions\EditAction::make(),
-        ];
-    }
 }

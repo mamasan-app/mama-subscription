@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\DTO\StripeMetadata;
+use App\DTO\MiBancoMetadata;
+
 
 class Transaction extends Model
 {
@@ -100,6 +103,30 @@ class Transaction extends Model
             'failed' => TransactionStatusEnum::Failed,
             default => TransactionStatusEnum::Failed, // O un valor predeterminado que prefieras
         };
+    }
+
+    /**
+     * Convierte la metadata en un objeto específico basado en el proveedor.
+     *
+     * @return StripeMetadata|MiBancoMetadata|null
+     */
+    public function getMetadataAsObject()
+    {
+        if (!isset($this->metadata) || !is_array($this->metadata)) {
+            return null;
+        }
+
+        if (array_key_exists('object', $this->metadata) && $this->metadata['object'] === 'payment_intent') {
+            // Es metadata de Stripe
+            return new StripeMetadata($this->metadata);
+        }
+
+        if (array_key_exists('code', $this->metadata)) {
+            // Es metadata de MiBanco
+            return new MiBancoMetadata($this->metadata);
+        }
+
+        return null; // No se puede identificar el tipo de metadata
     }
 
 }
