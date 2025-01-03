@@ -136,8 +136,11 @@ class TransactionResource extends Resource
                                         TextEntry::make('stripe_client_secret')
                                             ->label('Client Secret')
                                             ->getStateUsing(fn() => $metadata->client_secret)
-                                            ->extraAttributes(['style' => 'word-wrap: break-word; white-space: normal;'])
+                                            ->extraAttributes([
+                                                'style' => 'word-break: break-all; white-space: normal; max-width: 100%; display: block;'
+                                            ])
                                             ->placeholder('No disponible'),
+
 
                                         TextEntry::make('stripe_capture_method')
                                             ->label('Método de Captura')
