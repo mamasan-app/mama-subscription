@@ -3,6 +3,7 @@
 namespace App\Filament\App\Resources\StoreResource\Pages;
 
 use App\Filament\App\Resources\StoreResource;
+use App\Filament\App\Resources\StoreResource\Widgets\StorePlansWidget;
 use App\Filament\App\Resources\StoreResource\Widgets\StoreSubscriptionsWidget;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
@@ -17,6 +18,7 @@ class ViewStore extends ViewRecord
     protected function getFooterWidgets(): array
     {
         return [
+            StorePlansWidget::class,
             StoreSubscriptionsWidget::class,
         ];
     }
