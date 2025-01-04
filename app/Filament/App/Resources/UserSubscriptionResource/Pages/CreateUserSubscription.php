@@ -8,6 +8,7 @@ use App\Enums\SubscriptionStatusEnum;
 use Carbon\Carbon;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Auth;
+use Filament\Notifications\Notification;
 
 class CreateUserSubscription extends CreateRecord
 {
@@ -69,4 +70,18 @@ class CreateUserSubscription extends CreateRecord
 
         return $data;
     }
+
+    protected function afterCreate(): void
+    {
+        // Obtener el plan relacionado
+        $plan = Plan::find($this->record->service_id);
+
+        // Enviar la notificación
+        Notification::make()
+            ->title('¡Suscripción creada con éxito!')
+            ->success()
+            ->body('Te has suscrito al plan: ' . ($plan->name ?? 'Plan desconocido'))
+            ->send();
+    }
+
 }

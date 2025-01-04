@@ -10,6 +10,7 @@ use App\Models\Subscription;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Filament\Tables\Actions\Action;
+use Filament\Notifications\Notification;
 
 class StorePlansWidget extends BaseWidget
 {
@@ -100,7 +101,14 @@ class StorePlansWidget extends BaseWidget
             'expires_at' => $now->clone()->addDays($freeDays + $gracePeriod),
         ]);
 
-        // Puedes añadir un mensaje de éxito aquí si estás usando un sistema de notificaciones.
-        session()->flash('success', '¡Suscripción creada con éxito!');
+
+
+        // Dentro del método subscribeToPlan
+        Notification::make()
+            ->title('¡Suscripción creada con éxito!')
+            ->success()
+            ->body('Te has suscrito al plan: ' . $plan->name)
+            ->send();
+
     }
 }

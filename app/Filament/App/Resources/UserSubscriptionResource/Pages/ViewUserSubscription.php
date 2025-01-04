@@ -25,4 +25,24 @@ class ViewUserSubscription extends ViewRecord
     {
         return 'Ver Suscripcion';
     }
+
+    /**
+     * Define las acciones adicionales para la página.
+     */
+    protected function getActions(): array
+    {
+        return [
+            Actions\Action::make('Pagar')
+                ->url(
+                    fn($record): string => $record->payments->flatMap->transactions->isEmpty()
+                    ? \App\Filament\App\Resources\UserSubscriptionResource\Pages\UserSubscriptionPayment::getUrl(['record' => $record])
+                    : '/'
+                )
+                ->color('success')
+                ->icon('heroicon-o-currency-dollar')
+                ->label('Pagar')
+                ->button()
+                ->visible(fn($record) => $record->stripe_subscription_id === null),
+        ];
+    }
 }

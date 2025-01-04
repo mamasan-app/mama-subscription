@@ -50,7 +50,12 @@ class TransactionsWidget extends BaseWidget
                     ->sortable(),
             ])
             ->filters([])
-            ->actions([]);
+            ->actions([
+                Tables\Actions\Action::make('view')
+                    ->label('Ver')
+                    ->url(fn($record) => route('filament.app.resources.transactions.view', ['record' => $record->id]))
+                    ->icon('heroicon-o-eye'),
+            ]);
     }
 
     protected function getQuery()
