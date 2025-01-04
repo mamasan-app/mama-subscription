@@ -43,9 +43,7 @@ class StorePlansWidget extends BaseWidget
 
                 Tables\Columns\TextColumn::make('formattedPrice')
                     ->label('Precio')
-                    ->formatStateUsing(fn($state) => number_format($state, 2) . ' USD')
                     ->sortable(),
-
                 Tables\Columns\TextColumn::make('duration_text')
                     ->label('Duración')
                     ->sortable(),
