@@ -191,27 +191,34 @@ class UserSubscriptionPayment extends Page
 
     protected function generateOtp()
     {
+        // Concatenar los datos exactamente como lo requiere la API
+        $stringToHash = "{$this->bank}{$this->amount}{$this->phone}{$this->identity}";
+
+        // Generar el token HMAC-SHA256
         $tokenAuthorization = hash_hmac(
             'sha256',
-            "{$this->bank}{$this->amount}{$this->phone}{$this->identity}",
-            config('banking.token_key')
+            $stringToHash,
+            config('banking.token_key') // Llave secreta desde la configuración
         );
 
+        // Enviar la solicitud HTTP a la API
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
             'Authorization' => $tokenAuthorization,
-            'Commerce' => config('banking.commerce_id'),
+            'Commerce' => config('banking.commerce_id'), // Asegúrate de que este valor sea correcto
         ])->post(config('banking.otp_url'), [
-                    'Banco' => $this->bank,
-                    'Monto' => number_format((float) $this->amount, 2, '.', ''),
-                    'Telefono' => $this->phone,
-                    'Cedula' => $this->identity,
+                    'Banco' => $this->bank, // Código del banco (4 dígitos)
+                    'Monto' => number_format((float) $this->amount, 2, '.', ''), // Cadena con dos decimales
+                    'Telefono' => $this->phone, // Teléfono completo (11 dígitos)
+                    'Cedula' => $this->identity, // Cédula con prefijo (e.g., "V20767008")
                 ]);
 
+        // Inspeccionar la respuesta para depuración
         dd($response->json());
 
         return $response->json();
     }
+
 
     protected function processImmediateDebit()
     {
