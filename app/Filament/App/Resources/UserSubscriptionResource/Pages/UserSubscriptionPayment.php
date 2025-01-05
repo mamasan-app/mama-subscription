@@ -216,7 +216,7 @@ class UserSubscriptionPayment extends Page
             config('banking.commerce_id') // Llave secreta desde configuración
         );
         //dd(config('banking.token_key'));
-        dd('Token HMAC Generado', $tokenAuthorization);
+        //dd('Token HMAC Generado', $tokenAuthorization);
 
         // Enviar la solicitud HTTP
         $response = Http::withHeaders([
