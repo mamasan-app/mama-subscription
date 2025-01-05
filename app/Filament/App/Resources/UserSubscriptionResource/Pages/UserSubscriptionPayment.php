@@ -4,15 +4,19 @@ namespace App\Filament\App\Resources\UserSubscriptionResource\Pages;
 
 use App\Filament\App\Resources\UserSubscriptionResource;
 use App\Models\Subscription;
+use App\Enums\PhonePrefixEnum;
+use App\Enums\IdentityPrefixEnum;
+use App\Enums\BankEnum;
+use App\Services\StripeService;
 use Filament\Pages\Actions\Action;
 use Filament\Resources\Pages\Page;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\TextInput;
 use Illuminate\Support\Facades\Http;
 use Exception;
-use App\Enums\BankEnum;
 use Filament\Forms\Components\Select;
-use App\Services\StripeService;
+use Filament\Forms\Components\Grid;
+
 
 class UserSubscriptionPayment extends Page
 {
@@ -198,10 +202,10 @@ class UserSubscriptionPayment extends Page
             'Authorization' => $tokenAuthorization,
             'Commerce' => config('banking.commerce_id'),
         ])->post(config('banking.otp_url'), [
-                    'bank' => $this->bank,
-                    'phone' => $this->phone,
-                    'identity' => $this->identity,
-                    'amount' => $this->amount,
+                    'Banco' => $this->bank,
+                    'Monto' => $this->amount,
+                    'Telefono' => $this->phone,
+                    'Cedula' => $this->identity,
                 ]);
 
         dd($response->json());
@@ -247,6 +251,7 @@ class UserSubscriptionPayment extends Page
                 ->label('Pagar en Bolívares')
                 ->color('warning')
                 ->form([
+                    // Selector para el banco (independiente)
                     Select::make('bank')
                         ->label('Banco')
                         ->options(
@@ -255,11 +260,58 @@ class UserSubscriptionPayment extends Page
                                 ->toArray()
                         )
                         ->required(),
-                    TextInput::make('phone')->label('Teléfono')->required(),
-                    TextInput::make('identity')->label('Cédula')->required(),
-                    TextInput::make('amount')->label('Monto')->disabled()->default(fn() => $this->amount),
+
+                    // Agrupación del prefijo telefónico y número telefónico
+                    Grid::make(2)
+                        ->schema([
+                            Select::make('phone_prefix')
+                                ->label('Prefijo Telefónico')
+                                ->options(
+                                    collect(PhonePrefixEnum::cases())
+                                        ->mapWithKeys(fn($prefix) => [$prefix->value => $prefix->getLabel()])
+                                        ->toArray()
+                                )
+                                ->required(),
+                            TextInput::make('phone_number')
+                                ->label('Número Telefónico')
+                                ->numeric()
+                                ->minLength(7)
+                                ->maxLength(7)
+                                ->required(),
+                        ]),
+
+                    // Agrupación del tipo de cédula y número de cédula
+                    Grid::make(2)
+                        ->schema([
+                            Select::make('identity_prefix')
+                                ->label('Tipo de Cédula')
+                                ->options(
+                                    collect(IdentityPrefixEnum::cases())
+                                        ->mapWithKeys(fn($prefix) => [$prefix->value => $prefix->getLabel()])
+                                        ->toArray()
+                                )
+                                ->required(),
+                            TextInput::make('identity_number')
+                                ->label('Número de Cédula')
+                                ->numeric()
+                                ->minLength(6)
+                                ->maxLength(20)
+                                ->required(),
+                        ]),
+
+                    // Input para el monto (deshabilitado)
+                    TextInput::make('amount')
+                        ->label('Monto')
+                        ->disabled()
+                        ->default(fn() => $this->amount),
                 ])
                 ->action(function (array $data) {
+                    // Combinar los datos del prefijo y número de teléfono
+                    $data['phone'] = $data['phone_prefix'] . $data['phone_number'];
+
+                    // Combinar los datos del prefijo y número de cédula
+                    $data['identity'] = $data['identity_prefix'] . $data['identity_number'];
+
                     $this->submitBolivaresPayment($data);
                 }),
 
