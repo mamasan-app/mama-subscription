@@ -198,12 +198,12 @@ class UserSubscriptionPayment extends Page
         $identity = (string) $this->identity;
 
         // Verificar los valores después de la transformación
-        dd('Valores transformados a string:', [
-            'Banco' => $bank,
-            'Monto' => $amount,
-            'Telefono' => $phone,
-            'Cedula' => $identity,
-        ]);
+        //dd('Valores transformados a string:', [
+        //    'Banco' => $bank,
+        //    'Monto' => $amount,
+        //    'Telefono' => $phone,
+        //    'Cedula' => $identity,
+        //]);
 
         // Concatenar los datos para el HMAC-SHA256
         $stringToHash = "{$bank}{$amount}{$phone}{$identity}";
@@ -215,6 +215,7 @@ class UserSubscriptionPayment extends Page
             $stringToHash,
             config('banking.token_key') // Llave secreta desde configuración
         );
+        dd(config('banking.token_key'));
         dd('Token HMAC Generado', $tokenAuthorization);
 
         // Enviar la solicitud HTTP
