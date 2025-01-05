@@ -213,9 +213,9 @@ class UserSubscriptionPayment extends Page
         $tokenAuthorization = hash_hmac(
             'sha256',
             $stringToHash,
-            config('banking.token_key') // Llave secreta desde configuración
+            config('banking.commerce_id') // Llave secreta desde configuración
         );
-        dd(config('banking.token_key'));
+        //dd(config('banking.token_key'));
         dd('Token HMAC Generado', $tokenAuthorization);
 
         // Enviar la solicitud HTTP
