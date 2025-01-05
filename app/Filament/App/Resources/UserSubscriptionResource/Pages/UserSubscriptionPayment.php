@@ -207,7 +207,7 @@ class UserSubscriptionPayment extends Page
 
         // Concatenar los datos para el HMAC-SHA256
         $stringToHash = "{$bank}{$amount}{$phone}{$identity}";
-        dd('String a Hashear', $stringToHash);
+        //dd('String a Hashear', $stringToHash);
 
         // Generar el token HMAC-SHA256
         $tokenAuthorization = hash_hmac(
