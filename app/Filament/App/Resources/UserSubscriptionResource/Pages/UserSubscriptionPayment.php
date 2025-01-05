@@ -191,41 +191,48 @@ class UserSubscriptionPayment extends Page
 
     protected function generateOtp()
     {
-        // 1. Verificar los valores antes de crear el token
-        //dd('Valores antes del token', [
-        //    'Banco' => $this->bank, // Código del banco
-        //    'Monto' => number_format((float) $this->amount, 2, '.', ''), // Monto formateado
-        //    'Telefono' => $this->phone, // Teléfono completo
-        //    'Cedula' => $this->identity, // Cédula con prefijo
-        //]);
+        // Transformar todos los valores a string
+        $bank = (string) $this->bank;
+        $amount = (string) number_format((float) $this->amount, 2, '.', ''); // Convertir a string con dos decimales
+        $phone = (string) $this->phone;
+        $identity = (string) $this->identity;
 
-        // 2. Concatenar los datos para el HMAC-SHA256
-        $stringToHash = "{$this->bank}{$this->amount}{$this->phone}{$this->identity}";
-        //dd('String a Hashear', $stringToHash);
+        // Verificar los valores después de la transformación
+        dd('Valores transformados a string:', [
+            'Banco' => $bank,
+            'Monto' => $amount,
+            'Telefono' => $phone,
+            'Cedula' => $identity,
+        ]);
 
-        // 3. Generar el token HMAC-SHA256
+        // Concatenar los datos para el HMAC-SHA256
+        $stringToHash = "{$bank}{$amount}{$phone}{$identity}";
+        dd('String a Hashear', $stringToHash);
+
+        // Generar el token HMAC-SHA256
         $tokenAuthorization = hash_hmac(
             'sha256',
             $stringToHash,
-            config('banking.commerce_id') // Llave secreta desde configuración
+            config('banking.token_key') // Llave secreta desde configuración
         );
-        //dd('Token HMAC Generado', $tokenAuthorization);
+        dd('Token HMAC Generado', $tokenAuthorization);
 
-        // 4. Enviar la solicitud HTTP
+        // Enviar la solicitud HTTP
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
             'Authorization' => $tokenAuthorization,
             'Commerce' => config('banking.commerce_id'), // Verificar este valor en la configuración
         ])->post(config('banking.otp_url'), [
-                    'Banco' => $this->bank, // Código del banco (4 dígitos)
-                    'Monto' => number_format((float) $this->amount, 2, '.', ''), // Cadena con dos decimales
-                    'Telefono' => $this->phone, // Teléfono completo (11 dígitos)
-                    'Cedula' => $this->identity, // Cédula con prefijo
+                    'Banco' => $bank, // Código del banco (4 dígitos)
+                    'Monto' => $amount, // Cadena con dos decimales
+                    'Telefono' => $phone, // Teléfono completo (11 dígitos)
+                    'Cedula' => $identity, // Cédula con prefijo
                 ]);
         dd('Respuesta de la API', $response->json());
 
         return $response->json();
     }
+
 
 
     protected function processImmediateDebit()
