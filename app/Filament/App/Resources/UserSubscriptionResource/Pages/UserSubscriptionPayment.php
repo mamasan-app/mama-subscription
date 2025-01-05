@@ -191,30 +191,38 @@ class UserSubscriptionPayment extends Page
 
     protected function generateOtp()
     {
-        // Concatenar los datos exactamente como lo requiere la API
-        $stringToHash = "{$this->bank}{$this->amount}{$this->phone}{$this->identity}";
+        // 1. Verificar los valores antes de crear el token
+        dd('Valores antes del token', [
+            'Banco' => $this->bank, // Código del banco
+            'Monto' => number_format((float) $this->amount, 2, '.', ''), // Monto formateado
+            'Telefono' => $this->phone, // Teléfono completo
+            'Cedula' => $this->identity, // Cédula con prefijo
+        ]);
 
-        // Generar el token HMAC-SHA256
+        // 2. Concatenar los datos para el HMAC-SHA256
+        $stringToHash = "{$this->bank}{$this->amount}{$this->phone}{$this->identity}";
+        dd('String a Hashear', $stringToHash);
+
+        // 3. Generar el token HMAC-SHA256
         $tokenAuthorization = hash_hmac(
             'sha256',
             $stringToHash,
-            config('banking.token_key') // Llave secreta desde la configuración
+            config('banking.commerce_id') // Llave secreta desde configuración
         );
+        dd('Token HMAC Generado', $tokenAuthorization);
 
-        // Enviar la solicitud HTTP a la API
+        // 4. Enviar la solicitud HTTP
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
             'Authorization' => $tokenAuthorization,
-            'Commerce' => config('banking.commerce_id'), // Asegúrate de que este valor sea correcto
+            'Commerce' => config('banking.commerce_id'), // Verificar este valor en la configuración
         ])->post(config('banking.otp_url'), [
                     'Banco' => $this->bank, // Código del banco (4 dígitos)
                     'Monto' => number_format((float) $this->amount, 2, '.', ''), // Cadena con dos decimales
                     'Telefono' => $this->phone, // Teléfono completo (11 dígitos)
-                    'Cedula' => $this->identity, // Cédula con prefijo (e.g., "V20767008")
+                    'Cedula' => $this->identity, // Cédula con prefijo
                 ]);
-
-        // Inspeccionar la respuesta para depuración
-        dd($response->json());
+        dd('Respuesta de la API', $response->json());
 
         return $response->json();
     }
