@@ -204,6 +204,8 @@ class UserSubscriptionPayment extends Page
                     'amount' => $this->amount,
                 ]);
 
+        dd($response->json());
+
         return $response->json();
     }
 
