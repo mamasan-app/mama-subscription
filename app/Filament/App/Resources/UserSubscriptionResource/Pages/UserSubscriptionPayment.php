@@ -203,7 +203,7 @@ class UserSubscriptionPayment extends Page
             'Commerce' => config('banking.commerce_id'),
         ])->post(config('banking.otp_url'), [
                     'Banco' => $this->bank,
-                    'Monto' => $this->amount,
+                    'Monto' => number_format((float) $this->amount, 2, '.', ''),
                     'Telefono' => $this->phone,
                     'Cedula' => $this->identity,
                 ]);
