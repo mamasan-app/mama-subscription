@@ -192,16 +192,16 @@ class UserSubscriptionPayment extends Page
     protected function generateOtp()
     {
         // 1. Verificar los valores antes de crear el token
-        dd('Valores antes del token', [
-            'Banco' => $this->bank, // Código del banco
-            'Monto' => number_format((float) $this->amount, 2, '.', ''), // Monto formateado
-            'Telefono' => $this->phone, // Teléfono completo
-            'Cedula' => $this->identity, // Cédula con prefijo
-        ]);
+        //dd('Valores antes del token', [
+        //    'Banco' => $this->bank, // Código del banco
+        //    'Monto' => number_format((float) $this->amount, 2, '.', ''), // Monto formateado
+        //    'Telefono' => $this->phone, // Teléfono completo
+        //    'Cedula' => $this->identity, // Cédula con prefijo
+        //]);
 
         // 2. Concatenar los datos para el HMAC-SHA256
         $stringToHash = "{$this->bank}{$this->amount}{$this->phone}{$this->identity}";
-        dd('String a Hashear', $stringToHash);
+        //dd('String a Hashear', $stringToHash);
 
         // 3. Generar el token HMAC-SHA256
         $tokenAuthorization = hash_hmac(
@@ -209,7 +209,7 @@ class UserSubscriptionPayment extends Page
             $stringToHash,
             config('banking.commerce_id') // Llave secreta desde configuración
         );
-        dd('Token HMAC Generado', $tokenAuthorization);
+        //dd('Token HMAC Generado', $tokenAuthorization);
 
         // 4. Enviar la solicitud HTTP
         $response = Http::withHeaders([
