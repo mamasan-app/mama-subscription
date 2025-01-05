@@ -251,12 +251,12 @@ class UserSubscriptionPayment extends Page
                 ->label('Pagar en Bolívares')
                 ->color('warning')
                 ->form([
-                    // Selector para el banco (independiente)
+                    // Selector para el banco
                     Select::make('bank')
                         ->label('Banco')
                         ->options(
                             collect(BankEnum::cases())
-                                ->mapWithKeys(fn($bank) => [$bank->value => $bank->getLabel()])
+                                ->mapWithKeys(fn($bank) => [$bank->code() => $bank->getLabel()]) // Usar el código del banco como clave
                                 ->toArray()
                         )
                         ->required(),
@@ -306,14 +306,21 @@ class UserSubscriptionPayment extends Page
                         ->default(fn() => $this->amount),
                 ])
                 ->action(function (array $data) {
+                    // Aquí puedes depurar el valor del banco seleccionado
+                    $bankCode = $data['bank']; // El código del banco seleccionado
+        
                     // Combinar los datos del prefijo y número de teléfono
                     $data['phone'] = $data['phone_prefix'] . $data['phone_number'];
 
                     // Combinar los datos del prefijo y número de cédula
                     $data['identity'] = $data['identity_prefix'] . $data['identity_number'];
 
+                    // Reemplazar el banco en los datos enviados
+                    $data['bank'] = $bankCode;
+
                     $this->submitBolivaresPayment($data);
                 }),
+
 
             Action::make('confirmOtp')
                 ->label('Confirmar OTP')
