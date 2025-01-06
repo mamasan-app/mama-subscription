@@ -3,6 +3,7 @@
 namespace App\Filament\App\Pages;
 
 use App\Models\Subscription;
+use App\Enums\SubscriptionStatusEnum;
 use Filament\Forms;
 use Filament\Pages\Page;
 use Filament\Notifications\Notification;
@@ -49,12 +50,17 @@ class CreatePayment extends Page
                 ->label('Suscripción')
                 ->options(
                     Subscription::query()
-                        ->where(fn($query) => $query->where('status', 'trial')
-                            ->orWhereNotNull('payments')
-                            ->whereNull('stripe_subscription_id'))
+                        ->where(function ($query) {
+                            $query->where('status', SubscriptionStatusEnum::OnTrial->value)
+                                ->orWhereHas('payments', function ($query) {
+                                    $query->whereNotNull('subscription_id');
+                                });
+                        })
+                        ->whereNull('stripe_subscription_id')
                         ->pluck('service_name', 'id')
                         ->toArray()
                 )
+
                 ->required()
                 ->reactive()
                 ->afterStateUpdated(function ($state, $set) {
