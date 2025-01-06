@@ -7,12 +7,21 @@ use App\Enums\SubscriptionStatusEnum;
 use Filament\Forms;
 use Filament\Pages\Page;
 use Filament\Notifications\Notification;
+use App\Enums\PhonePrefixEnum;
+use App\Enums\IdentityPrefixEnum;
+use App\Enums\BankEnum;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Modal;
+use Filament\Pages\Actions\Action;
+use Exception;
 
 class CreatePayment extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-credit-card';
     protected static ?string $navigationGroup = 'Gestión de Pagos';
-    protected static string $view = 'filament.pages.subscription-payment'; // Vista personalizada
+    protected static string $view = 'filament.pages.subscription-payment';
 
     protected static ?string $title = 'Crear Pagos';
 
@@ -23,7 +32,6 @@ class CreatePayment extends Page
     public $phone_number;
     public $identity_prefix;
     public $identity_number;
-
     public $showOtpFields = false; // Controla la visibilidad de los campos de OTP
 
     public function mount(): void
@@ -46,7 +54,7 @@ class CreatePayment extends Page
     protected function getFormSchema(): array
     {
         return [
-            Forms\Components\Select::make('subscription_id')
+            Select::make('subscription_id')
                 ->label('Suscripción')
                 ->options(
                     Subscription::query()
@@ -60,78 +68,101 @@ class CreatePayment extends Page
                         ->pluck('service_name', 'id')
                         ->toArray()
                 )
-
                 ->required()
                 ->reactive()
                 ->afterStateUpdated(function ($state, $set) {
                     $subscription = Subscription::find($state);
 
-                    if ($subscription && $subscription->status === 'trial') {
+                    if ($subscription && $subscription->status === SubscriptionStatusEnum::OnTrial->value) {
                         $set('showOtpFields', false);
                     } else {
                         $set('showOtpFields', true);
                     }
                 }),
 
-            Forms\Components\TextInput::make('bank')
+            Select::make('bank')
                 ->label('Banco')
+                ->options(
+                    collect(BankEnum::cases())
+                        ->mapWithKeys(fn($bank) => [$bank->code() => $bank->getLabel()])
+                        ->toArray()
+                )
                 ->required()
-                ->hidden(fn($get) => !$get('showOtpFields')),
+                ->hidden(fn($get) => $get('showOtpFields')),
 
-            Forms\Components\TextInput::make('phone_prefix')
-                ->label('Prefijo Telefónico')
-                ->required()
-                ->hidden(fn($get) => !$get('showOtpFields')),
+            Grid::make(2)
+                ->schema([
+                    Select::make('phone_prefix')
+                        ->label('Prefijo Telefónico')
+                        ->options(
+                            collect(PhonePrefixEnum::cases())
+                                ->mapWithKeys(fn($prefix) => [$prefix->value => $prefix->getLabel()])
+                                ->toArray()
+                        )
+                        ->required()
+                        ->hidden(fn($get) => $get('showOtpFields')),
+                    TextInput::make('phone_number')
+                        ->label('Número Telefónico')
+                        ->numeric()
+                        ->minLength(7)
+                        ->maxLength(7)
+                        ->required()
+                        ->hidden(fn($get) => $get('showOtpFields')),
+                ]),
 
-            Forms\Components\TextInput::make('phone_number')
-                ->label('Número Telefónico')
-                ->required()
-                ->hidden(fn($get) => !$get('showOtpFields')),
+            Grid::make(2)
+                ->schema([
+                    Select::make('identity_prefix')
+                        ->label('Tipo de Cédula')
+                        ->options(
+                            collect(IdentityPrefixEnum::cases())
+                                ->mapWithKeys(fn($prefix) => [$prefix->value => $prefix->getLabel()])
+                                ->toArray()
+                        )
+                        ->required()
+                        ->hidden(fn($get) => $get('showOtpFields')),
+                    TextInput::make('identity_number')
+                        ->label('Número de Cédula')
+                        ->numeric()
+                        ->minLength(6)
+                        ->maxLength(20)
+                        ->required()
+                        ->hidden(fn($get) => $get('showOtpFields')),
+                ]),
 
-            Forms\Components\TextInput::make('identity_prefix')
-                ->label('Tipo de Cédula')
-                ->required()
-                ->hidden(fn($get) => !$get('showOtpFields')),
-
-            Forms\Components\TextInput::make('identity_number')
-                ->label('Número de Cédula')
-                ->required()
-                ->hidden(fn($get) => !$get('showOtpFields')),
-
-            Forms\Components\TextInput::make('otp')
-                ->label('Código OTP')
-                ->required()
-                ->hidden(fn($get) => !$get('showOtpFields')),
+            TextInput::make('amount')
+                ->label('Monto')
+                ->disabled()
+                ->default(fn() => $this->amount)
+                ->hidden(fn($get) => $get('showOtpFields')),
         ];
     }
 
-    public function submit()
+    protected function getActions(): array
     {
-        $subscription = Subscription::find($this->subscription_id);
+        return [
+            Action::make('submit')
+                ->label('Procesar Pago')
+                ->color('primary')
+                ->action(function () {
+                    $this->openOtpModal();
+                }),
+        ];
+    }
 
-        if (!$subscription) {
-            Notification::make()
-                ->title('Error')
-                ->body('La suscripción seleccionada no existe.')
-                ->danger()
-                ->send();
-            return;
-        }
+    public function openOtpModal(): void
+    {
+        $this->dispatchBrowserEvent('open-otp-modal');
+    }
 
-        if ($subscription->status === 'trial') {
-            Notification::make()
-                ->title('Suscripción en Prueba')
-                ->body('Esta suscripción está en período de prueba.')
-                ->success()
-                ->send();
-            return;
-        }
+    public function confirmOtp(array $data): void
+    {
+        $this->otp = $data['otp'];
 
-        // Lógica para procesar el OTP
         try {
             $this->processOtp();
             Notification::make()
-                ->title('Pago Procesado')
+                ->title('Pago Completado')
                 ->body('El pago se procesó exitosamente.')
                 ->success()
                 ->send();
@@ -142,18 +173,14 @@ class CreatePayment extends Page
                 ->danger()
                 ->send();
         }
-
-        $this->resetForm();
     }
 
-    protected function processOtp()
+    protected function processOtp(): void
     {
-        // Implementar lógica de envío/confirmación de OTP
         if (!$this->otp) {
-            throw new \Exception('El código OTP es requerido.');
+            throw new Exception('El código OTP es requerido.');
         }
 
-        // Procesar pago con OTP
-        // Aquí iría la integración con el sistema bancario
+        // Implementa la lógica para procesar el OTP aquí.
     }
 }
