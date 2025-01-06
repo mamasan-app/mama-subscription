@@ -13,7 +13,7 @@ class CreatePayment extends Page
     protected static ?string $navigationGroup = 'Gestión de Pagos';
     protected static string $view = 'filament.pages.subscription-payment'; // Vista personalizada
 
-    protected static ?string $title = 'Gestionar Pago de Suscripción';
+    protected static ?string $title = 'Crear Pagos';
 
     public $subscription_id;
     public $otp;
