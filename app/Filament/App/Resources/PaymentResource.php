@@ -178,11 +178,13 @@ class PaymentResource extends Resource
         ];
     }
 
-    protected static function getTableQuery()
+    public static function getTableQuery()
     {
-        return parent::getTableQuery()->whereHas('subscription', function ($query) {
-            $query->where('user_id', auth()->id());
-        });
+        // Retorna la consulta con los pagos asociados al usuario autenticado
+        return parent::getEloquentQuery()
+            ->whereHas('subscription', function ($query) {
+                $query->where('user_id', auth()->id());
+            });
     }
 
 
