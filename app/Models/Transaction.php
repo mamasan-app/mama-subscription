@@ -62,6 +62,14 @@ class Transaction extends Model
     }
 
     /**
+     * Relación con Store si el to_type es Store.
+     */
+    public function store()
+    {
+        return $this->belongsTo(Store::class, 'to_id')->where('to_type', Store::class);
+    }
+
+    /**
      * Crear una transacción desde un Payment Intent.
      *
      * @param \Stripe\PaymentIntent $paymentIntent
