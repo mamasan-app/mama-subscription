@@ -148,7 +148,7 @@ class CreatePayment extends Page
                 ->label('Procesar Pago')
                 ->color('primary')
                 ->action(function (array $data) {
-                    if ($this->showOtpFields) {
+                    if (!$this->showOtpFields) {
                         $this->submitBolivaresPayment($data);
                     } else {
                         Notification::make()
