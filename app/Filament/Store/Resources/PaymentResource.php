@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\App\Resources;
+namespace App\Filament\Store\Resources;
 
-use App\Filament\App\Resources\PaymentResource\Pages;
+use App\Filament\Store\Resources\PaymentResource\Pages;
 use App\Models\Payment;
 use App\Enums\PaymentStatusEnum;
 use Filament\Forms\Form;
@@ -13,6 +13,7 @@ use Filament\Infolists\Infolist;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\Tabs;
 use Filament\Infolists\Components\Tabs\Tab;
+use Filament\Facades\Filament;
 
 class PaymentResource extends Resource
 {
@@ -27,14 +28,15 @@ class PaymentResource extends Resource
     {
         return $form
             ->schema([
-                //
+                // Definir el esquema del formulario aquí
             ]);
     }
 
     public static function table(Table $table): Table
     {
+        $currentStore = Filament::getTenant();
+
         return $table
-            ->query(static::getTableQuery())
             ->columns([
                 Tables\Columns\TextColumn::make('id')
                     ->label('ID')
@@ -81,11 +83,12 @@ class PaymentResource extends Resource
                     ->query(fn($query) => $query->where('due_date', '<', now())->whereNull('paid_date')),
             ])
             ->actions([
-
+                // Acciones personalizadas
             ])
             ->bulkActions([
-
-            ]);
+                // Acciones masivas
+            ])
+            ->query(fn($query) => $query->whereHas('subscription', fn($q) => $q->where('store_id', $currentStore)));
     }
 
     public static function infolist(Infolist $infolist): Infolist
@@ -94,7 +97,6 @@ class PaymentResource extends Resource
             ->schema([
                 Tabs::make('Detalles del Pago')
                     ->tabs([
-                        // Pestaña Información del Pago
                         Tab::make('Pago')
                             ->schema([
                                 TextEntry::make('stripe_invoice_id')
@@ -115,7 +117,6 @@ class PaymentResource extends Resource
                                     ->placeholder('No disponible'),
                             ])->columns(2),
 
-                        // Pestaña Información de la Suscripción
                         Tab::make('Suscripción')
                             ->schema([
                                 TextEntry::make('subscription.status')
@@ -147,7 +148,7 @@ class PaymentResource extends Resource
                                     ->label('Frecuencia de Pago (días)')
                                     ->placeholder('No disponible'),
                             ])->columns(2),
-                        // Pestaña Información del Plan
+
                         Tab::make('Plan')
                             ->schema([
                                 TextEntry::make('subscription.service_name')
@@ -170,21 +171,12 @@ class PaymentResource extends Resource
             ]);
     }
 
-
     public static function getRelations(): array
     {
         return [
-            //
+            // Definir relaciones aquí
         ];
     }
-
-    protected static function getTableQuery()
-    {
-        return parent::getTableQuery()->whereHas('subscription', function ($query) {
-            $query->where('user_id', auth()->id());
-        });
-    }
-
 
     public static function getPages(): array
     {
