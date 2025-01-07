@@ -35,16 +35,18 @@ class CreateEmployee extends CreateRecord
         $this->record->assignRole('employee');
 
         // Obtener el store actual mediante getTenant
-        $currentStore = Filament::getTenant(); // Asegúrate de que este método devuelve correctamente el store actual
+        $currentStore = Filament::getTenant();
 
-        // Validar si el store actual existe
+        dd($currentStore);
+
+        // Validar si el store actual existe y asociarlo con el rol
         if ($currentStore) {
-            // Usar attach para asociar el usuario con el store actual, incluyendo el rol 'employee'
-            $this->record->stores()->attach($currentStore->id, ['role' => 'employee']);
+            $this->record->stores()->attach($currentStore->id, [
+                'role' => 'employee',
+            ]);
         }
-
-        
     }
+
 
 
 }
