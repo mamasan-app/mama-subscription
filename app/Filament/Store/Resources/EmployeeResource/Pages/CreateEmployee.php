@@ -5,6 +5,7 @@ namespace App\Filament\Store\Resources\EmployeeResource\Pages;
 use App\Filament\Store\Resources\EmployeeResource;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
+use Filament\Facades\Filament;
 
 class CreateEmployee extends CreateRecord
 {
@@ -27,19 +28,25 @@ class CreateEmployee extends CreateRecord
 
     protected function afterCreate(): void
     {
+        // Asignar el rol 'employee' al usuario recién creado
         $this->record->assignRole('employee');
 
-        // Si se seleccionaron tiendas, asociarlas con el usuario
-        if (!empty($this->selectedStores)) {
+        // Obtener el store actual mediante getTenant
+        $currentStore = Filament::getTenant(); // O usa tu método getTenant()
 
-            // Asociar las tiendas con el rol 'customer' en la tabla intermedia
+        // Asegurar que se asigna el store actual al usuario
+        if ($currentStore) {
+            $this->record->stores()->attach($currentStore->id, ['role' => 'employee']);
+        }
+
+        // Si se seleccionaron tiendas adicionales, asociarlas también
+        if (!empty($this->selectedStores)) {
             $storesWithRole = [];
             foreach ($this->selectedStores as $storeId) {
-                $storesWithRole[$storeId] = ['role' => 'employee'];  // Asignar el rol a cada tienda
+                $storesWithRole[$storeId] = ['role' => 'employee'];
             }
-
-            // Sincronizar tiendas con el rol en la tabla intermedia
-            $this->record->stores()->sync($storesWithRole);
+            $this->record->stores()->syncWithoutDetaching($storesWithRole);
         }
     }
+
 }
