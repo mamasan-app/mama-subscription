@@ -117,6 +117,13 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
             ->withTimestamps();
     }
 
+    public function store()
+    {
+        return $this->belongsToMany(Store::class, 'store_user')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
     // Obtener tiendas donde el usuario es 'employee'
     public function employeeStores()
     {
