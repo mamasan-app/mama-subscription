@@ -37,7 +37,7 @@ class CreateEmployee extends CreateRecord
         // Obtener el store actual mediante getTenant
         $currentStore = Filament::getTenant();
 
-        dd($currentStore);
+        //dd($currentStore);
 
         // Validar si el store actual existe y asociarlo con el rol
         if ($currentStore) {
