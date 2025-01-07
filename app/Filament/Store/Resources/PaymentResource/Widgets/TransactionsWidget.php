@@ -53,7 +53,7 @@ class TransactionsWidget extends BaseWidget
             ->actions([
                 Tables\Actions\Action::make('view')
                     ->label('Ver')
-                    ->url(fn($record) => route('filament.app.resources.transactions.view', ['record' => $record->id]))
+                    ->url(fn($record) => route('filament.store.resources.transansaction.view', ['record' => $record->id]))
                     ->icon('heroicon-o-eye'),
             ]);
     }
