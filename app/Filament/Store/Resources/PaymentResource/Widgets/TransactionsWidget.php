@@ -55,7 +55,7 @@ class TransactionsWidget extends BaseWidget
                 Tables\Actions\Action::make('view')
                     ->label('Ver')
                     ->url(fn($record) => route('filament.store.resources.transactions.view', [
-                        'tenant' => Filament::getTenant()->id, // Obtener el tenant actual
+                        'tenant' => Filament::getTenant()->slug, // Obtener el tenant actual
                         'record' => $record->id
                     ]))
                     ->icon('heroicon-o-eye'),
