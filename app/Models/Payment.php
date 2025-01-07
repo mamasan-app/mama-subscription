@@ -42,6 +42,21 @@ class Payment extends Model
     }
 
     /**
+     * Relación directa con la tienda a través de la suscripción.
+     */
+    public function store()
+    {
+        return $this->hasOneThrough(
+            Store::class,
+            Subscription::class,
+            'id',              // Llave foránea en la tabla intermedia (subscriptions.id)
+            'id',              // Llave primaria en la tabla objetivo (stores.id)
+            'subscription_id', // Llave foránea en la tabla actual (payments.subscription_id)
+            'store_id'         // Llave foránea en la tabla intermedia (subscriptions.store_id)
+        );
+    }
+
+    /**
      * Verificar si el pago está vencido.
      */
     public function isOverdue(): bool

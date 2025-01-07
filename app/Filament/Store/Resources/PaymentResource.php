@@ -22,8 +22,6 @@ class PaymentResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
     protected static ?string $navigationGroup = 'Gestión de Pagos';
-    protected static ?string $tenantOwnershipRelationshipName = 'subscription.store';
-
 
     protected static ?string $modelLabel = 'Pagos';
 
