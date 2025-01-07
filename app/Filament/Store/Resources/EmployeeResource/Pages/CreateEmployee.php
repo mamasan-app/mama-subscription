@@ -43,17 +43,7 @@ class CreateEmployee extends CreateRecord
             $this->record->stores()->attach($currentStore->id, ['role' => 'employee']);
         }
 
-        // Si se seleccionaron tiendas adicionales, asociarlas también
-        if (!empty($this->selectedStores)) {
-            $storesWithRole = [];
-
-            foreach ($this->selectedStores as $storeId) {
-                $storesWithRole[$storeId] = ['role' => 'employee'];
-            }
-
-            // Utilizar syncWithoutDetaching para agregar las tiendas seleccionadas sin eliminar las existentes
-            $this->record->stores()->syncWithoutDetaching($storesWithRole);
-        }
+        
     }
 
 
