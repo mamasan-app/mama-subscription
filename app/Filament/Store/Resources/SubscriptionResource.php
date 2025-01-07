@@ -20,6 +20,8 @@ class SubscriptionResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $modelLabel = 'Suscripciones';
+
     /**
      * Define el formulario para crear/editar suscripciones.
      */
