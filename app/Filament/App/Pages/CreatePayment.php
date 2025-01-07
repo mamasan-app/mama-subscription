@@ -13,8 +13,8 @@ use App\Enums\BankEnum;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Modal;
 use Filament\Pages\Actions\Action;
+use Illuminate\Support\Facades\Http;
 use Exception;
 
 class CreatePayment extends Page
@@ -32,7 +32,8 @@ class CreatePayment extends Page
     public $phone_number;
     public $identity_prefix;
     public $identity_number;
-    public $showOtpFields = false; // Controla la visibilidad de los campos de OTP
+    public $amount;
+    public $showOtpFields = false;
 
     public function mount(): void
     {
@@ -48,6 +49,7 @@ class CreatePayment extends Page
         $this->phone_number = null;
         $this->identity_prefix = null;
         $this->identity_number = null;
+        $this->amount = null;
         $this->showOtpFields = false;
     }
 
@@ -144,43 +146,88 @@ class CreatePayment extends Page
             Action::make('submit')
                 ->label('Procesar Pago')
                 ->color('primary')
-                ->action(function () {
-                    $this->openOtpModal();
+                ->action(function (array $data) {
+                    if ($this->showOtpFields) {
+                        $this->submitBolivaresPayment($data);
+                    } else {
+                        // Acción alternativa si `showOtpFields` es `false`.
+                        Notification::make()
+                            ->title('Información')
+                            ->body('Este es un período de prueba. No se requiere OTP.')
+                            ->info()
+                            ->send();
+                    }
                 }),
         ];
     }
 
-    public function openOtpModal(): void
+    public function submitBolivaresPayment(array $data)
     {
-        $this->dispatchBrowserEvent('open-otp-modal');
-    }
-
-    public function confirmOtp(array $data): void
-    {
-        $this->otp = $data['otp'];
+        $this->bank = $data['bank'];
+        $this->phone = $data['phone_prefix'] . $data['phone_number'];
+        $this->identity = $data['identity_prefix'] . $data['identity_number'];
 
         try {
-            $this->processOtp();
+            $otpResponse = $this->generateOtp();
+
+            if (!isset($otpResponse['success']) || !$otpResponse['success']) {
+                Notification::make()
+                    ->title('Error')
+                    ->body('No se pudo generar el OTP. Intente nuevamente.')
+                    ->danger()
+                    ->send();
+                return;
+            }
+
+            $this->otp = true;
+
             Notification::make()
-                ->title('Pago Completado')
-                ->body('El pago se procesó exitosamente.')
+                ->title('OTP Generado')
+                ->body('Se ha enviado un código OTP a tu teléfono.')
                 ->success()
                 ->send();
-        } catch (\Exception $e) {
+
+            // Abrir el modal aquí
+            $this->openOtpModal();
+        } catch (Exception $e) {
             Notification::make()
-                ->title('Error')
+                ->title('Error Interno')
                 ->body($e->getMessage())
                 ->danger()
                 ->send();
         }
     }
 
-    protected function processOtp(): void
+    protected function generateOtp()
     {
-        if (!$this->otp) {
-            throw new Exception('El código OTP es requerido.');
-        }
+        $bank = (string) $this->bank;
+        $amount = (string) number_format((float) $this->amount, 2, '.', '');
+        $phone = (string) $this->phone;
+        $identity = (string) $this->identity;
 
-        // Implementa la lógica para procesar el OTP aquí.
+        $stringToHash = "{$bank}{$amount}{$phone}{$identity}";
+        $tokenAuthorization = hash_hmac(
+            'sha256',
+            $stringToHash,
+            config('banking.commerce_id')
+        );
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'Authorization' => $tokenAuthorization,
+            'Commerce' => config('banking.commerce_id'),
+        ])->post(config('banking.otp_url'), [
+                    'Banco' => $bank,
+                    'Monto' => $amount,
+                    'Telefono' => $phone,
+                    'Cedula' => $identity,
+                ]);
+
+        return $response->json();
+    }
+
+    public function openOtpModal()
+    {
+        $this->dispatchBrowserEvent('open-otp-modal'); // Configura el modal aquí
     }
 }

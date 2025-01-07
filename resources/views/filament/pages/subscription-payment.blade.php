@@ -6,13 +6,6 @@
             <div class="space-y-4">
                 {{ $this->form }}
             </div>
-
-            <!-- Contenedor del botón -->
-            <div class="mt-6">
-                <x-filament::button type="submit">
-                    Procesar Pago
-                </x-filament::button>
-            </div>
         </form>
     </div>
 </x-filament::page>
