@@ -6,6 +6,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use App\Models\Transaction;
+use Filament\Facades\Filament;
 
 class TransactionsWidget extends BaseWidget
 {
@@ -53,7 +54,10 @@ class TransactionsWidget extends BaseWidget
             ->actions([
                 Tables\Actions\Action::make('view')
                     ->label('Ver')
-                    ->url(fn($record) => route('filament.store.resources.transansactions.view', ['record' => $record->id]))
+                    ->url(fn($record) => route('filament.store.resources.transactions.view', [
+                        'tenant' => Filament::getTenant()->id, // Obtener el tenant actual
+                        'record' => $record->id
+                    ]))
                     ->icon('heroicon-o-eye'),
             ]);
     }
