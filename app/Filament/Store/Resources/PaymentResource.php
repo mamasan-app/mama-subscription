@@ -14,6 +14,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\Tabs;
 use Filament\Infolists\Components\Tabs\Tab;
 use Filament\Facades\Filament;
+use Illuminate\Database\Eloquent\Builder;
 
 class PaymentResource extends Resource
 {
@@ -37,6 +38,7 @@ class PaymentResource extends Resource
         $currentStore = Filament::getTenant();
 
         return $table
+            ->query(static::getTableQuery())
             ->columns([
                 Tables\Columns\TextColumn::make('id')
                     ->label('ID')
@@ -87,8 +89,8 @@ class PaymentResource extends Resource
             ])
             ->bulkActions([
                 // Acciones masivas
-            ])
-            ->query(fn($query) => $query->whereHas('subscription', fn($q) => $q->where('store_id', $currentStore)));
+            ]);
+
     }
 
     public static function infolist(Infolist $infolist): Infolist
@@ -177,6 +179,22 @@ class PaymentResource extends Resource
             // Definir relaciones aquí
         ];
     }
+
+    public static function getTableQuery(): Builder
+    {
+        $currentStore = Filament::getTenant();
+
+        if (!$currentStore) {
+            // Si no hay tienda en sesión, devuelve una consulta vacía
+            return Payment::query()->whereRaw('1 = 0');
+        }
+
+        // Filtra los pagos asociados a suscripciones de la tienda actual
+        return Payment::query()->whereHas('subscription', function (Builder $query) use ($currentStore) {
+            $query->where('store_id', $currentStore->id);
+        });
+    }
+
 
     public static function getPages(): array
     {
