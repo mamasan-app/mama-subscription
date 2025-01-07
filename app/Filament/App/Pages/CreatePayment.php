@@ -151,11 +151,17 @@ class CreatePayment extends Page
                     if (!$this->showOtpFields) {
                         $this->submitBolivaresPayment($data);
                     } else {
-                        Notification::make()
-                            ->title('Información')
-                            ->body('Este es un período de prueba. No se requiere OTP.')
-                            ->info()
-                            ->send();
+                        // Redirigir al pago de la suscripción para períodos de prueba
+                        $subscription = Subscription::find($this->subscription_id);
+                        if ($subscription) {
+                            $this->redirect(\App\Filament\App\Resources\UserSubscriptionResource\Pages\UserSubscriptionPayment::getUrl(['record' => $subscription]));
+                        } else {
+                            Notification::make()
+                                ->title('Error')
+                                ->body('No se pudo encontrar la suscripción seleccionada.')
+                                ->danger()
+                                ->send();
+                        }
                     }
                 }),
         ];
