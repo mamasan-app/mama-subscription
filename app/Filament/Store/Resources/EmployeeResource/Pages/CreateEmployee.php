@@ -45,8 +45,14 @@ class CreateEmployee extends CreateRecord
                 'role' => 'employee',
             ]);
         }
+
+        // Si se seleccionaron tiendas adicionales, asociarlas también
+        if (!empty($this->selectedStores)) {
+            $storesWithRole = [];
+            foreach ($this->selectedStores as $storeId) {
+                $storesWithRole[$storeId] = ['role' => 'employee'];
+            }
+            $this->record->stores()->syncWithoutDetaching($storesWithRole);
+        }
     }
-
-
-
 }
