@@ -33,7 +33,7 @@ class CreatePayment extends Page
     public $identity_prefix;
     public $identity_number;
     public $amount;
-    public $showOtpFields = false;
+    public $showOtpFields = false; // Valor predeterminado corregido
 
     public function mount(): void
     {
@@ -50,7 +50,7 @@ class CreatePayment extends Page
         $this->identity_prefix = null;
         $this->identity_number = null;
         $this->amount = null;
-        $this->showOtpFields = false;
+        $this->showOtpFields = false; // Aseguramos que siempre inicie en `false`
     }
 
     protected function getFormSchema(): array
@@ -71,14 +71,15 @@ class CreatePayment extends Page
                         ->toArray()
                 )
                 ->required()
-                ->reactive()
+                ->reactive() // Reactividad habilitada
                 ->afterStateUpdated(function ($state, $set) {
+                    // Se ejecuta cada vez que cambia la selección
                     $subscription = Subscription::find($state);
 
                     if ($subscription && $subscription->status === SubscriptionStatusEnum::OnTrial->value) {
-                        $set('showOtpFields', false);
+                        $set('showOtpFields', false); // Ocultar OTP si está en periodo de prueba
                     } else {
-                        $set('showOtpFields', true);
+                        $set('showOtpFields', true); // Mostrar OTP si requiere pago
                     }
                 }),
 
@@ -90,7 +91,7 @@ class CreatePayment extends Page
                         ->toArray()
                 )
                 ->required()
-                ->hidden(fn($get) => $get('showOtpFields')),
+                ->hidden(fn($get) => $get('showOtpFields')), // Reactivo a la visibilidad de `showOtpFields`
 
             Grid::make(2)
                 ->schema([
@@ -150,7 +151,6 @@ class CreatePayment extends Page
                     if ($this->showOtpFields) {
                         $this->submitBolivaresPayment($data);
                     } else {
-                        // Acción alternativa si `showOtpFields` es `false`.
                         Notification::make()
                             ->title('Información')
                             ->body('Este es un período de prueba. No se requiere OTP.')
@@ -187,7 +187,6 @@ class CreatePayment extends Page
                 ->success()
                 ->send();
 
-            // Abrir el modal aquí
             $this->openOtpModal();
         } catch (Exception $e) {
             Notification::make()
@@ -228,6 +227,6 @@ class CreatePayment extends Page
 
     public function openOtpModal()
     {
-        $this->dispatchBrowserEvent('open-otp-modal'); // Configura el modal aquí
+        $this->dispatchBrowserEvent('open-otp-modal');
     }
 }
