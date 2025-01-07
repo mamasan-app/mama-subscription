@@ -23,6 +23,9 @@ class CreateEmployee extends CreateRecord
         $data['password'] = bcrypt($data['password']);
         unset($data['password_confirmation']);
 
+        // Agregar el rol 'employee' como parte de los datos de creación
+        $data['role'] = 'employee';
+
         return $data;
     }
 
