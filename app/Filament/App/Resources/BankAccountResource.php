@@ -27,6 +27,8 @@ class BankAccountResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $modelLabel = 'Cuentas Registradas';
+
     public static function form(Form $form): Form
     {
         return $form
@@ -34,9 +36,10 @@ class BankAccountResource extends Resource
                 Select::make('bank_code')
                     ->label('Banco')
                     ->options(
-                        collect(BankEnum::cases())->mapWithKeys(fn($bank) => [$bank->value => $bank->getLabel()])->toArray()
+                        collect(BankEnum::cases())->mapWithKeys(fn($bank) => [$bank->code() => $bank->getLabel()])->toArray()
                     )
                     ->required(),
+
                 Grid::make(2)
                     ->schema([
                         Select::make('phone_prefix')
@@ -67,7 +70,13 @@ class BankAccountResource extends Resource
                     ->sortable(),
                 TextColumn::make('bank_code')
                     ->label('Banco')
-                    ->formatStateUsing(fn($state) => BankEnum::tryFrom($state)?->getLabel() ?? 'Desconocido'),
+                    ->formatStateUsing(function ($state) {
+                        // Buscar el enum correspondiente al código del banco
+                        $bank = collect(BankEnum::cases())
+                            ->first(fn($bank) => $bank->code() === $state);
+
+                        return $bank?->getLabel() ?? 'Desconocido';
+                    }),
                 TextColumn::make('phone_number')
                     ->label('Número de teléfono'),
                 TextColumn::make('identity_number')
