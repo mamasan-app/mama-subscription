@@ -13,6 +13,12 @@ class CreateEmployee extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+
+        if (isset($data['identity_prefix'], $data['identity_number'])) {
+            $data['identity_document'] = $data['identity_prefix'] . '-' . $data['identity_number'];
+            unset($data['identity_prefix'], $data['identity_number']); // Eliminar los campos originales
+        }
+        
         // Verifica si se han seleccionado tiendas
         if (isset($data['stores'])) {
             $this->selectedStores = $data['stores'];  // Guardar tiendas seleccionadas temporalmente

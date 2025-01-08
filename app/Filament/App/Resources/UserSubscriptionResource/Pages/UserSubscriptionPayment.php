@@ -322,41 +322,23 @@ class UserSubscriptionPayment extends Page
                                         ->maxLength(7)
                                         ->required(),
                                 ]),
-
-                            // Agrupación del tipo de cédula y número de cédula
-                            Grid::make(2)
-                                ->schema([
-                                    Select::make('identity_prefix')
-                                        ->label('Tipo de Cédula')
-                                        ->options(
-                                            collect(IdentityPrefixEnum::cases())
-                                                ->mapWithKeys(fn($prefix) => [$prefix->value => $prefix->getLabel()])
-                                                ->toArray()
-                                        )
-                                        ->required(),
-                                    TextInput::make('identity_number')
-                                        ->label('Número de Cédula')
-                                        ->numeric()
-                                        ->minLength(6)
-                                        ->maxLength(20)
-                                        ->required(),
-                                ]),
                         ];
                     }
                 })
                 ->action(function (array $data) {
                     $user = auth()->user();
+                    $identity = str_replace('-', '', $user->identity_document);
 
                     if (isset($data['existing_account'])) {
                         // Usar la cuenta seleccionada
                         $bankAccount = $user->bankAccounts()->findOrFail($data['existing_account']);
                         $data['bank'] = $bankAccount->bank_code;
                         $data['phone'] = $bankAccount->phone_number;
-                        $data['identity'] = $bankAccount->identity_number;
+                        $data['identity'] = $identity;
                     } else {
                         // Registrar una nueva cuenta
                         $data['phone'] = $data['phone_prefix'] . $data['phone_number'];
-                        $data['identity'] = $data['identity_prefix'] . $data['identity_number'];
+                        $data['identity'] = $identity;
 
                         $user->bankAccounts()->create([
                             'bank_code' => $data['bank'],

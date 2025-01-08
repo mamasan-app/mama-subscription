@@ -3,6 +3,7 @@
 namespace App\Filament\Store\Pages;
 
 use App\Models\User;
+use App\Enums\IdentityPrefixEnum;
 use Filament\Forms;
 use Filament\Pages\Page;
 use Filament\Notifications\Notification;
@@ -39,6 +40,9 @@ class CustomerCreate extends Page
         $this->last_name = '';
         $this->phone_number = '';
         $this->birth_date = '';
+        $this->identity_document = '';
+        $this->identity_prefix = '';
+        $this->identity_number = '';
         $this->showAdditionalFields = false;
         $this->buttonLabel = 'Enviar Magic Link';
     }
@@ -82,6 +86,10 @@ class CustomerCreate extends Page
                 ->label('Fecha de Nacimiento')
                 ->nullable()
                 ->hidden(fn($get) => !$get('showAdditionalFields')),
+
+            \App\Filament\Inputs\IdentityDocumentTextInput::make()
+                ->hidden(fn($get) => !$get('showAdditionalFields')),
+
         ];
     }
 
@@ -141,6 +149,8 @@ class CustomerCreate extends Page
                 ->success()
                 ->send();
         } else {
+            $this->identity_document = $this->identity_prefix . "-" . $this->identity_numbre;
+
             // Crear un nuevo cliente
             $newUser = User::create([
                 'email' => $this->email,
@@ -149,6 +159,7 @@ class CustomerCreate extends Page
                 'phone_number' => $this->phone_number,
                 'birth_date' => $this->birth_date ?: null,
                 'password' => bcrypt('default_password'),
+                'identity_document' => $this->identity_document,
             ]);
 
             $newUser->assignRole('customer');
