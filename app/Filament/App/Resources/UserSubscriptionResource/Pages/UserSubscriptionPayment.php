@@ -274,6 +274,7 @@ class UserSubscriptionPayment extends Page
                 ->label('Pagar en Bolívares')
                 ->modalHeading('Seleccionar una opción')
                 ->modalWidth('lg')
+                ->modalActionsPosition('center')
                 ->modalActions([
                     // Botón para registrar una nueva cuenta
                     Action::make('registerAccount')
@@ -349,6 +350,9 @@ class UserSubscriptionPayment extends Page
                             ]);
                         })
                         ->disabled(fn() => !auth()->user()->bankAccounts()->exists()), // Deshabilitar si no hay cuentas
+                ])
+                ->modalAttributes([
+                    'class' => 'text-center', // Centrar el texto del heading del modal
                 ]),
 
             Action::make('confirmOtp')
