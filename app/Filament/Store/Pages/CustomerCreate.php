@@ -153,7 +153,7 @@ class CustomerCreate extends Page
                 ->success()
                 ->send();
         } else {
-            $this->identity_document = $this->identity_prefix . "-" . $this->identity_numbre;
+            $this->identity_document = $this->identity_prefix . "-" . $this->identity_number;
 
             // Crear un nuevo cliente
             $newUser = User::create([
