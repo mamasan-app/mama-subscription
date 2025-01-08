@@ -272,84 +272,98 @@ class UserSubscriptionPayment extends Page
 
             Action::make('payInBolivares')
                 ->label('Pagar en Bolívares')
-                ->color('warning')
-                ->form(function () {
-                    $user = auth()->user();
-                    $hasBankAccounts = $user->bankAccounts()->exists(); // Verificar si tiene cuentas registradas
-        
-                    if ($hasBankAccounts) {
-                        // Mostrar el selector de cuentas bancarias registradas
-                        return [
-                            Select::make('existing_account')
-                                ->label('Seleccionar Cuenta')
-                                ->options(
-                                    $user->bankAccounts
-                                        ->mapWithKeys(fn($account) => [
-                                            $account->id => "{$account->bank_code} - {$account->phone_number} - {$account->identity_number}"
-                                        ])
-                                        ->toArray()
-                                )
-                                ->required(),
-                        ];
-                    } else {
-                        // Mostrar los inputs para registrar una nueva cuenta
-                        return [
-                            // Selector para el banco
-                            Select::make('bank')
-                                ->label('Banco')
-                                ->options(
-                                    collect(BankEnum::cases())
-                                        ->mapWithKeys(fn($bank) => [$bank->code() => $bank->getLabel()])
-                                        ->toArray()
-                                )
-                                ->required(),
+                ->modalHeading('Seleccionar una opción')
+                ->modalWidth('lg') // Ajusta el tamaño del modal
+                ->modalActions([
+                    // Botón para abrir el modal de registrar cuenta
+                    Action::make('registerAccount')
+                        ->label('Registrar cuenta')
+                        ->color('secondary')
+                        ->action(function () {
+                            $this->emit('openRegisterAccountModal'); // Abrir modal para registrar cuenta
+                        }),
+                    // Botón para seleccionar una cuenta existente
+                    Action::make('useExistingAccount')
+                        ->label('Realizar con cuenta existente')
+                        ->color('primary')
+                        ->action(function () {
+                            $this->emit('openSelectAccountModal'); // Abrir modal para seleccionar cuenta
+                        })
+                        ->disabled(fn() => !auth()->user()->bankAccounts()->exists()), // Deshabilitar si no hay cuentas
+                ])
+                ->modalButton('Cerrar') // Botón para cerrar el modal principal
+                ->form([]),// No se requiere un formulario en el modal principal
 
-                            // Agrupación del prefijo telefónico y número telefónico
-                            Grid::make(2)
-                                ->schema([
-                                    Select::make('phone_prefix')
-                                        ->label('Prefijo Telefónico')
-                                        ->options(
-                                            collect(PhonePrefixEnum::cases())
-                                                ->mapWithKeys(fn($prefix) => [$prefix->value => $prefix->getLabel()])
-                                                ->toArray()
-                                        )
-                                        ->required(),
-                                    TextInput::make('phone_number')
-                                        ->label('Número Telefónico')
-                                        ->numeric()
-                                        ->minLength(7)
-                                        ->maxLength(7)
-                                        ->required(),
-                                ]),
-                        ];
-                    }
-                })
+            Action::make('registerAccount')
+                ->label('Registrar cuenta')
+                ->modalHeading('Registrar nueva cuenta bancaria')
+                ->form([
+                    Select::make('bank')
+                        ->label('Banco')
+                        ->options(
+                            collect(BankEnum::cases())
+                                ->mapWithKeys(fn($bank) => [$bank->code() => $bank->getLabel()])
+                                ->toArray()
+                        )
+                        ->required(),
+                    Grid::make(2)
+                        ->schema([
+                            Select::make('phone_prefix')
+                                ->label('Prefijo Telefónico')
+                                ->options(
+                                    collect(PhonePrefixEnum::cases())
+                                        ->mapWithKeys(fn($prefix) => [$prefix->value => $prefix->getLabel()])
+                                        ->toArray()
+                                )
+                                ->required(),
+                            TextInput::make('phone_number')
+                                ->label('Número Telefónico')
+                                ->numeric()
+                                ->minLength(7)
+                                ->maxLength(7)
+                                ->required(),
+                        ]),
+                ])
                 ->action(function (array $data) {
                     $user = auth()->user();
-                    $identity = str_replace('-', '', $user->identity_document);
 
-                    if (isset($data['existing_account'])) {
-                        // Usar la cuenta seleccionada
-                        $bankAccount = $user->bankAccounts()->findOrFail($data['existing_account']);
-                        $data['bank'] = $bankAccount->bank_code;
-                        $data['phone'] = $bankAccount->phone_number;
-                        $data['identity'] = $identity;
-                    } else {
-                        // Registrar una nueva cuenta
-                        $data['phone'] = $data['phone_prefix'] . $data['phone_number'];
-                        $data['identity'] = $identity;
+                    // Registrar la nueva cuenta bancaria
+                    $user->bankAccounts()->create([
+                        'bank_code' => $data['bank'],
+                        'phone_number' => $data['phone_prefix'] . $data['phone_number'],
+                        'identity_number' => str_replace('-', '', $user->identity_document),
+                    ]);
 
-                        $user->bankAccounts()->create([
-                            'bank_code' => $data['bank'],
-                            'phone_number' => $data['phone'],
-                            'identity_number' => $data['identity'],
-                        ]);
-                    }
-
-                    $this->submitBolivaresPayment($data);
+                    $this->notify('success', 'Cuenta bancaria registrada exitosamente.');
                 }),
 
+            Action::make('useExistingAccount')
+                ->label('Seleccionar cuenta existente')
+                ->modalHeading('Seleccionar cuenta bancaria')
+                ->form([
+                    Select::make('existing_account')
+                        ->label('Cuenta bancaria')
+                        ->options(
+                            auth()->user()->bankAccounts()
+                                ->get()
+                                ->mapWithKeys(fn($account) => [
+                                    $account->id => "{$account->bank_code} - {$account->phone_number} - {$account->identity_number}"
+                                ])
+                                ->toArray()
+                        )
+                        ->required(),
+                ])
+                ->action(function (array $data) {
+                    $bankAccount = auth()->user()->bankAccounts()->findOrFail($data['existing_account']);
+
+                    $this->submitBolivaresPayment([
+                        'bank' => $bankAccount->bank_code,
+                        'phone' => $bankAccount->phone_number,
+                        'identity' => $bankAccount->identity_number,
+                    ]);
+
+                    $this->notify('success', 'Pago realizado con la cuenta seleccionada.');
+                }),
 
             Action::make('confirmOtp')
                 ->label('Confirmar OTP')
