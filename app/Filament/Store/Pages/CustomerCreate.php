@@ -25,6 +25,10 @@ class CustomerCreate extends Page
     public $last_name;
     public $phone_number;
     public $birth_date;
+    public $identity_prefix; // Prefijo del documento de identidad
+    public $identity_number; // Número del documento de identidad
+    public $identity_document;
+
     public $showAdditionalFields = false; // Controla la visibilidad de los campos adicionales
     public $buttonLabel = 'Enviar Magic Link'; // Texto del botón
 
@@ -82,12 +86,12 @@ class CustomerCreate extends Page
                 ->required()
                 ->hidden(fn($get) => !$get('showAdditionalFields')),
 
+            \App\Filament\Inputs\IdentityDocumentTextInput::make()
+                ->hidden(fn($get) => !$get('showAdditionalFields')),
+
             Forms\Components\DatePicker::make('birth_date')
                 ->label('Fecha de Nacimiento')
                 ->nullable()
-                ->hidden(fn($get) => !$get('showAdditionalFields')),
-
-            \App\Filament\Inputs\IdentityDocumentTextInput::make()
                 ->hidden(fn($get) => !$get('showAdditionalFields')),
 
         ];
