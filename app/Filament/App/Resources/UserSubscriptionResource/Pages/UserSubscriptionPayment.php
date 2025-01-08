@@ -349,9 +349,6 @@ class UserSubscriptionPayment extends Page
                             ]);
                         })
                         ->disabled(fn() => !auth()->user()->bankAccounts()->exists()), // Deshabilitar si no hay cuentas
-                ])
-                ->modalAttributes([
-                    'class' => 'text-center', // Centrar el texto del heading del modal
                 ]),
 
             Action::make('confirmOtp')
