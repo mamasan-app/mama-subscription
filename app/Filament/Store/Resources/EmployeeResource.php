@@ -46,8 +46,7 @@ class EmployeeResource extends Resource
                     ->required()
                     ->maxLength(255),
 
-                IdentityDocumentTextInput::make('identity_document')
-                    ->required(),
+                IdentityDocumentTextInput::make('identity_document'),
 
                 Forms\Components\Select::make('stores')
                     ->label('Tiendas')
