@@ -25,7 +25,7 @@ class EditEmployee extends EditRecord
         }
 
         // Prellenar las tiendas seleccionadas
-        $data['stores'] = $this->record->stores()->pluck('id')->toArray();
+        $data['stores'] = $this->record->stores()->pluck('stores.id')->toArray();
 
         return $data;
     }
