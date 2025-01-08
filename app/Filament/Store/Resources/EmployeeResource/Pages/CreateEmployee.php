@@ -40,11 +40,11 @@ class CreateEmployee extends CreateRecord
         //dd($currentStore);
 
         // Validar si el store actual existe y asociarlo con el rol
-        if ($currentStore) {
-            $this->record->stores()->attach($currentStore->id, [
-                'role' => 'employee',
-            ]);
-        }
+        //if ($currentStore) {
+        //    $this->record->stores()->attach($currentStore->id, [
+        //        'role' => 'employee',
+        //    ]);
+        //}
 
         // Si se seleccionaron tiendas adicionales, asociarlas también
         if (!empty($this->selectedStores)) {
