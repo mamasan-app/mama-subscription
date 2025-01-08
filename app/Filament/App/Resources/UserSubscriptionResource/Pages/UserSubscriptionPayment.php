@@ -274,7 +274,6 @@ class UserSubscriptionPayment extends Page
                 ->label('Pagar en Bolívares')
                 ->modalHeading('Seleccionar una opción')
                 ->modalWidth('lg')
-                ->modalActionsPosition('center')
                 ->modalActions([
                     // Botón para registrar una nueva cuenta
                     Action::make('registerAccount')

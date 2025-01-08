@@ -96,19 +96,6 @@ class StoreResource extends Resource
                                     ]),
                             ])->columnSpanFull(),
 
-                        Tab::make('Propietario')
-                            ->schema([
-                                TextEntry::make('owner.name')
-                                    ->label('Nombre del Propietario')
-                                    ->placeholder('No disponible'),
-                                TextEntry::make('owner.email')
-                                    ->label('Correo Electrónico')
-                                    ->placeholder('No disponible'),
-                                TextEntry::make('owner.phone')
-                                    ->label('Teléfono')
-                                    ->placeholder('No disponible'),
-                            ])->columnSpanFull(),
-
                         Tab::make('Direcciones')
                             ->schema([
                                 RepeatableEntry::make('addresses')
