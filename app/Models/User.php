@@ -173,4 +173,18 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
         return $this->hasMany(Subscription::class, 'user_id');
     }
 
+    public function bankAccounts()
+    {
+        return $this->hasMany(BankAccount::class, 'user_id');
+    }
+
+    public function hasBankAccount(string $bankCode, string $phoneNumber, string $identityNumber): bool
+    {
+        return $this->bankAccounts()
+            ->where('bank_code', $bankCode)
+            ->where('phone_number', $phoneNumber)
+            ->where('identity_number', $identityNumber)
+            ->exists();
+    }
+
 }

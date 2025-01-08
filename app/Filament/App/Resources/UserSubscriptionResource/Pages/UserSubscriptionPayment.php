@@ -273,73 +273,97 @@ class UserSubscriptionPayment extends Page
             Action::make('payInBolivares')
                 ->label('Pagar en Bolívares')
                 ->color('warning')
-                ->form([
-                    // Selector para el banco
-                    Select::make('bank')
-                        ->label('Banco')
-                        ->options(
-                            collect(BankEnum::cases())
-                                ->mapWithKeys(fn($bank) => [$bank->code() => $bank->getLabel()]) // Usar el código del banco como clave
-                                ->toArray()
-                        )
-                        ->required(),
-
-                    // Agrupación del prefijo telefónico y número telefónico
-                    Grid::make(2)
-                        ->schema([
-                            Select::make('phone_prefix')
-                                ->label('Prefijo Telefónico')
-                                ->options(
-                                    collect(PhonePrefixEnum::cases())
-                                        ->mapWithKeys(fn($prefix) => [$prefix->value => $prefix->getLabel()])
-                                        ->toArray()
-                                )
-                                ->required(),
-                            TextInput::make('phone_number')
-                                ->label('Número Telefónico')
-                                ->numeric()
-                                ->minLength(7)
-                                ->maxLength(7)
-                                ->required(),
-                        ]),
-
-                    // Agrupación del tipo de cédula y número de cédula
-                    Grid::make(2)
-                        ->schema([
-                            Select::make('identity_prefix')
-                                ->label('Tipo de Cédula')
-                                ->options(
-                                    collect(IdentityPrefixEnum::cases())
-                                        ->mapWithKeys(fn($prefix) => [$prefix->value => $prefix->getLabel()])
-                                        ->toArray()
-                                )
-                                ->required(),
-                            TextInput::make('identity_number')
-                                ->label('Número de Cédula')
-                                ->numeric()
-                                ->minLength(6)
-                                ->maxLength(20)
-                                ->required(),
-                        ]),
-
-                    // Input para el monto (deshabilitado)
-                    TextInput::make('amount')
-                        ->label('Monto')
-                        ->disabled()
-                        ->default(fn() => $this->amount),
-                ])
-                ->action(function (array $data) {
-                    // Aquí puedes depurar el valor del banco seleccionado
-                    $bankCode = $data['bank']; // El código del banco seleccionado
+                ->form(function () {
+                    $user = auth()->user();
+                    $hasBankAccounts = $user->bankAccounts()->exists(); // Verificar si tiene cuentas registradas
         
-                    // Combinar los datos del prefijo y número de teléfono
-                    $data['phone'] = $data['phone_prefix'] . $data['phone_number'];
+                    if ($hasBankAccounts) {
+                        // Mostrar el selector de cuentas bancarias registradas
+                        return [
+                            Select::make('existing_account')
+                                ->label('Seleccionar Cuenta')
+                                ->options(
+                                    $user->bankAccounts
+                                        ->mapWithKeys(fn($account) => [
+                                            $account->id => "{$account->bank_code} - {$account->phone_number} - {$account->identity_number}"
+                                        ])
+                                        ->toArray()
+                                )
+                                ->required(),
+                        ];
+                    } else {
+                        // Mostrar los inputs para registrar una nueva cuenta
+                        return [
+                            // Selector para el banco
+                            Select::make('bank')
+                                ->label('Banco')
+                                ->options(
+                                    collect(BankEnum::cases())
+                                        ->mapWithKeys(fn($bank) => [$bank->code() => $bank->getLabel()])
+                                        ->toArray()
+                                )
+                                ->required(),
 
-                    // Combinar los datos del prefijo y número de cédula
-                    $data['identity'] = $data['identity_prefix'] . $data['identity_number'];
+                            // Agrupación del prefijo telefónico y número telefónico
+                            Grid::make(2)
+                                ->schema([
+                                    Select::make('phone_prefix')
+                                        ->label('Prefijo Telefónico')
+                                        ->options(
+                                            collect(PhonePrefixEnum::cases())
+                                                ->mapWithKeys(fn($prefix) => [$prefix->value => $prefix->getLabel()])
+                                                ->toArray()
+                                        )
+                                        ->required(),
+                                    TextInput::make('phone_number')
+                                        ->label('Número Telefónico')
+                                        ->numeric()
+                                        ->minLength(7)
+                                        ->maxLength(7)
+                                        ->required(),
+                                ]),
 
-                    // Reemplazar el banco en los datos enviados
-                    $data['bank'] = $bankCode;
+                            // Agrupación del tipo de cédula y número de cédula
+                            Grid::make(2)
+                                ->schema([
+                                    Select::make('identity_prefix')
+                                        ->label('Tipo de Cédula')
+                                        ->options(
+                                            collect(IdentityPrefixEnum::cases())
+                                                ->mapWithKeys(fn($prefix) => [$prefix->value => $prefix->getLabel()])
+                                                ->toArray()
+                                        )
+                                        ->required(),
+                                    TextInput::make('identity_number')
+                                        ->label('Número de Cédula')
+                                        ->numeric()
+                                        ->minLength(6)
+                                        ->maxLength(20)
+                                        ->required(),
+                                ]),
+                        ];
+                    }
+                })
+                ->action(function (array $data) {
+                    $user = auth()->user();
+
+                    if (isset($data['existing_account'])) {
+                        // Usar la cuenta seleccionada
+                        $bankAccount = $user->bankAccounts()->findOrFail($data['existing_account']);
+                        $data['bank'] = $bankAccount->bank_code;
+                        $data['phone'] = $bankAccount->phone_number;
+                        $data['identity'] = $bankAccount->identity_number;
+                    } else {
+                        // Registrar una nueva cuenta
+                        $data['phone'] = $data['phone_prefix'] . $data['phone_number'];
+                        $data['identity'] = $data['identity_prefix'] . $data['identity_number'];
+
+                        $user->bankAccounts()->create([
+                            'bank_code' => $data['bank'],
+                            'phone_number' => $data['phone'],
+                            'identity_number' => $data['identity'],
+                        ]);
+                    }
 
                     $this->submitBolivaresPayment($data);
                 }),
