@@ -143,6 +143,10 @@ class StripeWebhookController extends Controller
                                 'cancel_at' => strtotime($endDate),
                             ]);
 
+                            $subscription->update([
+                                'ends_at' => $endDate,
+                            ]);
+
                             Log::info('Stripe subscription updated with cancel_at', [
                                 'stripe_subscription_id' => $session->subscription,
                                 'cancel_at' => $endDate,
