@@ -17,7 +17,8 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
+use Saade\FilamentFullCalendar\FullCalendarPlugin;
+
 use App\Filament\Pages\Auth\UserLogin;
 
 class AppPanelProvider extends PanelProvider
@@ -61,7 +62,7 @@ class AppPanelProvider extends PanelProvider
                 \App\Filament\App\Resources\UserSubscriptionResource::class,
             ])
             ->plugins([
-                FullCalendarWidget::make(), // Registra el plugin del calendario
+                FullCalendarPlugin::make(), // Registra el plugin del calendario
             ]);
     }
 }
