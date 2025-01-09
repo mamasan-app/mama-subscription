@@ -6,7 +6,6 @@ use Filament\Support\Contracts\HasLabel;
 
 enum BankEnum: string implements HasLabel
 {
-    case BCV = 'BCV';
     case Venezuela = 'Venezuela';
     case VenezolanoDeCredito = 'VenezolanoDeCredito';
     case Mercantil = 'Mercantil';
@@ -34,7 +33,6 @@ enum BankEnum: string implements HasLabel
     public function code(): ?string
     {
         return match ($this) {
-            self::BCV => '0001',
             self::Venezuela => '0102',
             self::VenezolanoDeCredito => '0104',
             self::Mercantil => '0105',
@@ -64,7 +62,6 @@ enum BankEnum: string implements HasLabel
     public function getLabel(): ?string
     {
         return $this->code() . ' - ' . match ($this) {
-            self::BCV => 'Banco Central de Venezuela',
             self::Venezuela => 'Banco de Venezuela, S.A. Banco Universal',
             self::VenezolanoDeCredito => 'Banco Venezolano de Crédito, S.A. Banco Universal',
             self::Mercantil => 'Banco Mercantil C.A., Banco Universal',

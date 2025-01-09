@@ -47,9 +47,10 @@ class TransactionResource extends Resource
                     ->color(fn($record) => $record->status->getColor())
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('amount_cents')
+                Tables\Columns\TextColumn::make('amount')
                     ->label('Monto (USD)')
-                    ->formatStateUsing(fn($record) => '$' . number_format($record->amount / 100, 2)),
+                    ->formatStateUsing(fn($state) => '$' . number_format($state, 2))
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('date')
                     ->label('Fecha')
@@ -87,9 +88,9 @@ class TransactionResource extends Resource
                                 TextEntry::make('date')
                                     ->label('Fecha de Transacción')
                                     ->dateTime('d/m/Y'),
-                                TextEntry::make('amount_cents')
+                                TextEntry::make('amount')
                                     ->label('Monto (USD)')
-                                    ->getStateUsing(fn($record) => number_format($record->amount_cents, 2) . ' USD'),
+                                    ->getStateUsing(fn($record) => '$' . number_format($record->amount, 2)),
                                 TextEntry::make('from_user_name')
                                     ->label('Usuario (From)')
                                     ->getStateUsing(fn($record) => $record->from->name ?? 'No disponible'),

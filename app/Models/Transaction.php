@@ -50,8 +50,9 @@ class Transaction extends Model
 
     public function getAmountAttribute(): float
     {
-        return $this->amount_cents;
+        return $this->amount_cents / 100;
     }
+
 
     /**
      * Relación con Payment.
