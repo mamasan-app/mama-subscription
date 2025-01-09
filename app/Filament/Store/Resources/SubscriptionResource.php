@@ -95,7 +95,7 @@ class SubscriptionResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
                     ->sortable()
-                    ->formatStateUsing(fn($state) => ucfirst(str_replace('_', ' ', $state->value))),
+                    ->formatStateUsing(fn($state) => $state?->getLabel()),
 
                 Tables\Columns\TextColumn::make('trial_ends_at')
                     ->label('Fin del Período de Prueba')
