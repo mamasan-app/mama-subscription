@@ -14,7 +14,6 @@ use App\Enums\TransactionTypeEnum;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\PaymentStatusEnum;
 use App\Enums\SubscriptionStatusEnum;
-use App\Jobs\RetryUpdateTransaction;
 use Filament\Notifications\Notification;
 use Stripe\Webhook;
 use Stripe\Exception\SignatureVerificationException;
@@ -135,7 +134,7 @@ class StripeWebhookController extends Controller
                 if ($plan) {
                     // Verifica si el plan es finito
                     if (!$plan->infinite_duration) {
-                        $endDate = now()->addDays($plan->duration)->toDateString();
+                        $endDate = now()->setTimezone('America/Caracas')->addDays($plan->duration)->toDateString();
 
                         try {
                             // Actualiza la suscripción en Stripe
@@ -205,10 +204,10 @@ class StripeWebhookController extends Controller
             $localSubscription->update([
                 'status' => SubscriptionStatusEnum::from($subscription->status),
                 'renews_at' => isset($subscription->current_period_end)
-                    ? now()->setTimestamp($subscription->current_period_end)->subDay()
+                    ? now()->setTimestamp($subscription->current_period_end)->setTimezone('America/Caracas')->subDay()
                     : null,
                 'expires_at' => isset($subscription->cancel_at)
-                    ? now()->setTimestamp($subscription->cancel_at)->subDay()
+                    ? now()->setTimestamp($subscription->cancel_at)->setTimezone('America/Caracas')->subDay()
                     : null,
             ]);
 
@@ -228,7 +227,7 @@ class StripeWebhookController extends Controller
         if ($localSubscription) {
             $localSubscription->update([
                 'status' => SubscriptionStatusEnum::Cancelled,
-                'ends_at' => now(),
+                'ends_at' => now()->setTimezone('America/Caracas'),
             ]);
 
             Log::info('Subscription marked as cancelled in local database', ['subscription_id' => $localSubscription->id]);
@@ -282,7 +281,7 @@ class StripeWebhookController extends Controller
         }
 
         try {
-            $dueDate = isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null;
+            $dueDate = isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date)->setTimezone('America/Caracas') : null;
 
             $payment = Payment::where('stripe_invoice_id', $invoice->id)->first();
 
@@ -340,7 +339,7 @@ class StripeWebhookController extends Controller
                 $payment->update([
                     'status' => $status,
                     'amount_cents' => $invoice->amount_due,
-                    'due_date' => isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null,
+                    'due_date' => isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date)->setTimezone('America/Caracas') : null,
                 ]);
             } catch (\Exception $e) {
                 Log::error('Error al procesar el estado de la factura', [
@@ -359,7 +358,7 @@ class StripeWebhookController extends Controller
 
             $subscription = Subscription::where('stripe_subscription_id', $subscriptionId)->first();
 
-            $dueDate = isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null;
+            $dueDate = isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date)->setTimezone('America/Caracas') : null;
 
             $payment = Payment::updateOrCreate(
                 ['stripe_invoice_id' => $invoice->id],
@@ -407,7 +406,7 @@ class StripeWebhookController extends Controller
                 return;
             }
 
-            $dueDate = isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null;
+            $dueDate = isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date)->setTimezone('America/Caracas') : null;
 
             $payment = Payment::updateOrCreate(
                 ['stripe_invoice_id' => $invoice->id],
@@ -460,7 +459,7 @@ class StripeWebhookController extends Controller
         if ($payment) {
             $payment->update(['status' => 'failed']);
         } else {
-            $dueDate = isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null;
+            $dueDate = isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date)->setTimezone('America/Caracas') : null;
 
             $payment = Payment::updateOrCreate(
                 ['stripe_invoice_id' => $invoice->id],
@@ -493,7 +492,7 @@ class StripeWebhookController extends Controller
             $gracePeriod,
             $attemptCount,
             $subscriptionId
-        )->delay(now()->addDay()); // Reintenta después de 1 día
+        )->delay(now()->setTimezone('America/Caracas')->addDay()); // Reintenta después de 1 día
 
         Log::info('RetryInvoicePayment job dispatched', [
             'invoice_id' => $invoice->id,
@@ -558,7 +557,7 @@ class StripeWebhookController extends Controller
                     'subscription_id' => $subscription->id,
                     'status' => PaymentStatusEnum::Finalized->value, // Usando el enum para el estado.
                     'amount_cents' => $invoice->amount_due ?? 0,
-                    'due_date' => isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date) : null,
+                    'due_date' => isset($invoice->due_date) ? now()->setTimestamp($invoice->due_date)->setTimezone('America/Caracas') : null,
                 ]
             );
 
@@ -592,7 +591,7 @@ class StripeWebhookController extends Controller
                     'to_id' => $store->id, // Valor temporal hasta que se cree el invoice
                     'type' => TransactionTypeEnum::Subscription->value,
                     'status' => Transaction::mapStripeStatusToLocal($paymentIntent->status),
-                    'date' => now(),
+                    'date' => now()->setTimezone('America/Caracas'),
                     'amount_cents' => $paymentIntent->amount,
                     'metadata' => $paymentIntent->toArray(),
                     'payment_id' => $payment ? $payment->id : null,
@@ -607,7 +606,7 @@ class StripeWebhookController extends Controller
                     'to_id' => null, // Valor temporal hasta que se cree el invoice
                     'type' => TransactionTypeEnum::Subscription->value,
                     'status' => Transaction::mapStripeStatusToLocal($paymentIntent->status),
-                    'date' => now(),
+                    'date' => now()->setTimezone('America/Caracas'),
                     'amount_cents' => $paymentIntent->amount,
                     'metadata' => $paymentIntent->toArray(),
                     'payment_id' => $payment ? $payment->id : null,
@@ -654,7 +653,7 @@ class StripeWebhookController extends Controller
                         'to_id' => $store->id, // Valor temporal hasta que se cree el invoice
                         'type' => TransactionTypeEnum::Subscription->value,
                         'status' => Transaction::mapStripeStatusToLocal($paymentIntent->status),
-                        'date' => now(),
+                        'date' => now()->setTimezone('America/Caracas'),
                         'amount_cents' => $paymentIntent->amount,
                         'metadata' => $paymentIntent->toArray(),
                         'payment_id' => $payment ? $payment->id : null,
@@ -670,7 +669,7 @@ class StripeWebhookController extends Controller
                         'to_id' => null, // Valor temporal hasta que se cree el invoice
                         'type' => TransactionTypeEnum::Subscription->value,
                         'status' => Transaction::mapStripeStatusToLocal($paymentIntent->status),
-                        'date' => now(),
+                        'date' => now()->setTimezone('America/Caracas'),
                         'amount_cents' => $paymentIntent->amount,
                         'metadata' => $paymentIntent->toArray(),
                         'payment_id' => $payment ? $payment->id : null,
@@ -708,7 +707,7 @@ class StripeWebhookController extends Controller
                         'to_id' => $store->id, // Valor temporal hasta que se cree el invoice
                         'type' => TransactionTypeEnum::Subscription->value,
                         'status' => Transaction::mapStripeStatusToLocal($paymentIntent->status),
-                        'date' => now(),
+                        'date' => now()->setTimezone('America/Caracas'),
                         'amount_cents' => $paymentIntent->amount,
                         'metadata' => $paymentIntent->toArray(),
                         'payment_id' => $payment ? $payment->id : null,
@@ -724,7 +723,7 @@ class StripeWebhookController extends Controller
                         'to_id' => null, // Valor temporal hasta que se cree el invoice
                         'type' => TransactionTypeEnum::Subscription->value,
                         'status' => Transaction::mapStripeStatusToLocal($paymentIntent->status),
-                        'date' => now(),
+                        'date' => now()->setTimezone('America/Caracas'),
                         'amount_cents' => $paymentIntent->amount,
                         'metadata' => $paymentIntent->toArray(),
                         'payment_id' => $payment ? $payment->id : null,
@@ -759,7 +758,7 @@ class StripeWebhookController extends Controller
                         'to_id' => $store->id, // Valor temporal hasta que se cree el invoice
                         'type' => TransactionTypeEnum::Subscription->value,
                         'status' => Transaction::mapStripeStatusToLocal($paymentIntent->status),
-                        'date' => now(),
+                        'date' => now()->setTimezone('America/Caracas'),
                         'amount_cents' => $paymentIntent->amount,
                         'metadata' => $paymentIntent->toArray(),
                         'payment_id' => $payment ? $payment->id : null,
@@ -775,7 +774,7 @@ class StripeWebhookController extends Controller
                         'to_id' => null, // Valor temporal hasta que se cree el invoice
                         'type' => TransactionTypeEnum::Subscription->value,
                         'status' => Transaction::mapStripeStatusToLocal($paymentIntent->status),
-                        'date' => now(),
+                        'date' => now()->setTimezone('America/Caracas'),
                         'amount_cents' => $paymentIntent->amount,
                         'metadata' => $paymentIntent->toArray(),
                         'payment_id' => $payment ? $payment->id : null,
