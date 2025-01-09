@@ -122,7 +122,7 @@ class StripeWebhookController extends Controller
                 $subscription->update([
                     'stripe_subscription_id' => $session->subscription,
                     'status' => 'active',
-                    'trial_ends_at' => now(),
+                    'trial_ends_at' => now()->setTimezone('America/Caracas'),
                 ]);
 
                 Log::info('Subscription updated', [
