@@ -17,7 +17,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Saade\FilamentFullCalendar\FullCalendarPlugin;
+use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
 
 use App\Filament\Pages\Auth\UserLogin;
 
@@ -62,7 +62,17 @@ class AppPanelProvider extends PanelProvider
                 \App\Filament\App\Resources\UserSubscriptionResource::class,
             ])
             ->plugins([
-                FullCalendarPlugin::make(), // Registra el plugin del calendario
+                FilamentFullCalendarPlugin::make() // Registra el plugin del calendario
+                    ->timezone('UTC') // Establecer la zona horaria
+                    ->locale('es') // Establecer el idioma del calendario
+                    ->config([
+                        'headerToolbar' => [
+                            'left' => 'prev,next today',
+                            'center' => 'title',
+                            'right' => 'dayGridMonth,timeGridWeek,timeGridDay',
+                        ],
+                        'firstDay' => 1, // Comenzar la semana en lunes
+                    ])
             ]);
     }
 }
