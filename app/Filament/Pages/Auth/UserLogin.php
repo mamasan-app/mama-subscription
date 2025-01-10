@@ -37,14 +37,13 @@ class UserLogin extends BaseUserLogin
     {
         $data = $this->form->getState();
 
-        // Validar que el correo exista en la base de datos
-        $user = User::where('email', $data['email'])->first();
-
-        if (!$user) {
-            $this->throwFailureValidationException();
+        // Validaciones adicionales y notificaciones
+        if (!$this->validateAndNotify($data)) {
+            return null; // Detener flujo si hay errores
         }
 
         // Crear una acción de inicio de sesión con Magic Link
+        $user = User::where('email', $data['email'])->first();
         $action = new LoginAction($user);
 
         // Crear el enlace mágico
@@ -62,9 +61,59 @@ class UserLogin extends BaseUserLogin
             ->success()
             ->send();
 
-
         // Retorna null ya que no se realizará una autenticación directa
         return null;
+    }
+
+    /**
+     * Valida el correo electrónico y muestra notificaciones en caso de error.
+     */
+    protected function validateAndNotify(array $data): bool
+    {
+        $errors = false;
+
+        // Validar si el campo de correo electrónico está vacío
+        if (empty($data['email'])) {
+            Notification::make()
+                ->title('Error de validación')
+                ->body('El campo de correo electrónico es obligatorio.')
+                ->danger()
+                ->send();
+            $errors = true;
+        }
+
+        // Validar formato de correo electrónico
+        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            Notification::make()
+                ->title('Error de validación')
+                ->body('El correo electrónico no tiene un formato válido.')
+                ->danger()
+                ->send();
+            $errors = true;
+        }
+
+        // Validar si el correo existe en la base de datos
+        if (!User::where('email', $data['email'])->exists()) {
+            Notification::make()
+                ->title('Correo no encontrado')
+                ->body('El correo electrónico ingresado no está registrado en el sistema.')
+                ->warning()
+                ->send();
+            $errors = true;
+        }
+
+        // Verificar si el usuario está desactivado
+        $user = User::where('email', $data['email'])->first();
+        if ($user && !$user->active) { // Si tienes un campo `active` para usuarios
+            Notification::make()
+                ->title('Usuario inactivo')
+                ->body('Este usuario está desactivado y no puede iniciar sesión.')
+                ->danger()
+                ->send();
+            $errors = true;
+        }
+
+        return !$errors; // Retorna true si no hay errores
     }
 
     /**
@@ -72,8 +121,14 @@ class UserLogin extends BaseUserLogin
      */
     protected function throwFailureValidationException(): never
     {
+        Notification::make()
+            ->title('Error')
+            ->body('El correo electrónico no está registrado o no es válido.')
+            ->danger()
+            ->send();
+
         throw \Illuminate\Validation\ValidationException::withMessages([
-            'email' => 'El correo no está registrado en el sistema.',
+            'email' => 'El correo electrónico no está registrado en el sistema.',
         ]);
     }
 
