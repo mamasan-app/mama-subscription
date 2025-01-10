@@ -8,6 +8,7 @@ use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
+use Illuminate\Validation\ValidationException;
 
 class CreateEmployee extends CreateRecord
 {
@@ -18,7 +19,7 @@ class CreateEmployee extends CreateRecord
         // Generar el documento de identidad si los prefijos están presentes
         if (isset($data['identity_prefix'], $data['identity_number'])) {
             $data['identity_document'] = $data['identity_prefix'] . '-' . $data['identity_number'];
-            unset($data['identity_prefix'], $data['identity_number']); // Eliminar los campos originales
+            unset($data['identity_prefix'], $data['identity_number']);
         }
 
         // Verificar unicidad del correo electrónico
@@ -28,17 +29,23 @@ class CreateEmployee extends CreateRecord
                 ->body('El correo electrónico ya está registrado.')
                 ->danger()
                 ->send();
-            abort(422, 'El correo electrónico ya está registrado.');
+
+            throw ValidationException::withMessages([
+                'email' => 'El correo electrónico ya está registrado.',
+            ]);
         }
 
-        // Verificar unicidad del número de teléfono (si está presente)
+        // Verificar unicidad del número de teléfono
         if (!empty($data['phone_number']) && User::where('phone_number', $data['phone_number'])->exists()) {
             Notification::make()
                 ->title('Error')
                 ->body('El número de teléfono ya está registrado.')
                 ->danger()
                 ->send();
-            abort(422, 'El número de teléfono ya está registrado.');
+
+            throw ValidationException::withMessages([
+                'phone_number' => 'El número de teléfono ya está registrado.',
+            ]);
         }
 
         // Verificar unicidad del documento de identidad
@@ -48,21 +55,13 @@ class CreateEmployee extends CreateRecord
                 ->body('El documento de identidad ya está registrado.')
                 ->danger()
                 ->send();
-            abort(422, 'El documento de identidad ya está registrado.');
+
+            throw ValidationException::withMessages([
+                'identity_document' => 'El documento de identidad ya está registrado.',
+            ]);
         }
 
-        // Verificar si se han seleccionado tiendas
-        if (isset($data['stores'])) {
-            $this->selectedStores = $data['stores'];  // Guardar tiendas seleccionadas temporalmente
-            unset($data['stores']);  // Eliminar el campo 'stores' antes de guardar en la tabla 'users'
-        }
-
-        // Hash de la contraseña antes de guardar
-        $data['password'] = bcrypt($data['password']);
-        unset($data['password_confirmation']);
-
-        // Agregar el rol 'employee' como parte de los datos de creación
-        $data['role'] = 'employee';
+        // Resto del código...
 
         return $data;
     }

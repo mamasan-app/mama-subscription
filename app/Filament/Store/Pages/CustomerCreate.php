@@ -158,12 +158,7 @@ class CustomerCreate extends Page
                 $this->identity_document = $this->identity_prefix . "-" . $this->identity_number;
 
                 // Validaciones de unicidad
-                if (User::where('email', $this->email)->exists()) { /* Notificación */
-                }
-                if (!empty($this->phone_number) && User::where('phone_number', $this->phone_number)->exists()) { /* Notificación */
-                }
-                if (User::where('identity_document', $this->identity_document)->exists()) { /* Notificación */
-                }
+                
 
                 // Crear usuario
                 // Crear un nuevo cliente
@@ -188,11 +183,41 @@ class CustomerCreate extends Page
                     ->send();
 
             } catch (\Exception $e) {
-                Notification::make()
+                if (User::where('email', $this->email)->exists()) { 
+                    /* Notificación */
+                    Notification::make()
+                    ->title('Error crítico')
+                    ->body('El email ya esta registrado.')
+                    ->danger()
+                    ->send();
+
+                }
+                if (!empty($this->phone_number) && User::where('phone_number', $this->phone_number)->exists()) { 
+                    /* Notificación */
+                    Notification::make()
+                    ->title('Error crítico')
+                    ->body('El telefono ya se encuentra asociado a otro usuario')
+                    ->danger()
+                    ->send();
+
+                }
+                if (User::where('identity_document', $this->identity_document)->exists()) { 
+                    /* Notificación */
+                    Notification::make()
+                    ->title('Error crítico')
+                    ->body('El documento de identidad ya se encuentra asociado a otro usuario')
+                    ->danger()
+                    ->send();
+
+                    
+                }else{
+                    Notification::make()
                     ->title('Error crítico')
                     ->body('Ocurrió un error inesperado: ' . $e->getMessage())
                     ->danger()
-                    ->send();
+                    ->send(); 
+                }
+                
             }
         }
 
