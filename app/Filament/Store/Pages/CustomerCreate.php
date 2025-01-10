@@ -153,28 +153,47 @@ class CustomerCreate extends Page
                 ->success()
                 ->send();
         } else {
-            $this->identity_document = $this->identity_prefix . "-" . $this->identity_number;
 
-            // Crear un nuevo cliente
-            $newUser = User::create([
-                'email' => $this->email,
-                'first_name' => $this->first_name,
-                'last_name' => $this->last_name,
-                'phone_number' => $this->phone_number,
-                'birth_date' => $this->birth_date ?: null,
-                'password' => bcrypt('default_password'),
-                'identity_document' => $this->identity_document,
-            ]);
+            try {
+                $this->identity_document = $this->identity_prefix . "-" . $this->identity_number;
 
-            $newUser->assignRole('customer');
-            $newUser->stores()->attach($currentStoreId, ['role' => 'customer']);
-            $this->sendMagicLink($newUser);
+                // Validaciones de unicidad
+                if (User::where('email', $this->email)->exists()) { /* Notificación */
+                }
+                if (!empty($this->phone_number) && User::where('phone_number', $this->phone_number)->exists()) { /* Notificación */
+                }
+                if (User::where('identity_document', $this->identity_document)->exists()) { /* Notificación */
+                }
 
-            Notification::make()
-                ->title('Cliente registrado')
-                ->body('El cliente fue registrado exitosamente y se le envió un enlace mágico.')
-                ->success()
-                ->send();
+                // Crear usuario
+                // Crear un nuevo cliente
+                $newUser = User::create([
+                    'email' => $this->email,
+                    'first_name' => $this->first_name,
+                    'last_name' => $this->last_name,
+                    'phone_number' => $this->phone_number,
+                    'birth_date' => $this->birth_date ?: null,
+                    'password' => bcrypt('default_password'),
+                    'identity_document' => $this->identity_document,
+                ]);
+
+                $newUser->assignRole('customer');
+                $newUser->stores()->attach($currentStoreId, ['role' => 'customer']);
+                $this->sendMagicLink($newUser);
+
+                Notification::make()
+                    ->title('Cliente registrado')
+                    ->body('El cliente fue registrado exitosamente y se le envió un enlace mágico.')
+                    ->success()
+                    ->send();
+
+            } catch (\Exception $e) {
+                Notification::make()
+                    ->title('Error crítico')
+                    ->body('Ocurrió un error inesperado: ' . $e->getMessage())
+                    ->danger()
+                    ->send();
+            }
         }
 
         $this->resetForm();
