@@ -181,6 +181,8 @@ class CustomerCreate extends Page
                     ->body('El cliente fue registrado exitosamente y se le envió un enlace mágico.')
                     ->success()
                     ->send();
+                
+                $this->resetForm();
 
             } catch (\Exception $e) {
                 if (User::where('email', $this->email)->exists()) { 
@@ -220,8 +222,6 @@ class CustomerCreate extends Page
                 
             }
         }
-
-        $this->resetForm();
     }
 
 
