@@ -20,6 +20,7 @@ use Illuminate\Support\HtmlString;
 use Illuminate\Validation\Rules\Password;
 use Filament\Http\Responses\Auth\Contracts\RegistrationResponse;
 use Illuminate\Support\Str;
+use Filament\Notifications\Notification;
 
 class UserRegister extends FilamentRegister
 {
@@ -178,51 +179,150 @@ class UserRegister extends FilamentRegister
             ]);
     }
 
+    protected function validateAndNotify(array $data): bool
+    {
+        $errors = false;
+
+        // Verificar si el email ya existe
+        if (User::where('email', $data['email'])->exists()) {
+            Notification::make()
+                ->title('Error de validación')
+                ->body('El correo electrónico ya está registrado.')
+                ->danger()
+                ->send();
+            $errors = true;
+        }
+
+        // Verificar si el número de teléfono ya existe
+        if (!empty($data['phone_number']) && User::where('phone_number', $data['phone_number'])->exists()) {
+            Notification::make()
+                ->title('Error de validación')
+                ->body('El número de teléfono ya está registrado.')
+                ->danger()
+                ->send();
+            $errors = true;
+        }
+
+        // Verificar si el documento de identidad ya existe
+        if (!empty($data['identity_prefix']) && !empty($data['identity_number'])) {
+            $identityDocument = $data['identity_prefix'] . '-' . $data['identity_number'];
+            if (User::where('identity_document', $identityDocument)->exists()) {
+                Notification::make()
+                    ->title('Error de validación')
+                    ->body('El documento de identidad ya está registrado.')
+                    ->danger()
+                    ->send();
+                $errors = true;
+            }
+        }
+
+        // Validar si se aceptaron los términos y condiciones
+        if (empty($data['terms_and_conditions_accepted'])) {
+            Notification::make()
+                ->title('Error de validación')
+                ->body('Debe aceptar los términos y condiciones.')
+                ->danger()
+                ->send();
+            $errors = true;
+        }
+
+        return !$errors; // Retorna `true` si no hubo errores, `false` si los hubo
+    }
+
+    protected function validateStoreAndNotify(array $data): bool
+    {
+        $errors = false;
+
+        // Validar si el nombre de la tienda ya existe
+        if (Store::where('name', $data['store_name'])->exists()) {
+            Notification::make()
+                ->title('Error de validación')
+                ->body('El nombre de la tienda ya está registrado.')
+                ->danger()
+                ->send();
+            $errors = true;
+        }
+
+        // Validar si el slug ya existe (se genera automáticamente si no se proporciona)
+        $slug = $data['store_slug'] ?? Str::slug($data['store_name']);
+        if (Store::where('slug', $slug)->exists()) {
+            Notification::make()
+                ->title('Error de validación')
+                ->body('El identificador único (slug) de la tienda ya está registrado.')
+                ->danger()
+                ->send();
+            $errors = true;
+        }
+
+        return !$errors; // Retorna `true` si no hubo errores, `false` si los hubo
+    }
+
     public function register(): RegistrationResponse|null
     {
         $data = $this->form->getState();
 
-        // Crear el usuario
-        $user = User::create([
-            'first_name' => $data['first_name'],
-            'last_name' => $data['last_name'],
-            'email' => $data['email'],
-            'phone_number' => $data['phone_number'],
-            'password' => $data['password'],
-            'identity_document' => $data['identity_document'],
-            'birth_date' => $data['birth_date'],
-            'address' => $data['address'],
-            'selfie_path' => $data['selfie_path'],
-            'ci_picture_path' => $data['ci_picture_path'],
-        ]);
+        // Validar usuario y tienda con notificaciones en caso de errores
+        if (!$this->validateAndNotify($data) || !$this->validateStoreAndNotify($data)) {
+            return null; // Detener el flujo si hay errores
+        }
 
-        // Asignar el rol de "owner_store" al usuario
-        $user->assignRole('owner_store');
+        try {
+            // Crear el usuario
+            $data['identity_document'] = $data['identity_prefix'] . '-' . $data['identity_number'];
+            $user = User::create([
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'],
+                'email' => $data['email'],
+                'phone_number' => $data['phone_number'],
+                'password' => $data['password'],
+                'identity_document' => $data['identity_document'],
+                'birth_date' => $data['birth_date'],
+                'address' => $data['address'],
+                'selfie_path' => $data['selfie_path'],
+                'ci_picture_path' => $data['ci_picture_path'],
+            ]);
 
-        // Crear la tienda y asociarla al usuario
-        $store = Store::create([
-            'name' => $data['store_name'],
-            'slug' => Str::slug($data['store_name']), // Generar slug a partir del nombre
-            'description' => $data['store_description'],
-            'rif_path' => $data['store_rif_path'],
-            'constitutive_document_path' => $data['constitutive_document_path'],
-            'owner_id' => $user->id, // Asociar la tienda al usuario
-        ]);
+            // Asignar rol al usuario
+            $user->assignRole('owner_store');
 
-        // Crear la dirección de la tienda en la tabla `address`
-        \App\Models\Address::create([
-            'branch' => $data['short_address'], // O el valor que desees colocar como `branch`
-            'location' => $data['long_address'],
-            'store_id' => $store->id, // Asocia la dirección a la tienda creada
-        ]);
+            // Crear la tienda asociada al usuario
+            $store = Store::create([
+                'name' => $data['store_name'],
+                'slug' => $data['store_slug'] ?? Str::slug($data['store_name']),
+                'description' => $data['store_description'],
+                'rif_path' => $data['store_rif_path'],
+                'constitutive_document_path' => $data['constitutive_document_path'],
+                'owner_id' => $user->id,
+            ]);
 
-        // Asociar la tienda al usuario en la relación many-to-many
-        $user->stores()->attach($store->id, ['role' => 'owner_store']);
+            // Crear dirección de la tienda
+            \App\Models\Address::create([
+                'branch' => $data['short_address'],
+                'location' => $data['long_address'],
+                'store_id' => $store->id,
+            ]);
 
-        // Devolver la respuesta de registro estándar de Filament
-        return $this->registered($user);
+            // Asociar la tienda al usuario
+            $user->stores()->attach($store->id, ['role' => 'owner_store']);
+
+            Notification::make()
+                ->title('Registro exitoso')
+                ->body('El usuario y la tienda se registraron correctamente.')
+                ->success()
+                ->send();
+
+            return $this->registered($user);
+        } catch (\Exception $e) {
+            // Manejar errores inesperados
+            Notification::make()
+                ->title('Error crítico')
+                ->body('Ocurrió un error inesperado: ' . $e->getMessage())
+                ->danger()
+                ->send();
+
+            return null;
+        }
     }
-
 
     protected function registered(User $user): RegistrationResponse|null
     {
