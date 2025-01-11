@@ -158,7 +158,7 @@ class CustomerCreate extends Page
                 $this->identity_document = $this->identity_prefix . "-" . $this->identity_number;
 
                 // Validaciones de unicidad
-                
+
 
                 // Crear usuario
                 // Crear un nuevo cliente
@@ -181,45 +181,45 @@ class CustomerCreate extends Page
                     ->body('El cliente fue registrado exitosamente y se le envió un enlace mágico.')
                     ->success()
                     ->send();
-                
+
                 $this->resetForm();
 
             } catch (\Exception $e) {
-                if (User::where('email', $this->email)->exists()) { 
+                if (User::where('email', $this->email)->exists()) {
                     /* Notificación */
                     Notification::make()
-                    ->title('Error crítico')
-                    ->body('El email ya esta registrado.')
-                    ->danger()
-                    ->send();
+                        ->title('Error crítico')
+                        ->body('El email ya esta registrado.')
+                        ->danger()
+                        ->send();
 
                 }
-                if (!empty($this->phone_number) && User::where('phone_number', $this->phone_number)->exists()) { 
+                if (!empty($this->phone_number) && User::where('phone_number', $this->phone_number)->exists()) {
                     /* Notificación */
                     Notification::make()
-                    ->title('Error crítico')
-                    ->body('El telefono ya se encuentra asociado a otro usuario')
-                    ->danger()
-                    ->send();
+                        ->title('Error crítico')
+                        ->body('El telefono ya se encuentra asociado a otro usuario')
+                        ->danger()
+                        ->send();
 
                 }
-                if (User::where('identity_document', $this->identity_document)->exists()) { 
+                if (User::where('identity_document', $this->identity_document)->exists()) {
                     /* Notificación */
                     Notification::make()
-                    ->title('Error crítico')
-                    ->body('El documento de identidad ya se encuentra asociado a otro usuario')
-                    ->danger()
-                    ->send();
+                        ->title('Error crítico')
+                        ->body('El documento de identidad ya se encuentra asociado a otro usuario')
+                        ->danger()
+                        ->send();
 
-                    
-                }else{
+
+                } else {
                     Notification::make()
-                    ->title('Error crítico')
-                    ->body('Ocurrió un error inesperado: ' . $e->getMessage())
-                    ->danger()
-                    ->send(); 
+                        ->title('Error crítico')
+                        ->body('Ocurrió un error inesperado: ' . $e->getMessage())
+                        ->danger()
+                        ->send();
                 }
-                
+
             }
         }
     }
@@ -227,11 +227,15 @@ class CustomerCreate extends Page
 
 
 
-    protected function sendMagicLink(User $user): void
+    protected function sendWelcomeNotification(User $user): void
     {
         $action = new LoginAction($user);
         $magicLinkUrl = MagicLink::create($action)->url;
 
-        $user->notify(new \App\Notifications\MagicLinkNotification($magicLinkUrl));
+        $store = Filament::getTenant(); // Obtener la tienda actual
+        $storeName = $store ? $store->name : 'Nuestra Tienda'; // Nombre de la tienda o valor por defecto
+
+        $user->notify(new \App\Notifications\WelcomeCustomerNotification($magicLinkUrl, $storeName));
     }
+
 }
