@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\CustomVerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Filament\Models\Contracts\HasTenants;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -185,6 +186,15 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
             ->where('phone_number', $phoneNumber)
             ->where('identity_number', $identityNumber)
             ->exists();
+    }
+
+    /**
+     * Enviar la notificación personalizada para verificar el correo.
+     */
+    public function sendEmailVerificationNotification()
+    {
+        $panel = request()->segment(1); // Captura el panel actual desde la URL (app, tienda, admin)
+        $this->notify(new CustomVerifyEmail($panel));
     }
 
 }
