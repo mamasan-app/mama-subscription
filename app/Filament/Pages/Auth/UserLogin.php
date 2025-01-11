@@ -102,17 +102,6 @@ class UserLogin extends BaseUserLogin
             $errors = true;
         }
 
-        // Verificar si el usuario está desactivado
-        $user = User::where('email', $data['email'])->first();
-        if ($user && !$user->active) { // Si tienes un campo `active` para usuarios
-            Notification::make()
-                ->title('Usuario inactivo')
-                ->body('Este usuario está desactivado y no puede iniciar sesión.')
-                ->danger()
-                ->send();
-            $errors = true;
-        }
-
         return !$errors; // Retorna true si no hay errores
     }
 
