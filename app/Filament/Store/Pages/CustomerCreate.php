@@ -207,7 +207,7 @@ class CustomerCreate extends Page
 
                 $newUser->assignRole('customer');
                 $newUser->stores()->attach($currentStoreId, ['role' => 'customer']);
-                $this->sendMagicLink($newUser);
+
 
                 Notification::make()
                     ->title('Cliente registrado')
@@ -216,6 +216,8 @@ class CustomerCreate extends Page
                     ->send();
 
                 $this->resetForm();
+
+                $this->sendMagicLink($newUser);
 
             } catch (\Exception $e) {
                 Notification::make()
@@ -230,7 +232,7 @@ class CustomerCreate extends Page
 
 
 
-    protected function sendWelcomeNotification(User $user): void
+    protected function sendMagicLink(User $user): void
     {
         $action = new LoginAction($user);
         $magicLinkUrl = MagicLink::create($action)->url;
