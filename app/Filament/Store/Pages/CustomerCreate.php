@@ -10,6 +10,7 @@ use Filament\Notifications\Notification;
 use MagicLink\Actions\LoginAction;
 use MagicLink\MagicLink;
 use Filament\Facades\Filament;
+use Illuminate\Validation\ValidationException;
 
 class CustomerCreate extends Page
 {
@@ -157,10 +158,42 @@ class CustomerCreate extends Page
             try {
                 $this->identity_document = $this->identity_prefix . "-" . $this->identity_number;
 
-                // Validaciones de unicidad
+                if (User::where('email', $this->email)->exists()) {
+                    /* Notificación */
+                    Notification::make()
+                        ->title('Error crítico')
+                        ->body('El email ya esta registrado.')
+                        ->danger()
+                        ->send();
+                    throw ValidationException::withMessages([
+                        'email' => 'El correo electrónico ya está registrado.',
+                    ]);
 
+                }
+                if (!empty($this->phone_number) && User::where('phone_number', $this->phone_number)->exists()) {
+                    /* Notificación */
+                    Notification::make()
+                        ->title('Error crítico')
+                        ->body('El telefono ya se encuentra asociado a otro usuario')
+                        ->danger()
+                        ->send();
+                    throw ValidationException::withMessages([
+                        'email' => 'El correo electrónico ya está registrado.',
+                    ]);
 
-                // Crear usuario
+                }
+                if (User::where('identity_document', $this->identity_document)->exists()) {
+                    /* Notificación */
+                    Notification::make()
+                        ->title('Error crítico')
+                        ->body('El documento de identidad ya se encuentra asociado a otro usuario')
+                        ->danger()
+                        ->send();
+                    throw ValidationException::withMessages([
+                        'email' => 'El correo electrónico ya está registrado.',
+                    ]);
+                }
+
                 // Crear un nuevo cliente
                 $newUser = User::create([
                     'email' => $this->email,
@@ -185,41 +218,11 @@ class CustomerCreate extends Page
                 $this->resetForm();
 
             } catch (\Exception $e) {
-                if (User::where('email', $this->email)->exists()) {
-                    /* Notificación */
-                    Notification::make()
-                        ->title('Error crítico')
-                        ->body('El email ya esta registrado.')
-                        ->danger()
-                        ->send();
-
-                }
-                if (!empty($this->phone_number) && User::where('phone_number', $this->phone_number)->exists()) {
-                    /* Notificación */
-                    Notification::make()
-                        ->title('Error crítico')
-                        ->body('El telefono ya se encuentra asociado a otro usuario')
-                        ->danger()
-                        ->send();
-
-                }
-                if (User::where('identity_document', $this->identity_document)->exists()) {
-                    /* Notificación */
-                    Notification::make()
-                        ->title('Error crítico')
-                        ->body('El documento de identidad ya se encuentra asociado a otro usuario')
-                        ->danger()
-                        ->send();
-
-
-                } else {
-                    Notification::make()
-                        ->title('Error crítico')
-                        ->body('Ocurrió un error inesperado: ' . $e->getMessage())
-                        ->danger()
-                        ->send();
-                }
-
+                Notification::make()
+                    ->title('Error crítico')
+                    ->body('Ocurrió un error inesperado: ' . $e->getMessage())
+                    ->danger()
+                    ->send();
             }
         }
     }
