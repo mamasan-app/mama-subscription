@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Filament\App\Widgets;
 
 use App\Models\Payment;
-use App\Models\User;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -25,7 +24,9 @@ class PaymentHistoryWidget extends BaseWidget
             ->defaultSort('created_at', 'desc')
             ->query(
                 Payment::query()
-                    ->where('client_id', auth()->id()) // Filtrar por cliente autenticado
+                    ->whereHas('subscription', function ($query) {
+                        $query->where('user_id', auth()->id()); // Filtrar por usuario autenticado
+                    })
             )
             ->columns([
                 Tables\Columns\TextColumn::make('created_at')
@@ -33,15 +34,14 @@ class PaymentHistoryWidget extends BaseWidget
                     ->dateTime('d M Y, h:i A')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('amount_cents')
-                    ->label('Monto')
-                    ->formatStateUsing(fn($value) => '$' . number_format($value / 100, 2)),
+                    ->label('Monto (USD)')
+                    ->getStateUsing(fn($record) => number_format($record->amount_cents / 100, 2) . ' USD'),
                 Tables\Columns\TextColumn::make('subscription.service_name')
                     ->label('Servicio')
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
-                    ->getStateUsing(fn($record) => $record->status->getLabel())
                     ->badge()
                     ->color(fn($state) => match ($state) {
                         'Completado' => 'success',
