@@ -5,7 +5,6 @@ namespace App\Filament\App\Pages;
 use App\Filament\App\Widgets\PaymentCalendarWidget;
 use App\Filament\App\Widgets\PaymentStatsWidget;
 use App\Filament\App\Widgets\PaymentHistoryWidget;
-use App\Filament\App\Widgets\NextPaymentWidget;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
@@ -23,7 +22,6 @@ class Dashboard extends FilamentDashboard
     {
         return [
             PaymentStatsWidget::class,
-            NextPaymentWidget::class,
             PaymentHistoryWidget::class,
             PaymentCalendarWidget::make(), // El widget del calendario de pagos
         ];
