@@ -1,39 +1,56 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\App\Widgets;
 
-use Filament\Widgets\TableWidget as BaseWidget;
-use Illuminate\Database\Eloquent\Builder;
 use App\Models\Payment;
+use App\Models\User;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Filament\Widgets\TableWidget as BaseWidget;
 
 class PaymentHistoryWidget extends BaseWidget
 {
-    protected function getTableQuery(): Builder
+    protected static ?string $heading = 'Historial de Pagos';
+
+    public function getColumnSpan(): int|string|array
     {
-        // Query para obtener los pagos del cliente actual
-        return Payment::query()
-            ->where('client_id', auth()->id()) // Solo los pagos del cliente autenticado
-            ->latest('created_at'); // Ordenados por fecha más reciente
+        return 'full';
     }
 
-    protected function getTableColumns(): array
+    public function table(Table $table): Table
     {
-        return [
-            [
-                'label' => 'Fecha',
-                'name' => 'created_at',
-                'format' => 'datetime',
-            ],
-            [
-                'label' => 'Monto',
-                'name' => 'amount_cents',
-                'format' => fn($value) => '$' . number_format($value / 100, 2),
-            ],
-            [
-                'label' => 'Estado',
-                'name' => 'status',
-                'format' => fn($value) => ucfirst($value),
-            ],
-        ];
+        return $table
+            ->defaultSort('created_at', 'desc')
+            ->query(
+                Payment::query()
+                    ->where('client_id', auth()->id()) // Filtrar por cliente autenticado
+            )
+            ->columns([
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Fecha')
+                    ->dateTime('d M Y, h:i A')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('amount_cents')
+                    ->label('Monto')
+                    ->formatStateUsing(fn($value) => '$' . number_format($value / 100, 2)),
+                Tables\Columns\TextColumn::make('subscription.service_name')
+                    ->label('Servicio')
+                    ->sortable()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Estado')
+                    ->getStateUsing(fn($record) => $record->status->getLabel())
+                    ->badge()
+                    ->color(fn($state) => match ($state) {
+                        'Completado' => 'success',
+                        'Pendiente' => 'warning',
+                        'Fallido', 'Cancelado' => 'danger',
+                        'Incobrable' => 'secondary',
+                        default => 'secondary',
+                    })
+                    ->sortable(),
+            ]);
     }
 }
