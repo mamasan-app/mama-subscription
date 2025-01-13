@@ -27,12 +27,29 @@ class StripeService
             // Actualizar el modelo del usuario con el ID del cliente de Stripe
             $user->update(['stripe_customer_id' => $customer->id]);
         } else {
-            // Recuperar cliente existente
-            $customer = Customer::retrieve($user->stripe_customer_id);
+            try {
+                // Intentar recuperar cliente existente
+                $customer = Customer::retrieve($user->stripe_customer_id);
+
+                // Verificar que el cliente aún exista
+                if (!$customer || $customer->deleted ?? false) {
+                    throw new \Exception("Cliente no encontrado o eliminado en Stripe.");
+                }
+            } catch (\Exception $e) {
+                // Si ocurre un error, crear un nuevo cliente
+                $customer = Customer::create([
+                    'email' => $user->email,
+                    'name' => "{$user->first_name} {$user->last_name}",
+                ]);
+
+                // Actualizar el modelo del usuario con el nuevo ID del cliente
+                $user->update(['stripe_customer_id' => $customer->id]);
+            }
         }
 
         return $customer;
     }
+
 
     public function getOrCreateProduct($service)
     {
