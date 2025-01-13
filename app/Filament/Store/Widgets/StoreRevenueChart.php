@@ -12,6 +12,12 @@ class StoreRevenueChart extends LineChartWidget
 {
     protected static ?string $heading = 'Ingresos de la Tienda';
 
+    // Asegura que el gráfico ocupe todo el ancho
+    protected int|string|array $columnSpan = 'full';
+
+    // Define una altura mayor para el gráfico
+    protected static ?string $maxHeight = '400px';
+
     protected function getType(): string
     {
         return 'line'; // Tipo de gráfico
