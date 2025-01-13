@@ -12,11 +12,11 @@ class PaymentStatsWidget extends BaseWidget
     protected function getStats(): array
     {
         // Obtener el total de dinero pagado hasta ahora (completado)
-        $totalPaidCents = Payment::where('estado', 'completed')->sum('amount_cents');
+        $totalPaidCents = Payment::where('status', 'completed')->sum('amount_cents');
         $totalPaidDollars = $totalPaidCents / 100;
 
         // Obtener el total a pagar en los próximos 7 días
-        $upcomingWeekTotalCents = Subscription::whereBetween('renew_at', [now(), now()->addDays(7)])
+        $upcomingWeekTotalCents = Subscription::whereBetween('renews_at', [now(), now()->addDays(7)])
             ->sum('service_price_cents');
         $upcomingWeekTotalDollars = $upcomingWeekTotalCents / 100;
 
