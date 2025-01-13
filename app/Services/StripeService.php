@@ -67,21 +67,42 @@ class StripeService
             // Actualizar el producto en tu base de datos
             $service->update(['stripe_product_id' => $product->id]);
         } else {
-            // Recuperar el producto desde Stripe
-            $product = Product::retrieve($service->stripe_product_id);
+            try {
+                // Intentar recuperar el producto existente desde Stripe
+                $product = Product::retrieve($service->stripe_product_id);
 
-            // Actualizar metadata si cambió el período de gracia
-            if ($product->metadata->retry_count != $service->grace_period) {
-                $product->metadata = [
-                    'retry_count' => $service->grace_period,
-                    'retry_interval' => 1, // Siempre 1 día
-                ];
-                $product->save();
+                // Validar si el producto existe o ha sido eliminado
+                if (!$product || $product->deleted ?? false) {
+                    throw new \Exception("Producto no encontrado o eliminado en Stripe.");
+                }
+
+                // Actualizar metadata si cambió el período de gracia
+                if ($product->metadata->retry_count != $service->grace_period) {
+                    $product->metadata = [
+                        'retry_count' => $service->grace_period,
+                        'retry_interval' => 1, // Siempre 1 día
+                    ];
+                    $product->save();
+                }
+            } catch (\Exception $e) {
+                // Si ocurre un error, crear un nuevo producto
+                $product = Product::create([
+                    'name' => $service->name,
+                    'description' => $service->description,
+                    'metadata' => [
+                        'retry_count' => $service->grace_period,   // Número máximo de reintentos
+                        'retry_interval' => 1, // Intervalo fijo de 1 día
+                    ],
+                ]);
+
+                // Actualizar el producto en tu base de datos con el nuevo ID
+                $service->update(['stripe_product_id' => $product->id]);
             }
         }
 
         return $product;
     }
+
 
     public function createPrice($product, $amountCents, $interval, $intervalCount, $gracePeriod)
     {

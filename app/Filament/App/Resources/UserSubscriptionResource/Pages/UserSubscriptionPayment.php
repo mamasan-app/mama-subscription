@@ -61,50 +61,59 @@ class UserSubscriptionPayment extends Page
 
     public function createStripeSession(StripeService $stripeService)
     {
-        // Obtener o crear el cliente en Stripe
-        $customer = $stripeService->getOrCreateCustomer($this->subscription->user);
+        try {
+            // Obtener o crear el cliente en Stripe
+            $customer = $stripeService->getOrCreateCustomer($this->subscription->user);
 
-        // Obtener o crear el producto en Stripe
-        $product = $stripeService->getOrCreateProduct($this->subscription->service);
+            // Obtener o crear el producto en Stripe
+            $product = $stripeService->getOrCreateProduct($this->subscription->service);
 
-        // Determinar el intervalo y el intervalo_count
-        $frequency_days = $this->subscription->frequency_days;
-        [$interval, $intervalCount] = $this->getIntervalDetails($frequency_days);
+            // Determinar el intervalo y el intervalo_count
+            $frequency_days = $this->subscription->frequency_days;
+            [$interval, $intervalCount] = $this->getIntervalDetails($frequency_days);
 
-        // Crear el precio en Stripe
-        $price = $stripeService->createPrice(
-            $product,
-            $this->subscription->service_price_cents,
-            $interval,
-            $intervalCount,
-            $this->subscription->service_grace_period,
-        );
+            // Crear el precio en Stripe
+            $price = $stripeService->createPrice(
+                $product,
+                $this->subscription->service_price_cents,
+                $interval,
+                $intervalCount,
+                $this->subscription->service_grace_period,
+            );
 
-        // Crear la sesión de Stripe Checkout
-        $session = $stripeService->createCheckoutSession(
-            $customer,
-            $price,
-            static::getResource()::getUrl('payment', [
-                'record' => $this->subscription->id,
-                'success' => true,
-            ]),
-            static::getResource()::getUrl('payment', [
-                'record' => $this->subscription->id,
-                'success' => false,
-            ]),
-            [
-                'payment_id' => $this->subscription->id,
-                'subscription_id' => $this->subscription->id,
-            ]
-        );
+            // Crear la sesión de Stripe Checkout
+            $session = $stripeService->createCheckoutSession(
+                $customer,
+                $price,
+                static::getResource()::getUrl('payment', [
+                    'record' => $this->subscription->id,
+                    'success' => true,
+                ]),
+                static::getResource()::getUrl('payment', [
+                    'record' => $this->subscription->id,
+                    'success' => false,
+                ]),
+                [
+                    'payment_id' => $this->subscription->id,
+                    'subscription_id' => $this->subscription->id,
+                ]
+            );
 
-        if (isset($session->subscription)) {
-            $this->subscription->update([
-                'stripe_subscription_id' => $session->subscription,
-            ]);
+            if (isset($session->subscription)) {
+                $this->subscription->update([
+                    'stripe_subscription_id' => $session->subscription,
+                ]);
+            }
+
+            return redirect($session->url);
+        } catch (\Exception $e) {
+            // Mostrar notificación de error
+            Notification::make()
+                ->title('Error al crear la sesión de Stripe')
+                ->body('Ocurrió un problema al crear la sesión de Stripe. Detalles: ' . $e->getMessage())
+                ->danger()
+                ->send();
         }
-
-        return redirect($session->url);
     }
 
     private function getIntervalDetails($frequency_days)
