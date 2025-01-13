@@ -21,8 +21,8 @@ class Dashboard extends FilamentDashboard
     public function getWidgets(): array
     {
         return [
-            PaymentStatsWidget::class,
-            PaymentHistoryWidget::class,
+            PaymentStatsWidget::make(),
+            PaymentHistoryWidget::make(),
             PaymentCalendarWidget::make(), // El widget del calendario de pagos
         ];
     }

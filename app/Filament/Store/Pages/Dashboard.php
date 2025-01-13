@@ -11,6 +11,7 @@ use App\Filament\Store\Widgets\SubscriptionChart;
 use App\Filament\Store\Widgets\SubscriptionStats;
 use App\Filament\Store\Widgets\TodaySubscriptionsTable;
 use App\Filament\Store\Widgets\PaymentStatsWidget;
+use App\Filament\Store\Widgets\StoreRevenueChart;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -90,6 +91,7 @@ class Dashboard extends FilamentDashboard
         return [
             SubscriptionStats::make(),
             PaymentStatsWidget::make(),
+            StoreRevenueChart::make(),
             SubscriptionChart::make(),
             TodaySubscriptionsTable::make(),
         ];
