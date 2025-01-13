@@ -20,14 +20,16 @@ class PaymentStatsWidget extends BaseWidget
             ->sum('service_price_cents');
         $upcomingWeekTotalDollars = $upcomingWeekTotalCents / 100;
 
-        // Obtener el total de pagos pendientes o fallidos
-        $failedOrPendingCents = Payment::whereIn('status', ['failed', 'pending'])->sum('amount_cents');
-        $failedOrPendingDollars = $failedOrPendingCents / 100;
+        // Obtener el total de pagos pendientes (estado 'pending') y suscripciones en periodo de prueba
+        $pendingPaymentsCents = Payment::where('status', 'pending')->sum('amount_cents');
+        $trialSubscriptionsCents = Subscription::where('status', 'on_trial')->sum('service_price_cents');
+        $totalPendingCents = $pendingPaymentsCents + $trialSubscriptionsCents;
+        $totalPendingDollars = $totalPendingCents / 100;
 
         return [
             Stat::make('Total Pagado', '$' . number_format($totalPaidDollars, 2)),
             Stat::make('Pagos Próxima Semana', '$' . number_format($upcomingWeekTotalDollars, 2)),
-            Stat::make('Pagos Pendientes/Fallidos', '$' . number_format($failedOrPendingDollars, 2)),
+            Stat::make('Pendientes y Pruebas', '$' . number_format($totalPendingDollars, 2)),
         ];
     }
 }
