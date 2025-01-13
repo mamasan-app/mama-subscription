@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Filament\Store\Widgets\SubscriptionChart;
 use App\Filament\Store\Widgets\SubscriptionStats;
 use App\Filament\Store\Widgets\TodaySubscriptionsTable;
+use App\Filament\Store\Widgets\PaymentStatsWidget;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -88,6 +89,7 @@ class Dashboard extends FilamentDashboard
     {
         return [
             SubscriptionStats::make(),
+            PaymentStatsWidget::make(),
             SubscriptionChart::make(),
             TodaySubscriptionsTable::make(),
         ];
