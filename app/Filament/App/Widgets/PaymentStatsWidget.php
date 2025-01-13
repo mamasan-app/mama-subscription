@@ -37,11 +37,11 @@ class PaymentStatsWidget extends BaseWidget
             ->first();
 
         $nextPaymentStat = $nextPayment
-            ? Stat::make(
-                'Próximo Pago',
-                '$' . number_format($nextPayment->service_price_cents / 100, 2) .
-                ' - ' . $nextPayment->renews_at->format('d/m/Y')
-            )
+            ? Stat::make('Próximo Pago', sprintf(
+                '<span style="font-size: 1.25em; font-weight: bold;">$%s</span><br><span style="font-size: 0.75em; color: #6b7280;">%s</span>',
+                number_format($nextPayment->service_price_cents / 100, 2),
+                $nextPayment->renews_at->format('d/m/Y')
+            ))->html() // Activa HTML en el contenido
             : Stat::make('Próximo Pago', 'No tiene pagos pendientes');
 
         return [
