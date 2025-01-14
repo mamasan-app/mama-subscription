@@ -18,11 +18,11 @@ class PaymentStatsWidget extends BaseWidget
         // Total a pagar en los próximos 7 días (renovaciones y periodo de prueba)
         $upcomingWeekTotalCents = Subscription::where(function ($query) {
             $query->whereBetween('renews_at', [now(), now()->addDays(7)])
-                ->whereColumn('renews_at', '!=', 'ends_at'); // Excluir `renews_at == ends_at`
+                ->whereColumn('renews_at', '!=', 'ends_at');
         })
             ->where(function ($query) {
-                $query->where('status', 'active') // Solo suscripciones activas
-                    ->orWhere('status', 'on_trial'); // Incluir suscripciones en prueba
+                $query->where('status', 'active')
+                    ->orWhere('status', 'on_trial');
             })
             ->sum('service_price_cents');
         $upcomingWeekTotalDollars = $upcomingWeekTotalCents / 100;
@@ -37,11 +37,11 @@ class PaymentStatsWidget extends BaseWidget
         $nextPayment = Subscription::where('user_id', auth()->id())
             ->where(function ($query) {
                 $query->where('renews_at', '>=', now())
-                    ->whereColumn('renews_at', '!=', 'ends_at'); // Excluir `renews_at == ends_at`
+                    ->whereColumn('renews_at', '!=', 'ends_at');
             })
             ->where(function ($query) {
-                $query->where('status', 'active') // Solo suscripciones activas
-                    ->orWhere('status', 'on_trial'); // Incluir suscripciones en prueba
+                $query->where('status', 'active')
+                    ->orWhere('status', 'on_trial');
             })
             ->orderBy('renews_at')
             ->first();
@@ -49,7 +49,8 @@ class PaymentStatsWidget extends BaseWidget
         $nextPaymentStat = $nextPayment
             ? Stat::make('Próximo Pago', '$' . number_format($nextPayment->service_price_cents / 100, 2))
                 ->description($nextPayment->renews_at->format('d/m/Y')) // Coloca la fecha debajo
-            : Stat::make('Próximo Pago', 'No tiene pagos pendientes');
+            : Stat::make('Próximo Pago', '$0.00') // Cambiamos el monto a $0.00
+                ->description('No tiene pagos pendientes'); // Texto pequeño como la fecha
 
         return [
             Stat::make('Total Pagado', '$' . number_format($totalPaidDollars, 2)),
