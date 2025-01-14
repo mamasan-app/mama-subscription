@@ -17,9 +17,11 @@ class PaymentStatsWidget extends BaseWidget
 
         // Total a pagar en los próximos 7 días (renovaciones y periodo de prueba)
         $upcomingWeekTotalCents = Subscription::whereBetween('renews_at', [now(), now()->addDays(7)])
+            ->whereColumn('renews_at', '!=', 'ends_at') // Excluir `renews_at == ends_at`
             ->orWhere('status', 'on_trial') // Incluye las suscripciones en periodo de prueba
             ->sum('service_price_cents');
         $upcomingWeekTotalDollars = $upcomingWeekTotalCents / 100;
+
 
         // Total de pagos pendientes (estado 'pending') + periodo de prueba
         $pendingPaymentsCents = Payment::where('status', 'pending')->sum('amount_cents');
@@ -31,10 +33,12 @@ class PaymentStatsWidget extends BaseWidget
         $nextPayment = Subscription::where('user_id', auth()->id())
             ->where(function ($query) {
                 $query->where('renews_at', '>=', now())
+                    ->whereColumn('renews_at', '!=', 'ends_at') // Excluir `renews_at == ends_at`
                     ->orWhere('status', 'on_trial'); // Incluye las de prueba
             })
             ->orderBy('renews_at')
             ->first();
+
 
         $nextPaymentStat = $nextPayment
             ? Stat::make('Próximo Pago', '$' . number_format($nextPayment->service_price_cents / 100, 2))
