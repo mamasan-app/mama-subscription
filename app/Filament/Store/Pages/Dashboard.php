@@ -41,9 +41,11 @@ class Dashboard extends FilamentDashboard
                         ->options(fn() => User::whereHas('stores', fn($query) => $query
                             ->where('store_id', Filament::getTenant()->id)
                             ->where('store_user.role', 'customer'))
-                            ->pluck('name', 'id'))
+                            ->get()
+                            ->mapWithKeys(fn($user) => [$user->id => $user->name]))
                         ->searchable()
                         ->required(),
+
                 ])
                 ->action(function (array $data) {
                     $currentStore = Filament::getTenant();
