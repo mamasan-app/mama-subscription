@@ -17,6 +17,8 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Pages\Dashboard as FilamentDashboard;
+use Carbon\Carbon;
+use Filament\Facades\Filament;
 
 class Dashboard extends FilamentDashboard
 {
@@ -24,58 +26,65 @@ class Dashboard extends FilamentDashboard
     {
         return [
             Action::make('addSubscription')
-                ->visible(fn() => auth()->user()?->can('create subscriptions')) // Verificar permisos de suscripción
+                ->visible(fn() => auth()->user()?->can('create subscriptions')) // Verificar permisos
                 ->label('Registrar Suscripción')
                 ->form([
-                    // Seleccionar un servicio para la suscripción
-                    Select::make('plan')
+                    Select::make('service_id')
                         ->label('Plan')
+                        ->options(fn() => Plan::where('store_id', Filament::getTenant()->id)
+                            ->where('published', true)
+                            ->pluck('name', 'id'))
                         ->searchable()
-                        ->getSearchResultsUsing(function (string $search): array {
-                            return Plan::query()
-                                ->where('name', 'like', "%$search%")
-                                ->get()
-                                ->mapWithKeys(fn(Plan $plan) => [$plan->id => $plan->name])
-                                ->all();
-                        }),
-
-                    // Fecha de fin del periodo de prueba
-                    DatePicker::make('trial_ends_at')
-                        ->label('Fin del Periodo de Prueba')
-                        ->default(now()->addDays(7)),
-
-                    // Fecha de renovación de la suscripción
-                    DatePicker::make('renews_at')
-                        ->label('Fecha de Renovación')
-                        ->default(now()->addMonth()),
-
-                    // Seleccionar el cliente (usuario con el rol 'customer')
+                        ->required(),
                     Select::make('user_id')
                         ->label('Cliente')
+                        ->options(fn() => User::whereHas('stores', fn($query) => $query
+                            ->where('store_id', Filament::getTenant()->id)
+                            ->where('store_user.role', 'customer'))
+                            ->pluck('name', 'id'))
                         ->searchable()
-                        ->getSearchResultsUsing(function (string $search): array {
-                            return User::role('customer') // Buscar solo usuarios con rol 'customer'
-                                ->where('first_name', 'like', "%$search%")
-                                ->orWhere('last_name', 'like', "%$search%")
-                                ->get()
-                                ->mapWithKeys(fn(User $user) => [$user->id => $user->name])
-                                ->all();
-                        }),
+                        ->required(),
                 ])
                 ->action(function (array $data) {
-                    // Registrar una nueva suscripción
+                    $currentStore = Filament::getTenant();
+                    if (!$currentStore) {
+                        Notification::make()->danger()
+                            ->title('Error')
+                            ->body('No se encontró una tienda para asociar la suscripción.')
+                            ->send();
+                        return;
+                    }
+
+                    $plan = Plan::with('frequency')->find($data['service_id']);
+                    if (!$plan) {
+                        Notification::make()->danger()
+                            ->title('Error')
+                            ->body('El plan seleccionado no se encontró.')
+                            ->send();
+                        return;
+                    }
+
+                    $now = Carbon::now('America/Caracas');
+                    $trialEndsAt = $now->clone()->addDays($plan->free_days ?? 0);
+                    $expiresAt = $now->clone()->addDays(($plan->grace_period ?? 0) + ($plan->free_days ?? 0));
+
                     Subscription::create([
-                        'plan' => $data['plan_id'],
-                        'user_id' => $data['user_id'],  // Relacionar la suscripción con el usuario
-                        'store_id' => auth()->user()->ownedStores->first()->id ?? null,  // Obtener la tienda del propietario
-                        'status' => SubscriptionStatusEnum::OnTrial,
-                        'trial_ends_at' => $data['trial_ends_at'],
-                        'renews_at' => $data['renews_at'],
-                        'price_usd_cents' => Plan::find($data['plan_id'])->price * 100,  // Obtener el precio del servicio
-                        'creator_id' => auth()->id(),
+                        'store_id' => $currentStore->id,
+                        'user_id' => $data['user_id'],
+                        'service_id' => $data['service_id'],
+                        'status' => SubscriptionStatusEnum::OnTrial->value,
+                        'trial_ends_at' => $trialEndsAt,
+                        'renews_at' => $trialEndsAt,
+                        'expires_at' => $expiresAt,
+                        'service_name' => $plan->name,
+                        'service_description' => $plan->description,
+                        'service_price_cents' => $plan->price_cents,
+                        'service_free_days' => $plan->free_days,
+                        'service_grace_period' => $plan->grace_period,
+                        'frequency_days' => $plan->getFrequencyDays(),
                     ]);
 
-                    Notification::make('subscriptionAdded')
+                    Notification::make()
                         ->success()
                         ->title('Suscripción registrada satisfactoriamente')
                         ->send();
