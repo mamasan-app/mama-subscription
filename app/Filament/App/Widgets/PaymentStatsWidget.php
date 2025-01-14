@@ -16,13 +16,13 @@ class PaymentStatsWidget extends BaseWidget
         $totalPaidDollars = $totalPaidCents / 100;
 
         // Total a pagar en los próximos 7 días (renovaciones y periodo de prueba)
-        $upcomingWeekTotalCents = Subscription::whereBetween('renews_at', [now(), now()->addDays(7)])
-            ->whereColumn('renews_at', '!=', 'ends_at') // Excluir `renews_at == ends_at`
+        $upcomingWeekTotalCents = Subscription::where(function ($query) {
+            $query->whereBetween('renews_at', [now(), now()->addDays(7)])
+                ->whereColumn('renews_at', '!=', 'ends_at'); // Excluir `renews_at == ends_at`
+        })
             ->orWhere('status', 'on_trial') // Incluir suscripciones en prueba
             ->sum('service_price_cents');
         $upcomingWeekTotalDollars = $upcomingWeekTotalCents / 100;
-
-
 
         // Total de pagos pendientes (estado 'pending') + periodo de prueba
         $pendingPaymentsCents = Payment::where('status', 'pending')->sum('amount_cents');
@@ -34,12 +34,11 @@ class PaymentStatsWidget extends BaseWidget
         $nextPayment = Subscription::where('user_id', auth()->id())
             ->where(function ($query) {
                 $query->where('renews_at', '>=', now())
-                    ->whereColumn('renews_at', '!=', 'ends_at') // Excluir `renews_at == ends_at`
-                    ->orWhere('status', 'on_trial'); // Incluye las de prueba
+                    ->whereColumn('renews_at', '!=', 'ends_at'); // Excluir `renews_at == ends_at`
             })
+            ->orWhere('status', 'on_trial') // Incluir suscripciones en prueba
             ->orderBy('renews_at')
             ->first();
-
 
         $nextPaymentStat = $nextPayment
             ? Stat::make('Próximo Pago', '$' . number_format($nextPayment->service_price_cents / 100, 2))
@@ -48,7 +47,7 @@ class PaymentStatsWidget extends BaseWidget
 
         return [
             Stat::make('Total Pagado', '$' . number_format($totalPaidDollars, 2)),
-            Stat::make('Pagos Proximos 7 días', '$' . number_format($upcomingWeekTotalDollars, 2)),
+            Stat::make('Pagos Próximos 7 días', '$' . number_format($upcomingWeekTotalDollars, 2)),
             Stat::make('Pendientes y Pruebas', '$' . number_format($totalPendingDollars, 2)),
             $nextPaymentStat,
         ];
