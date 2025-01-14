@@ -47,7 +47,7 @@ class PaymentStatsWidget extends BaseWidget
 
         return [
             Stat::make('Total Pagado', '$' . number_format($totalPaidDollars, 2)),
-            Stat::make('Pagos Próxima Semana', '$' . number_format($upcomingWeekTotalDollars, 2)),
+            Stat::make('Pagos Proximos 7 días', '$' . number_format($upcomingWeekTotalDollars, 2)),
             Stat::make('Pendientes y Pruebas', '$' . number_format($totalPendingDollars, 2)),
             $nextPaymentStat,
         ];
