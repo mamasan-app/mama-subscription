@@ -33,9 +33,13 @@ class PaymentStatsWidget extends BaseWidget
         $upcomingWeekTotalCents = Subscription::where('store_id', $currentStore->id)
             ->whereBetween('renews_at', [now(), now()->addDays(7)])
             ->whereColumn('renews_at', '!=', 'ends_at') // Excluir `renews_at == ends_at`
-            ->orWhere('status', 'on_trial') // Incluye las suscripciones en periodo de prueba
+            ->where(function ($query) {
+                $query->where('status', 'active') // Solo incluir suscripciones activas
+                    ->orWhere('status', 'on_trial'); // O en periodo de prueba
+            })
             ->sum('service_price_cents');
         $upcomingWeekTotalDollars = $upcomingWeekTotalCents / 100;
+
 
         // Total de pagos pendientes (estado 'pending') + periodo de prueba
         $pendingPaymentsCents = Payment::whereHas('subscription', function ($query) use ($currentStore) {
