@@ -43,10 +43,10 @@ class PaymentSubscriptionsWidget extends BaseWidget
                     })
                     ->sortable(),
 
-
                 Tables\Columns\TextColumn::make('amount_cents')
                     ->label('Monto (USD)')
-                    ->formatStateUsing(fn($record) => '$' . number_format($record->getAmountInDollarsAttribute(), 2)),
+                    ->getStateUsing(fn($record) => number_format($record->amount_cents / 100, 2) . ' USD')
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('paid_date')
                     ->label('Fecha de Pago')

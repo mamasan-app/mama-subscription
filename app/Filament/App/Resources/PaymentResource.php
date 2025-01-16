@@ -125,23 +125,23 @@ class PaymentResource extends Resource
                                     ->color(fn($record) => $record->status->getColor()),
                                 TextEntry::make('subscription.trial_ends_at')
                                     ->label('Fin del Periodo de Prueba')
-                                    ->dateTime()
+                                    ->date('d/m/Y')
                                     ->placeholder('No disponible'),
                                 TextEntry::make('subscription.renews_at')
                                     ->label('Renovación')
-                                    ->dateTime()
+                                    ->date('d/m/Y')
                                     ->placeholder('No disponible'),
                                 TextEntry::make('subscription.ends_at')
                                     ->label('Fecha de Finalización')
-                                    ->dateTime()
+                                    ->date('d/m/Y')
                                     ->placeholder('No disponible'),
                                 TextEntry::make('subscription.last_notification_at')
                                     ->label('Última Notificación')
-                                    ->dateTime()
+                                    ->date('d/m/Y')
                                     ->placeholder('No disponible'),
                                 TextEntry::make('subscription.expires_at')
                                     ->label('Fecha de Expiración')
-                                    ->dateTime()
+                                    ->date('d/m/Y')
                                     ->placeholder('No disponible'),
                                 TextEntry::make('subscription.frequency_days')
                                     ->label('Frecuencia de Pago (días)')

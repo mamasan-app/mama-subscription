@@ -44,8 +44,8 @@ class StoreResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')->label('Nombre'),
-                TextColumn::make('description')->label('Descripción'),
-                TextColumn::make('owner.name')->label('Propietario'),
+                TextColumn::make('description')->label('Descripción')->placeholder('No disponible'),
+                TextColumn::make('owner.name')->label('Propietario')->placeholder('No disponible'),
             ])
             ->filters([
                 //

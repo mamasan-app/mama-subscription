@@ -39,14 +39,16 @@ class StorePlansWidget extends BaseWidget
 
                 Tables\Columns\TextColumn::make('description')
                     ->label('Descripción')
-                    ->limit(50)
+                    ->placeholder('No disponible')
                     ->wrap(),
 
                 Tables\Columns\TextColumn::make('formattedPrice')
                     ->label('Precio')
+                    ->placeholder('No disponible')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('duration_text')
                     ->label('Duración')
+                    ->placeholder('No disponible')
                     ->sortable(),
             ])
             ->filters([

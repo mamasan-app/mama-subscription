@@ -66,14 +66,15 @@ class UserSubscriptionResource extends Resource
             ->query(static::getTableQuery()) // Llama al método de la consulta personalizada
             ->defaultSort('created_at', 'desc') // Ordenar por defecto por fecha de creación, descendente
             ->columns([
-                Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
-                Tables\Columns\TextColumn::make('service.name')->label('Servicio')->sortable()->searchable(),
+                Tables\Columns\TextColumn::make('id')->label('ID')->sortable()->placeholder('No disponible'),
+                Tables\Columns\TextColumn::make('service.name')->label('Servicio')->sortable()->searchable()->placeholder('No disponible'),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
                     ->sortable()
-                    ->formatStateUsing(fn($state) => $state?->getLabel()),
-                Tables\Columns\TextColumn::make('trial_ends_at')->label('Fin del Período de Prueba')->dateTime(),
-                Tables\Columns\TextColumn::make('expires_at')->label('Fecha de Expiración')->dateTime(),
+                    ->formatStateUsing(fn($state) => $state?->getLabel())
+                    ->color(fn($record) => $record->status->getColor()),
+                Tables\Columns\TextColumn::make('trial_ends_at')->label('Fin del Período de Prueba')->date('d/m/Y')->placeholder('No disponible'),
+                Tables\Columns\TextColumn::make('expires_at')->label('Fecha de Expiración')->date('d/m/Y')->placeholder('No disponible'),
             ])
             ->actions([
                 Action::make('Pagar')
@@ -100,30 +101,26 @@ class UserSubscriptionResource extends Resource
                                     ->label('Estado')
                                     ->getStateUsing(fn($record) => $record->status->getLabel())
                                     ->badge()
-                                    ->color(fn($state) => match ($state) {
-                                        'Activo' => 'success',
-                                        'Cancelado' => 'danger',
-                                        default => 'warning',
-                                    }),
+                                    ->color(fn($record) => $record->status->getColor()),
                                 TextEntry::make('trial_ends_at')
                                     ->label('Fin del Periodo de Prueba')
-                                    ->dateTime()
+                                    ->date('d/m/Y')
                                     ->placeholder('No disponible'),
                                 TextEntry::make('renews_at')
                                     ->label('Renovación')
-                                    ->dateTime()
+                                    ->date('d/m/Y')
                                     ->placeholder('No disponible'),
                                 TextEntry::make('ends_at')
                                     ->label('Fecha de Finalización')
-                                    ->dateTime()
+                                    ->date('d/m/Y')
                                     ->placeholder('No disponible'),
                                 TextEntry::make('last_notification_at')
                                     ->label('Última Notificación')
-                                    ->dateTime()
+                                    ->date('d/m/Y')
                                     ->placeholder('No disponible'),
                                 TextEntry::make('expires_at')
                                     ->label('Fecha de Expiración')
-                                    ->dateTime()
+                                    ->date('d/m/Y')
                                     ->placeholder('No disponible'),
                                 TextEntry::make('frequency_days')
                                     ->label('Frecuencia de Pago (días)')
