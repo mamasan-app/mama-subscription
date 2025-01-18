@@ -39,6 +39,7 @@ class UserSubscriptionPayment extends Page
     {
         $this->subscription = Subscription::findOrFail($record);
         $this->amount = $this->subscription->service_price_cents / 100; // Convertir a dólares
+        $this->otp = null;
 
         // Capturar el resultado del pago
         if ($filter = request()->query('success') === "1") {
@@ -150,21 +151,12 @@ class UserSubscriptionPayment extends Page
             }
 
             // OTP generado correctamente
-            $this->otp = null;
-
+            $this->otp = true; // Se asegura de que el OTP esté listo para confirmarse.
             Notification::make()
                 ->title('OTP Generado')
-                ->body('Se ha enviado un código OTP a tu teléfono.')
+                ->body('Se ha enviado un código OTP a tu teléfono. Por favor, ingrésalo para continuar.')
                 ->success()
                 ->send();
-
-            $this->dispatchBrowserEvent('open-confirm-otp-modal', [
-                'bank' => $this->bank,
-                'phone' => $this->phone,
-                'identity' => $this->identity,
-                'amount' => $this->amount,
-            ]);
-
         } catch (\Exception $e) {
             Notification::make()
                 ->title('Error Interno')
@@ -173,6 +165,7 @@ class UserSubscriptionPayment extends Page
                 ->send();
         }
     }
+
 
     protected function generateOtp()
     {
@@ -217,6 +210,7 @@ class UserSubscriptionPayment extends Page
         try {
             $paymentResponse = $this->processImmediateDebit();
 
+            $this->otp = null;
             if ($paymentResponse['code'] === 'ACCP') {
                 Notification::make()
                     ->title('Pago Completado')
@@ -243,6 +237,9 @@ class UserSubscriptionPayment extends Page
 
     protected function processImmediateDebit()
     {
+        $user = auth()->user(); // Obtener el usuario autenticado
+        $nombre = $user->name ?? "{$user->first_name} {$user->last_name}"; // Obtener el nombre completo
+
         $tokenAuthorization = hash_hmac(
             'sha256',
             "{$this->bank}{$this->identity}{$this->phone}{$this->amount}{$this->otp}",
@@ -254,11 +251,13 @@ class UserSubscriptionPayment extends Page
             'Authorization' => $tokenAuthorization,
             'Commerce' => config('banking.commerce_id'),
         ])->post(config('banking.debit_url'), [
-                    'bank' => $this->bank,
-                    'identity' => $this->identity,
-                    'phone' => $this->phone,
-                    'amount' => $this->amount,
-                    'otp' => $this->otp,
+                    'Banco' => $this->bank,
+                    'Monto' => $this->amount,
+                    'Telefono' => $this->phone,
+                    'Cedula' => $this->identity,
+                    'Nombre' => $nombre,
+                    'Concepto' => 'pago de suscripcion',
+                    'OTP' => $this->otp,
                 ]);
 
         dd('Respuesta de la API', $response->json());
@@ -327,7 +326,8 @@ class UserSubscriptionPayment extends Page
                                 ->body('La nueva cuenta bancaria se registró exitosamente.')
                                 ->success()
                                 ->send();
-                        }),
+                        })
+                        ->hidden(fn() => $this->otp !== null), // Ocultar este botón si el OTP fue generado.
 
                     // Botón para usar una cuenta existente
                     Action::make('useExistingAccount')
@@ -355,7 +355,30 @@ class UserSubscriptionPayment extends Page
                                 'identity' => $bankAccount->identity_number,
                             ]);
                         })
-                        ->disabled(fn() => !auth()->user()->bankAccounts()->exists()), // Deshabilitar si no hay cuentas
+                        ->hidden(fn() => $this->otp !== null), // Ocultar este botón si el OTP fue generado.
+
+                    // Botón para confirmar OTP
+                    Action::make('confirmOtp')
+                        ->label('Confirmar OTP')
+                        ->color('info')
+                        ->form([
+                            TextInput::make('otp')
+                                ->label('Código OTP')
+                                ->required(),
+                        ])
+                        ->action(function (array $data) {
+                            $this->otp = $data['otp']; // Asignar el OTP ingresado por el usuario.
+                
+                            // Aquí puedes usar los datos del submitBolivaresPayment:
+                            $this->confirmOtp([
+                                'bank' => $this->bank,
+                                'phone' => $this->phone,
+                                'identity' => $this->identity,
+                                'amount' => $this->amount,
+                                'otp' => $this->otp,
+                            ]);
+                        })
+                        ->visible(fn() => $this->otp !== null), // Mostrar solo si el OTP ha sido generado.
                 ]),
         ];
     }
