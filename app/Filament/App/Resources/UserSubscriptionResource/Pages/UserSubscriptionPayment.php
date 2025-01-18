@@ -209,7 +209,6 @@ class UserSubscriptionPayment extends Page
 
         try {
             $paymentResponse = $this->processImmediateDebit();
-
             $this->otp = null;
             if ($paymentResponse['code'] === 'ACCP') {
                 Notification::make()
@@ -239,10 +238,17 @@ class UserSubscriptionPayment extends Page
     {
         $user = auth()->user(); // Obtener el usuario autenticado
         $nombre = $user->name ?? "{$user->first_name} {$user->last_name}"; // Obtener el nombre completo
+        $bank = (string) $this->bank;
+        $amount = (string) number_format((float) $this->amount, 2, '.', ''); // Convertir a string con dos decimales
+        $phone = (string) $this->phone;
+        $identity = (string) $this->identity;
+        $otp = (string) $this->otp;
+
+        $stringToHash = "{$bank}{$amount}{$phone}{$identity}{$otp}";
 
         $tokenAuthorization = hash_hmac(
             'sha256',
-            "{$this->bank}{$this->identity}{$this->phone}{$this->amount}{$this->otp}",
+            $stringToHash,
             config('banking.token_key')
         );
 
@@ -251,16 +257,16 @@ class UserSubscriptionPayment extends Page
             'Authorization' => $tokenAuthorization,
             'Commerce' => config('banking.commerce_id'),
         ])->post(config('banking.debit_url'), [
-                    'Banco' => $this->bank,
-                    'Monto' => $this->amount,
-                    'Telefono' => $this->phone,
-                    'Cedula' => $this->identity,
+                    'Banco' => $bank,
+                    'Monto' => $amount,
+                    'Telefono' => $phone,
+                    'Cedula' => $identity,
                     'Nombre' => $nombre,
                     'Concepto' => 'pago de suscripcion',
-                    'OTP' => $this->otp,
+                    'OTP' => $otp,
                 ]);
 
-        dd('Respuesta de la API', $response->json());
+        //dd('Respuesta de la API', $response->json());
 
         return $response->json();
     }
