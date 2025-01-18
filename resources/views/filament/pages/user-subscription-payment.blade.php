@@ -65,5 +65,45 @@
                 @endif
             </div>
         </div>
+
+        <div>
+            <!-- Modal para Confirmar OTP -->
+            <div x-data="{ open: false, bank: '', phone: '', identity: '', amount: '', otp: '' }"
+                @open-confirm-otp-modal.window="
+            open = true;
+            bank = $event.detail.bank;
+            phone = $event.detail.phone;
+            identity = $event.detail.identity;
+            amount = $event.detail.amount;
+        " x-show="open" class="fixed inset-0 flex items-center justify-center z-50 bg-gray-900 bg-opacity-50">
+                <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
+                    <h2 class="text-lg font-bold mb-4">Confirmar OTP</h2>
+                    <p class="mb-2 text-sm text-gray-600">Banco: <span x-text="bank"></span></p>
+                    <p class="mb-2 text-sm text-gray-600">Teléfono: <span x-text="phone"></span></p>
+                    <p class="mb-2 text-sm text-gray-600">Identidad: <span x-text="identity"></span></p>
+                    <p class="mb-4 text-sm text-gray-600">Monto: $<span x-text="amount"></span></p>
+
+                    <form wire:submit.prevent="confirmOtp">
+                        <div class="mb-4">
+                            <label for="otp" class="block text-sm font-medium text-gray-700">Código OTP</label>
+                            <input type="text" id="otp" x-model="otp" wire:model.defer="otp"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                required>
+                        </div>
+                        <div class="flex justify-end space-x-2">
+                            <button type="button" @click="open = false"
+                                class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded">
+                                Cancelar
+                            </button>
+                            <button type="submit"
+                                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                Confirmar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
     </div>
 </x-filament::page>

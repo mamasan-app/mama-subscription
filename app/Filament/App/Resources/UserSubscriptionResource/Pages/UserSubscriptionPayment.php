@@ -150,13 +150,21 @@ class UserSubscriptionPayment extends Page
             }
 
             // OTP generado correctamente
-            $this->otp = true;
+            $this->otp = null;
 
             Notification::make()
                 ->title('OTP Generado')
                 ->body('Se ha enviado un código OTP a tu teléfono.')
                 ->success()
                 ->send();
+
+            $this->dispatchBrowserEvent('open-confirm-otp-modal', [
+                'bank' => $this->bank,
+                'phone' => $this->phone,
+                'identity' => $this->identity,
+                'amount' => $this->amount,
+            ]);
+
         } catch (\Exception $e) {
             Notification::make()
                 ->title('Error Interno')
@@ -174,14 +182,6 @@ class UserSubscriptionPayment extends Page
         $phone = (string) $this->phone;
         $identity = (string) $this->identity;
 
-        // Verificar los valores después de la transformación
-        //dd('Valores transformados a string:', [
-        //    'Banco' => $bank,
-        //    'Monto' => $amount,
-        //    'Telefono' => $phone,
-        //    'Cedula' => $identity,
-        //]);
-
         // Concatenar los datos para el HMAC-SHA256
         $stringToHash = "{$bank}{$amount}{$phone}{$identity}";
         //dd('String a Hashear', $stringToHash);
@@ -192,8 +192,6 @@ class UserSubscriptionPayment extends Page
             $stringToHash,
             config('banking.commerce_id') // Llave secreta desde configuración
         );
-        //dd(config('banking.token_key'));
-        //dd('Token HMAC Generado', $tokenAuthorization);
 
         // Enviar la solicitud HTTP
         $response = Http::withHeaders([
@@ -214,7 +212,7 @@ class UserSubscriptionPayment extends Page
 
     public function confirmOtp(array $data)
     {
-        $this->otp = $data['otp'];
+        $this->otp = $data['otp']; // Asignar OTP desde el modal
 
         try {
             $paymentResponse = $this->processImmediateDebit();
@@ -243,10 +241,6 @@ class UserSubscriptionPayment extends Page
         }
     }
 
-
-
-
-
     protected function processImmediateDebit()
     {
         $tokenAuthorization = hash_hmac(
@@ -266,6 +260,8 @@ class UserSubscriptionPayment extends Page
                     'amount' => $this->amount,
                     'otp' => $this->otp,
                 ]);
+
+        dd('Respuesta de la API', $response->json());
 
         return $response->json();
     }
@@ -361,18 +357,6 @@ class UserSubscriptionPayment extends Page
                         })
                         ->disabled(fn() => !auth()->user()->bankAccounts()->exists()), // Deshabilitar si no hay cuentas
                 ]),
-
-            Action::make('confirmOtp')
-                ->label('Confirmar OTP')
-                ->color('info')
-                ->form([
-                    TextInput::make('otp')->label('Código OTP')->required(),
-                ])
-                ->action(function (array $data) {
-                    $this->confirmOtp($data);
-                })
-                ->visible(fn() => $this->otp !== null), // Solo visible cuando $otp no es null
-
         ];
     }
 }
