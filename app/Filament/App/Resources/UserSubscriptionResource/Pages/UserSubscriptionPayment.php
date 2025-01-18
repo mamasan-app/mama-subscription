@@ -166,38 +166,6 @@ class UserSubscriptionPayment extends Page
         }
     }
 
-
-    public function confirmOtp(array $data)
-    {
-        $this->otp = $data['otp'];
-
-        try {
-            $paymentResponse = $this->processImmediateDebit();
-
-            if ($paymentResponse['code'] === 'ACCP') {
-                Notification::make()
-                    ->title('Pago Completado')
-                    ->body('El pago se procesó exitosamente.')
-                    ->success()
-                    ->send();
-
-                return redirect(static::getUrl(['record' => $this->subscription->id]));
-            } else {
-                Notification::make()
-                    ->title('Error')
-                    ->body('No se pudo completar el pago. Intente nuevamente.')
-                    ->danger()
-                    ->send();
-            }
-        } catch (\Exception $e) {
-            Notification::make()
-                ->title('Error Interno')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
-        }
-    }
-
     protected function generateOtp()
     {
         // Transformar todos los valores a string
@@ -238,10 +206,44 @@ class UserSubscriptionPayment extends Page
                     'Telefono' => $phone, // Teléfono completo (11 dígitos)
                     'Cedula' => $identity, // Cédula con prefijo
                 ]);
-        dd('Respuesta de la API', $response->json());
+        //dd('Respuesta de la API', $response->json());
 
         return $response->json();
     }
+
+
+    public function confirmOtp(array $data)
+    {
+        $this->otp = $data['otp'];
+
+        try {
+            $paymentResponse = $this->processImmediateDebit();
+
+            if ($paymentResponse['code'] === 'ACCP') {
+                Notification::make()
+                    ->title('Pago Completado')
+                    ->body('El pago se procesó exitosamente.')
+                    ->success()
+                    ->send();
+
+                return redirect(static::getUrl(['record' => $this->subscription->id]));
+            } else {
+                Notification::make()
+                    ->title('Error')
+                    ->body('No se pudo completar el pago. Intente nuevamente.')
+                    ->danger()
+                    ->send();
+            }
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('Error Interno')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
+    }
+
+
 
 
 
