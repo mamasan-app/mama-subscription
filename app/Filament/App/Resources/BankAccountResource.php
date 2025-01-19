@@ -86,7 +86,7 @@ class BankAccountResource extends Resource
                     ->label('Número de identidad'),
                 TextColumn::make('created_at')
                     ->label('Creado')
-                    ->date(),
+                    ->dateTime('d/m/Y'),
             ])
             ->filters([
                 //
