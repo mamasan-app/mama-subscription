@@ -70,6 +70,7 @@ class UserSubscriptionResource extends Resource
                 Tables\Columns\TextColumn::make('service.name')->label('Servicio')->sortable()->searchable()->placeholder('No disponible'),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
+                    ->badge()
                     ->sortable()
                     ->formatStateUsing(fn($state) => $state?->getLabel())
                     ->color(fn($record) => $record->status->getColor()),
