@@ -244,12 +244,12 @@ class UserSubscriptionPayment extends Page
         $identity = (string) $this->identity;
         $otp = (string) $this->otp;
 
-        $stringToHash = "{$bank}{$amount}{$phone}{$identity}{$otp}";
+        $stringToHash = "{$bank}{$identity}{$phone}{$amount}{$otp}";
 
         $tokenAuthorization = hash_hmac(
             'sha256',
             $stringToHash,
-            config('banking.token_key')
+            config('banking.commerce_id')
         );
 
         $response = Http::withHeaders([
