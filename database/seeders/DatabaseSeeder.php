@@ -42,6 +42,8 @@ class DatabaseSeeder extends Seeder
             'first_name' => 'customer',
             'last_name' => 'customer',
             'email' => 'moises.liotawork@gmail.com',
+            'identity_document' => 'V-12260129',
+            'phone_number' => '04146634862',
             'password' => '201102',
             'email_verified_at' => now(),
         ]);
