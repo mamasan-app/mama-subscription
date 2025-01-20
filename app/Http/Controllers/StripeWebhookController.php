@@ -144,6 +144,7 @@ class StripeWebhookController extends Controller
 
                             $subscription->update([
                                 'ends_at' => $endDate,
+                                'cancel_at' => $endDate,
                             ]);
 
                             Log::info('Stripe subscription updated with cancel_at', [
@@ -204,10 +205,10 @@ class StripeWebhookController extends Controller
             $localSubscription->update([
                 'status' => SubscriptionStatusEnum::from($subscription->status),
                 'renews_at' => isset($subscription->current_period_end)
-                    ? now()->setTimestamp($subscription->current_period_end)->setTimezone('America/Caracas')->subDay()
+                    ? now()->setTimestamp($subscription->current_period_end)->setTimezone('America/Caracas')
                     : null,
                 'expires_at' => isset($subscription->cancel_at)
-                    ? now()->setTimestamp($subscription->cancel_at)->setTimezone('America/Caracas')->subDay()
+                    ? now()->setTimestamp($subscription->cancel_at)->setTimezone('America/Caracas')
                     : null,
             ]);
 
