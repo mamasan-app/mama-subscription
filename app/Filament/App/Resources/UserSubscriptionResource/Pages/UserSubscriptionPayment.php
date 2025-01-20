@@ -266,7 +266,7 @@ class UserSubscriptionPayment extends Page
                     'OTP' => $otp,
                 ]);
 
-        //dd('Respuesta de la API', $response->json());
+        dd('Respuesta de la API', $response->json());
 
         return $response->json();
     }
