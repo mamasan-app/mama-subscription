@@ -212,7 +212,7 @@ class UserSubscriptionPayment extends Page
             $paymentResponse = $this->checkOperationStatus( $payment['id']);
 
             $this->otp = null;
-            
+
             if ($paymentResponse['code'] === 'ACCP') {
                 Notification::make()
                     ->title('Pago Completado')
@@ -286,7 +286,7 @@ class UserSubscriptionPayment extends Page
             'Content-Type' => 'application/json',
             'Authorization' => $tokenAuthorization,
             'Commerce' => config('banking.commerce_id'),
-        ])->post(config('banking.operation_status_url'), [
+        ])->post(config('banking.consult_debit'), [
                     'Id' => $operationId,
                 ]);
 
