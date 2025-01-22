@@ -208,8 +208,11 @@ class UserSubscriptionPayment extends Page
         $this->otp = $data['otp']; // Asignar OTP desde el modal
 
         try {
-            $paymentResponse = $this->processImmediateDebit();
+            $payment = $this->processImmediateDebit();
+            $paymentResponse = $this->checkOperationStatus( $payment['id']);
+
             $this->otp = null;
+            
             if ($paymentResponse['code'] === 'ACCP') {
                 Notification::make()
                     ->title('Pago Completado')
@@ -268,6 +271,28 @@ class UserSubscriptionPayment extends Page
 
         return $response->json();
     }
+
+    protected function checkOperationStatus($operationId)
+    {
+        $stringToHash = $operationId;
+
+        $tokenAuthorization = hash_hmac(
+            'sha256',
+            $stringToHash,
+            config('banking.commerce_id')
+        );
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'Authorization' => $tokenAuthorization,
+            'Commerce' => config('banking.commerce_id'),
+        ])->post(config('banking.operation_status_url'), [
+                    'Id' => $operationId,
+                ]);
+
+        return $response->json();
+    }
+
 
     protected function getActions(): array
     {
