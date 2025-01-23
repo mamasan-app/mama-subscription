@@ -5,7 +5,7 @@ namespace App\Filament\App\Resources\UserSubscriptionResource\Pages;
 use App\Filament\App\Resources\UserSubscriptionResource;
 use App\Models\Subscription;
 use App\Enums\PhonePrefixEnum;
-use App\Enums\IdentityPrefixEnum;
+use App\Jobs\MonitorTransactionStatus;
 use App\Enums\BankEnum;
 use App\Services\StripeService;
 use Filament\Pages\Actions\Action;
@@ -208,26 +208,25 @@ class UserSubscriptionPayment extends Page
         $this->otp = $data['otp']; // Asignar OTP desde el modal
 
         try {
+            // Procesar el débito inmediato y obtener el ID de la transacción
             $payment = $this->processImmediateDebit();
-            $paymentResponse = $this->checkOperationStatus( $payment['id']);
 
+            // Despachar el Job para monitorear el estado de la transacción
+            if (isset($payment['id'])) {
+                MonitorTransactionStatus::dispatch($payment['id']);
+
+                Notification::make()
+                    ->title('Proceso Iniciado')
+                    ->body('El pago está siendo procesado. Recibirás una notificación cuando el proceso sea completado.')
+                    ->info()
+                    ->send();
+            } else {
+                throw new \Exception('No se pudo iniciar el proceso de pago. Inténtelo nuevamente.');
+            }
+
+            // Limpiar el OTP después de iniciar el proceso
             $this->otp = null;
 
-            if ($paymentResponse['code'] === 'ACCP') {
-                Notification::make()
-                    ->title('Pago Completado')
-                    ->body('El pago se procesó exitosamente.')
-                    ->success()
-                    ->send();
-
-                return redirect(static::getUrl(['record' => $this->subscription->id]));
-            } else {
-                Notification::make()
-                    ->title('Error')
-                    ->body('No se pudo completar el pago. Intente nuevamente.')
-                    ->danger()
-                    ->send();
-            }
         } catch (\Exception $e) {
             Notification::make()
                 ->title('Error Interno')
@@ -236,6 +235,8 @@ class UserSubscriptionPayment extends Page
                 ->send();
         }
     }
+
+
 
     protected function processImmediateDebit()
     {
@@ -269,28 +270,8 @@ class UserSubscriptionPayment extends Page
                     'OTP' => $otp,
                 ]);
 
-        return $response->json();
-    }
+        return $response->json();  
 
-    protected function checkOperationStatus($operationId)
-    {
-        $stringToHash = $operationId;
-
-        $tokenAuthorization = hash_hmac(
-            'sha256',
-            $stringToHash,
-            config('banking.commerce_id')
-        );
-
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json',
-            'Authorization' => $tokenAuthorization,
-            'Commerce' => config('banking.commerce_id'),
-        ])->post(config('banking.consult_debit'), [
-                    'Id' => $operationId,
-                ]);
-
-        return $response->json();
     }
 
 
