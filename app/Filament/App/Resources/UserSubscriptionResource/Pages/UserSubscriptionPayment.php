@@ -296,7 +296,7 @@ class UserSubscriptionPayment extends Page
             'from_type' => get_class($user),
             'from_id' => $user->id,
             'to_type' => get_class($store),
-            'to_id' => $store,
+            'to_id' => $store->id,
             'type' => TransactionTypeEnum::Subscription->value,
             'status' => TransactionStatusEnum::Processing,
             'date' => now()->setTimezone('America/Caracas'),
