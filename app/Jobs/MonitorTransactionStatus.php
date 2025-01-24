@@ -69,6 +69,8 @@ class MonitorTransactionStatus implements ShouldQueue
             // Actualizar transacción y pago según el estado final
             $payment = $transaction->payment;
 
+            $subscription = $payment->subscription;
+
             if ($statusCode === 'ACCP') {
                 // Actualizar transacción y pago a completado
                 $transaction->update([
@@ -78,6 +80,10 @@ class MonitorTransactionStatus implements ShouldQueue
 
                 $payment->update([
                     'status' => PaymentStatusEnum::Completed,
+                ]);
+
+                $subscription->update([
+                    'status' => SubscriptionStatusEnum::Active,
                 ]);
 
                 Notification::make()
@@ -93,7 +99,7 @@ class MonitorTransactionStatus implements ShouldQueue
                 ]);
 
                 // Si la suscripción está en periodo de prueba
-                $subscription = $payment->subscription;
+
                 if ($subscription->isOnTrial) {
                     $payment->update([
                         'status' => PaymentStatusEnum::Pending,

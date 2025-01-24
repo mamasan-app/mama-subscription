@@ -71,7 +71,7 @@ class UserSubscriptionPayment extends Page
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => $this->generateBcvToken(),
-            ])->post(config('banking.tasa_bcv_url'), [
+            ])->post(config('banking.tasa_bcv'), [
                         'Moneda' => 'USD',
                         'Fechavalor' => now()->format('Y-m-d'),
                     ]);
