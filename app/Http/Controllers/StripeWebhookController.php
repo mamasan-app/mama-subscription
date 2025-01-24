@@ -563,6 +563,16 @@ class StripeWebhookController extends Controller
                 ]
             );
 
+            $transactions = Transaction::where('stripe_invoice_id', $invoice->id)->get();
+
+            foreach ($transactions as $transaction) {
+                $transaction->update([
+                    'payment_id' => $payment->id,
+                    'to_type' => $subscription->service && $subscription->service->store ? get_class($subscription->service->store) : null,
+                    'to_id' => $subscription->service && $subscription->service->store ? $subscription->service->store->id : null,
+                ]);
+            }
+
             Log::info('Payment updated for finalized invoice', ['payment_id' => $payment->id]);
         } else {
             Log::warning('Subscription not found for finalized invoice', ['subscription_id' => $subscriptionId]);
@@ -619,7 +629,7 @@ class StripeWebhookController extends Controller
                         'stripe_payment_id' => $paymentIntent->id,
                         'stripe_invoice_id' => $invoiceId,
                     ]);
-                }  
+                }
             }
             Log::info('Transacción creada/actualizada con éxito', ['payment_intent_id' => $paymentIntent->id]);
         } else {
