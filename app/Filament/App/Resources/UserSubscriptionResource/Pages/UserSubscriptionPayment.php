@@ -40,22 +40,22 @@ class UserSubscriptionPayment extends Page
     public $amount;
     public $otp = null;
 
+    public $amountInBs; // Monto en bolívares
+
     public function mount($record): void
     {
         $this->subscription = Subscription::findOrFail($record);
         $this->amount = $this->subscription->service_price_cents / 100; // Convertir a dólares
+        $this->amountInBs = $this->convertToBs($this->amount); // Convertir a bolívares
         $this->otp = null;
 
-        // Capturar el resultado del pago
         if ($filter = request()->query('success') === "1") {
             Notification::make()
                 ->title('Pago exitoso')
                 ->body('Tu suscripción se activó correctamente.')
                 ->success()
                 ->send();
-
             redirect(UserSubscriptionResource::getUrl('index'));
-
         } elseif ($filter = request()->query('success') === "0") {
             Notification::make()
                 ->title('Pago cancelado')
@@ -64,6 +64,41 @@ class UserSubscriptionPayment extends Page
                 ->send();
         }
     }
+
+    protected function convertToBs($amountInUSD)
+    {
+        try {
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => $this->generateBcvToken(),
+            ])->post(config('banking.tasa_bcv_url'), [
+                        'Moneda' => 'USD',
+                        'Fechavalor' => now()->format('Y-m-d'),
+                    ]);
+
+            $rate = $response->json()['tipocambio'] ?? null;
+
+            if ($rate) {
+                return round($amountInUSD * $rate, 2);
+            }
+
+            throw new Exception('No se pudo obtener la tasa de cambio.');
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('Error al obtener la tasa')
+                ->body('No se pudo obtener la tasa de cambio del BCV. Detalles: ' . $e->getMessage())
+                ->danger()
+                ->send();
+            return null;
+        }
+    }
+
+    protected function generateBcvToken()
+    {
+        $data = now()->format('Y-m-d') . 'USD';
+        return hash_hmac('sha256', $data, config('banking.commerce_id'));
+    }
+
 
     public function createStripeSession(StripeService $stripeService)
     {
@@ -176,7 +211,7 @@ class UserSubscriptionPayment extends Page
     {
         // Transformar todos los valores a string
         $bank = (string) $this->bank;
-        $amount = (string) number_format((float) $this->amount, 2, '.', ''); // Convertir a string con dos decimales
+        $amount = (string) number_format((float) $this->amountInBs, 2, '.', ''); // Convertir a string con dos decimales
         $phone = (string) $this->phone;
         $identity = (string) $this->identity;
 
@@ -265,7 +300,7 @@ class UserSubscriptionPayment extends Page
 
         $nombre = $user->name ?? "{$user->first_name} {$user->last_name}"; // Obtener el nombre completo
         $bank = (string) $this->bank;
-        $amount = (string) number_format((float) $this->amount, 2, '.', ''); // Convertir a string con dos decimales
+        $amount = (string) number_format((float) $this->amountInBs, 2, '.', ''); // Convertir a string con dos decimales
         $phone = (string) $this->phone;
         $identity = (string) $this->identity;
         $otp = (string) $this->otp;
@@ -391,6 +426,10 @@ class UserSubscriptionPayment extends Page
                                         ->toArray()
                                 )
                                 ->required(),
+                            TextInput::make('amountInBs')
+                                ->label('Monto en Bolívares')
+                                ->value($this->amountInBs)
+                                ->disabled(),
                         ])
                         ->action(function (array $data) {
                             $bankAccount = auth()->user()->bankAccounts()->findOrFail($data['existing_account']);
