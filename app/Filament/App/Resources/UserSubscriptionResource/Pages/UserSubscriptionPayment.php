@@ -428,8 +428,9 @@ class UserSubscriptionPayment extends Page
                                 ->required(),
                             TextInput::make('amountInBs')
                                 ->label('Monto en Bolívares')
-                                ->value($this->amountInBs)
-                                ->disabled(),
+                                ->default($this->amountInBs) // Usa default() para establecer el valor inicial
+                                ->disabled(), // Deshabilitar para que sea de solo lectura
+
                         ])
                         ->action(function (array $data) {
                             $bankAccount = auth()->user()->bankAccounts()->findOrFail($data['existing_account']);
