@@ -4,10 +4,15 @@ namespace App\Filament\App\Resources\UserSubscriptionResource\Pages;
 
 use App\Filament\App\Resources\UserSubscriptionResource;
 use App\Models\Subscription;
+use App\Models\Payment;
+use App\Models\Transaction;
 use App\Enums\PhonePrefixEnum;
-use App\Jobs\MonitorTransactionStatus;
+use App\Enums\TransactionTypeEnum;
+use App\Enums\PaymentStatusEnum;
+use App\Enums\TransactionStatusEnum;
 use App\Enums\BankEnum;
 use App\Services\StripeService;
+use App\Jobs\MonitorTransactionStatus;
 use Filament\Pages\Actions\Action;
 use Filament\Resources\Pages\Page;
 use Filament\Notifications\Notification;
@@ -202,18 +207,36 @@ class UserSubscriptionPayment extends Page
         return $response->json();
     }
 
-
     public function confirmOtp(array $data)
     {
-        $this->otp = $data['otp']; // Asignar OTP desde el modal
+        $this->otp = $data['otp']; // Asignar el OTP ingresado por el usuario.
+
+        if ($this->otp === null) {
+            Notification::make()
+                ->title('Error')
+                ->body('Debe ingresar un OTP para confirmar el pago.')
+                ->danger()
+                ->send();
+            return;
+        }
 
         try {
-            // Procesar el débito inmediato y obtener el ID de la transacción
-            $payment = $this->processImmediateDebit();
+            // Crear el pago en estado 'pending'
+            $payment = Payment::create([
+                'subscription_id' => $this->subscription->id,
+                'status' => \App\Enums\PaymentStatusEnum::Pending,
+                'amount_cents' => $this->subscription->service_price_cents,
+                'due_date' => $this->subscription->ends_at,
+                'is_bs' => true,
+            ]);
 
-            // Despachar el Job para monitorear el estado de la transacción
-            if (isset($payment['id'])) {
-                MonitorTransactionStatus::dispatch($payment['id']);
+            // Procesar el débito inmediato y obtener el ID de la transacción
+            $immediateDebitResponse = $this->processImmediateDebit($payment);
+
+            // Verificar si se generó correctamente un ID de transacción
+            if (isset($immediateDebitResponse['id'])) {
+                // Despachar el Job para monitorear el estado de la transacción
+                MonitorTransactionStatus::dispatch($immediateDebitResponse['id']);
 
                 Notification::make()
                     ->title('Proceso Iniciado')
@@ -226,7 +249,6 @@ class UserSubscriptionPayment extends Page
 
             // Limpiar el OTP después de iniciar el proceso
             $this->otp = null;
-
         } catch (\Exception $e) {
             Notification::make()
                 ->title('Error Interno')
@@ -236,11 +258,11 @@ class UserSubscriptionPayment extends Page
         }
     }
 
-
-
-    protected function processImmediateDebit()
+    protected function processImmediateDebit($payment)
     {
         $user = auth()->user(); // Obtener el usuario autenticado
+        $store = $this->subscription->store; // Tienda asociada a la suscripción
+
         $nombre = $user->name ?? "{$user->first_name} {$user->last_name}"; // Obtener el nombre completo
         $bank = (string) $this->bank;
         $amount = (string) number_format((float) $this->amount, 2, '.', ''); // Convertir a string con dos decimales
@@ -270,7 +292,21 @@ class UserSubscriptionPayment extends Page
                     'OTP' => $otp,
                 ]);
 
-        return $response->json();  
+        Transaction::create([
+            'from_type' => get_class($user),
+            'from_id' => $user->id,
+            'to_type' => get_class($store),
+            'to_id' => $store,
+            'type' => TransactionTypeEnum::Subscription->value,
+            'status' => TransactionStatusEnum::Processing,
+            'date' => now()->setTimezone('America/Caracas'),
+            'amount_cents' => $payment->amount_cents,
+            'metadata' => $response->json(),
+            'payment_id' => $payment->id,
+            'is_bs' => true,
+        ]);
+
+        return $response->json();
 
     }
 

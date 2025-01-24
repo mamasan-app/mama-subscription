@@ -29,6 +29,7 @@ class Transaction extends Model
         'payment_id',
         'stripe_payment_id', // Nuevo campo agregado
         'stripe_invoice_id',
+        'is_bs',
     ];
 
     protected $casts = [
@@ -36,6 +37,7 @@ class Transaction extends Model
         'status' => TransactionStatusEnum::class,
         'date' => 'date',
         'metadata' => 'array',
+        'is_bs' => 'boolean',
     ];
 
     public function from(): MorphTo

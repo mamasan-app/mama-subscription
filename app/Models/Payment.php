@@ -17,12 +17,14 @@ class Payment extends Model
         'amount_cents',
         'due_date',
         'paid_date',
+        'is_bs', // Nueva columna para indicar si el pago es en bolívares
     ];
 
     protected $casts = [
         'status' => PaymentStatusEnum::class,
         'due_date' => 'date',
         'paid_date' => 'date',
+        'is_bs' => 'boolean', // Cast automático a booleano
     ];
 
     /**
