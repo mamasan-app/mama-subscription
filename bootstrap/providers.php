@@ -5,4 +5,5 @@ return [
     App\Providers\Filament\AdminPanelPanelProvider::class,
     App\Providers\Filament\AppPanelProvider::class,
     App\Providers\Filament\StorePanelPanelProvider::class,
+    App\Providers\HorizonServiceProvider::class,
 ];
