@@ -54,7 +54,7 @@ class PaymentCalendarWidget extends FullCalendarWidget
 
                     // Verificar si hay un pago exitoso en la fecha
                     $paymentsCount = Payment::where('subscription_id', $subscription->id)
-                        ->where('estado', PaymentStatusEnum::Completed)
+                        ->where('status', PaymentStatusEnum::Completed)
                         ->whereDate('fecha', $nextRenewal->toDateString())
                         ->count();
 
