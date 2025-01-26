@@ -46,26 +46,30 @@ class PaymentCalendarWidget extends FullCalendarWidget
                     ? Carbon::parse($subscription->ends_at)->subDays($subscription->frequency_days)
                     : null;
 
+                // Obtener la cantidad de pagos exitosos
+                $completedPaymentsCount = Payment::where('subscription_id', $subscription->id)
+                    ->where('status', PaymentStatusEnum::Completed)
+                    ->whereBetween('date', [$start, $end])
+                    ->count();
+
+                $eventsToShow = 0;
+
                 while ($nextRenewal->lessThanOrEqualTo($end)) {
                     // Para suscripciones finitas, respetar el límite de fecha.
                     if ($limitDate && $nextRenewal->greaterThan($limitDate)) {
                         break;
                     }
 
-                    // Verificar si hay un pago exitoso en la fecha
-                    $paymentsCount = Payment::where('subscription_id', $subscription->id)
-                        ->where('status', PaymentStatusEnum::Completed)
-                        ->whereDate('fecha', $nextRenewal->toDateString())
-                        ->count();
-
-                    // Si el pago está completado, no mostrar el evento
-                    if ($paymentsCount === 0) {
+                    if ($completedPaymentsCount > 0) {
+                        $completedPaymentsCount--;
+                    } else {
                         $events[] = [
                             'id' => $subscription->id,
                             'title' => $subscription->service_name,
                             'start' => $nextRenewal->toDateString(),
                             'color' => 'success', // Verde para "Activa"
                         ];
+                        $eventsToShow++;
                     }
 
                     // Incrementar la siguiente fecha dependiendo de la frecuencia
