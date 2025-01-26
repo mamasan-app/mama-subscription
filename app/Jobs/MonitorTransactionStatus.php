@@ -24,7 +24,7 @@ class MonitorTransactionStatus implements ShouldQueue
     /**
      * Create a new job instance.
      *
-     * @return void
+     * @param string $operationId
      */
     public function __construct($operationId)
     {
@@ -33,8 +33,6 @@ class MonitorTransactionStatus implements ShouldQueue
 
     /**
      * Execute the job.
-     *
-     * @return void
      */
     public function handle()
     {
@@ -49,30 +47,30 @@ class MonitorTransactionStatus implements ShouldQueue
             }
 
             // Consultar estado de la operación
-            do {
-                sleep(10); // Esperar 5 segundos
-                $response = Http::withHeaders([
-                    'Content-Type' => 'application/json',
-                    'Authorization' => hash_hmac(
-                        'sha256',
-                        $this->operationId,
-                        config('banking.commerce_id')
-                    ),
-                    'Commerce' => config('banking.commerce_id'),
-                ])->post(config('banking.consult_debit'), [
-                            'Id' => $this->operationId,
-                        ]);
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => hash_hmac(
+                    'sha256',
+                    $this->operationId,
+                    config('banking.commerce_id')
+                ),
+                'Commerce' => config('banking.commerce_id'),
+            ])->post(config('banking.consult_debit'), [
+                        'Id' => $this->operationId,
+                    ]);
 
-                $statusCode = $response->json()['code'] ?? null;
-            } while ($statusCode === 'AC00'); // Código de operación en proceso
+            $statusCode = $response->json()['code'] ?? null;
 
-            // Actualizar transacción y pago según el estado final
+            if ($statusCode === 'AC00') {
+                // Transacción en proceso: no hacer nada
+                return;
+            }
+
+            // Procesar el estado final de la transacción
             $payment = $transaction->payment;
-
             $subscription = $payment->subscription;
 
             if ($statusCode === 'ACCP') {
-                // Actualizar transacción y pago a completado
                 $transaction->update([
                     'status' => TransactionStatusEnum::Succeeded,
                     'metadata' => $response->json(),
@@ -92,20 +90,12 @@ class MonitorTransactionStatus implements ShouldQueue
                     ->success()
                     ->send();
             } else {
-                // Manejar fallo en la transacción
                 $transaction->update([
                     'status' => TransactionStatusEnum::Failed,
                     'metadata' => $response->json(),
                 ]);
 
-                // Si la suscripción está en periodo de prueba
-
-                if ($subscription->isOnTrial) {
-                    $payment->update([
-                        'status' => PaymentStatusEnum::Pending,
-                    ]);
-                } else {
-                    // Si no está en periodo de prueba, verificar expiración
+                if (!$subscription->isOnTrial) {
                     if (now()->greaterThanOrEqualTo($subscription->expires_at)) {
                         $subscription->update([
                             'status' => SubscriptionStatusEnum::Cancelled,
