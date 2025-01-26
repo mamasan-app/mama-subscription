@@ -30,3 +30,7 @@ Route::get('/magiclink/login', [MagicLinkLoginController::class, 'loginWithMagic
 Route::get('/', function () {
     return redirect('/app');
 });
+
+Route::get('/horizon-check', function () {
+    return auth()->check() ? auth()->user() : 'Not Authenticated';
+});
