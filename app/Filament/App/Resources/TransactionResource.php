@@ -25,9 +25,7 @@ class TransactionResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
-            ->schema([
-                //
-            ]);
+            ->schema([]);
     }
 
     public static function table(Table $table): Table
@@ -51,7 +49,7 @@ class TransactionResource extends Resource
 
                 Tables\Columns\TextColumn::make('amount')
                     ->label('Monto (USD)')
-                    ->formatStateUsing(fn($state) => number_format($state, 2) . 'USD')
+                    ->formatStateUsing(fn($state) => number_format($state, 2) . ' USD')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('date')
@@ -59,14 +57,9 @@ class TransactionResource extends Resource
                     ->date('d/m/Y')
                     ->sortable(),
             ])
-            ->filters([
-                //
-            ])
-            ->actions([
-
-            ])
-            ->bulkActions([
-            ]);
+            ->filters([])
+            ->actions([])
+            ->bulkActions([]);
     }
 
     public static function infolist(Infolist $infolist): Infolist
@@ -75,7 +68,6 @@ class TransactionResource extends Resource
             ->schema([
                 Tabs::make('Detalles de la Transaccion')
                     ->tabs([
-                        // Pestaña Información de la Transaccion
                         Tab::make('Informacion General')
                             ->schema([
                                 TextEntry::make('id')
@@ -92,7 +84,7 @@ class TransactionResource extends Resource
                                     ->dateTime('d/m/Y'),
                                 TextEntry::make('amount')
                                     ->label('Monto (USD)')
-                                    ->getStateUsing(fn($record) => number_format($record->amount, 2)) . 'USD',
+                                    ->getStateUsing(fn($record) => number_format($record->amount, 2) . ' USD'),
                                 TextEntry::make('from_user_name')
                                     ->label('Usuario (From)')
                                     ->getStateUsing(fn($record) => $record->from->name ?? 'No disponible'),
@@ -109,106 +101,42 @@ class TransactionResource extends Resource
                                     }),
                             ])->columns(2),
 
-                        // Pestaña Información Detallada
-                        //Tab::make('Información Detallada')
-                        //    ->schema(function ($record) {
-                        //        $metadata = $record->getMetadataAsObject();
-//
-                        //        if ($metadata instanceof \App\DTO\StripeMetadata) {
-                        //            return [
-                        //                TextEntry::make('stripe_id')
-                        //                    ->label('Stripe ID')
-                        //                    ->getStateUsing(fn() => $metadata->id)
-                        //                    ->placeholder('No disponible'),
-//
-                        //                TextEntry::make('stripe_object')
-                        //                    ->label('Stripe Object')
-                        //                    ->getStateUsing(fn() => $metadata->object)
-                        //                    ->placeholder('No disponible'),
-//
-                        //                TextEntry::make('stripe_amount')
-                        //                    ->label('Monto (Stripe)')
-                        //                    ->getStateUsing(fn() => number_format($metadata->amount / 100, 2) . ' USD')
-                        //                    ->placeholder('No disponible'),
-//
-                        //                TextEntry::make('stripe_status')
-                        //                    ->label('Estado (Stripe)')
-                        //                    ->getStateUsing(fn() => $metadata->status)
-                        //                    ->placeholder('No disponible'),
-//
-                        //                TextEntry::make('stripe_client_secret')
-                        //                    ->label('Client Secret')
-                        //                    ->getStateUsing(fn() => $metadata->client_secret)
-                        //                    ->extraAttributes([
-                        //                        'style' => 'word-break: break-all; white-space: normal; max-width: 100%; display: block;'
-                        //                    ])
-                        //                    ->placeholder('No disponible'),
-//
-//
-                        //                TextEntry::make('stripe_capture_method')
-                        //                    ->label('Método de Captura')
-                        //                    ->getStateUsing(fn() => $metadata->capture_method)
-                        //                    ->placeholder('No disponible'),
-//
-                        //                TextEntry::make('stripe_confirmation_method')
-                        //                    ->label('Método de Confirmación')
-                        //                    ->getStateUsing(fn() => $metadata->confirmation_method)
-                        //                    ->placeholder('No disponible'),
-//
-                        //                TextEntry::make('stripe_created')
-                        //                    ->label('Fecha de Creación (Stripe)')
-                        //                    ->getStateUsing(fn() => $metadata->created->format('d/m/Y H:i:s'))
-                        //                    ->placeholder('No disponible'),
-//
-                        //                TextEntry::make('stripe_livemode')
-                        //                    ->label('Modo en Vivo (Stripe)')
-                        //                    ->getStateUsing(fn() => $metadata->livemode ? 'Sí' : 'No')
-                        //                    ->placeholder('No disponible'),
-//
-                        //                TextEntry::make('stripe_payment_method_types')
-                        //                    ->label('Métodos de Pago (Stripe)')
-                        //                    ->getStateUsing(fn() => implode(', ', $metadata->payment_method_types))
-                        //                    ->placeholder('No disponible'),
-//
-                        //                TextEntry::make('stripe_cancellation_reason')
-                        //                    ->label('Razón de Cancelación')
-                        //                    ->getStateUsing(fn() => $metadata->cancellation_reason)
-                        //                    ->placeholder('No disponible'),
-                        //            ];
-                        //        } elseif ($metadata instanceof \App\DTO\MiBancoMetadata) {
-                        //            return [
-                        //                TextEntry::make('mibanco_code')
-                        //                    ->label('Código (MiBanco)')
-                        //                    ->getStateUsing(fn() => $metadata->code)
-                        //                    ->placeholder('No disponible'),
-//
-                        //                TextEntry::make('mibanco_message')
-                        //                    ->label('Mensaje (MiBanco)')
-                        //                    ->getStateUsing(fn() => $metadata->message)
-                        //                    ->placeholder('No disponible'),
-//
-                        //                TextEntry::make('mibanco_reference')
-                        //                    ->label('Referencia (MiBanco)')
-                        //                    ->getStateUsing(fn() => $metadata->reference)
-                        //                    ->placeholder('No disponible'),
-//
-                        //                TextEntry::make('mibanco_id')
-                        //                    ->label('ID (MiBanco)')
-                        //                    ->getStateUsing(fn() => $metadata->id)
-                        //                    ->placeholder('No disponible'),
-                        //            ];
-                        //        }
-//
-                        //        return [
-                        //            TextEntry::make('metadata_details')
-                        //                ->label('Detalles de Metadata')
-                        //                ->placeholder('No disponible')
-                        //                ->getStateUsing(fn() => 'No se pudo determinar el tipo de metadata.'),
-                        //        ];
-                        //    })
-                        //    ->columns(2),
+                        Tab::make('Información Detallada')
+                            ->schema(function ($record) {
+                                $metadata = $record->getMetadataAsObject();
 
-                        // Pestaña Información del Pago
+                                if ($metadata instanceof \App\DTO\MiBancoMetadata) {
+                                    return [
+                                        TextEntry::make('mibanco_code')
+                                            ->label('Código (MiBanco)')
+                                            ->getStateUsing(fn() => $metadata->code)
+                                            ->placeholder('No disponible'),
+
+                                        TextEntry::make('mibanco_message')
+                                            ->label('Mensaje (MiBanco)')
+                                            ->getStateUsing(fn() => $metadata->message)
+                                            ->placeholder('No disponible'),
+
+                                        TextEntry::make('mibanco_reference')
+                                            ->label('Referencia (MiBanco)')
+                                            ->getStateUsing(fn() => $metadata->reference)
+                                            ->placeholder('No disponible'),
+                                        TextEntry::make('mibanco_id')
+                                            ->label('ID (MiBanco)')
+                                            ->getStateUsing(fn() => $metadata->id)
+                                            ->placeholder('No disponible'),
+                                    ];
+                                }
+
+                                return [
+                                    TextEntry::make('metadata_details')
+                                        ->label('Detalles de Metadata')
+                                        ->placeholder('No disponible')
+                                        ->getStateUsing(fn() => 'No se pudo determinar el tipo de metadata.'),
+                                ];
+                            })
+                            ->columns(2),
+
                         Tab::make('Pago')
                             ->schema([
                                 TextEntry::make('stripe_invoice_id')
@@ -234,9 +162,7 @@ class TransactionResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
