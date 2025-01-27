@@ -88,12 +88,9 @@ class MonitorTransactionStatus implements ShouldQueue
                     $plan = $subscription->service;
 
                     if ($plan) {
-                        if (!$plan->infinite) {
+                        if (!$plan->infinite_duration) {
                             // Plan finito: calcular la fecha de expiración
                             $endDate = $currentDate->copy()->addDays($plan->duration)->toDateString();
-
-                            dd($currentDate->toDateString());
-                            
 
                             $subscription->update([
                                 'status' => SubscriptionStatusEnum::Active,
