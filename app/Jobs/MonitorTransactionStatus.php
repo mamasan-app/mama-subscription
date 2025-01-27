@@ -3,7 +3,8 @@
 namespace App\Jobs;
 
 use App\Models\Transaction;
-use App\Models\Payment;
+use App\Models\Plan;
+use App\Models\Subscription;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -67,7 +68,8 @@ class MonitorTransactionStatus implements ShouldQueue
             }
 
             $payment = $transaction->payment;
-            $subscription = $payment->subscription;
+            $subscription = Subscription::find($payment->subscription_id);
+            
             $currentDate = now()->setTimezone('America/Caracas');
 
             if ($statusCode === 'ACCP') {
@@ -81,11 +83,12 @@ class MonitorTransactionStatus implements ShouldQueue
                     'status' => PaymentStatusEnum::Completed,
                 ]);
 
-                if ($subscription && $subscription->isOnTrial) {
+                if ($subscription && $subscription->isOnTrial()) {
                     // Calcular las fechas de forma independiente
                     $renewDate = $currentDate->copy()->addDays($subscription->frequency_days)->toDateString();
                     $expireDate = $currentDate->copy()->addDays($subscription->frequency_days + $subscription->service_grace_period)->toDateString();
-                    $plan = $subscription->service;
+
+                    $plan = Plan::find($subscription->service_id);
 
                     if ($plan) {
                         if (!$plan->infinite_duration) {
