@@ -68,7 +68,7 @@ class MonitorTransactionStatus implements ShouldQueue
 
             $payment = $transaction->payment;
             $subscription = $payment->subscription;
-            $currentDate = now()->setTimezone('America/Caracas');
+            $currentDate = now();
 
             if ($statusCode === 'ACCP') {
 
