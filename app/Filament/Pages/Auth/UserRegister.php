@@ -26,8 +26,6 @@ class UserRegister extends FilamentRegister
 {
     protected static string $view = 'filament.pages.auth.register';
 
-    protected static string $layout = 'filament.components.layout.register';
-
     protected ?string $maxWidth = MaxWidth::FourExtraLarge->value;
 
     public function mount(): void
@@ -99,8 +97,7 @@ class UserRegister extends FilamentRegister
                     Wizard\Step::make('Información Representante Legal')
                         ->columns(2)
                         ->schema([
-                            IdentityDocumentTextInput::make()
-                                ->required(),
+                            IdentityDocumentTextInput::make(),
 
                             DatePicker::make('birth_date')
                                 ->label('Fecha de Nacimiento')
