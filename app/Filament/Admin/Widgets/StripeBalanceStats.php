@@ -6,8 +6,8 @@ namespace App\Filament\Admin\Widgets;
 
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use Stripe\Stripe;
 use Stripe\Balance;
+use Stripe\Stripe;
 
 class StripeBalanceStats extends BaseWidget
 {
@@ -35,8 +35,8 @@ class StripeBalanceStats extends BaseWidget
         }
 
         return [
-            Stat::make('Balance Disponible en Stripe', "$" . number_format($availableBalance, 2)),
-            Stat::make('Balance Pendiente en Stripe', "$" . number_format($pendingBalance, 2)),
+            Stat::make('Balance Disponible en Stripe', '$'.number_format($availableBalance, 2)),
+            Stat::make('Balance Pendiente en Stripe', '$'.number_format($pendingBalance, 2)),
         ];
     }
 }

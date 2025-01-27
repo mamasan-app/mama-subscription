@@ -9,9 +9,7 @@ use NumberFormatter;
 
 class MoneyFormatter
 {
-    public function __construct(protected Money $amount)
-    {
-    }
+    public function __construct(protected Money $amount) {}
 
     public static function make(Money $amount): self
     {
@@ -20,7 +18,7 @@ class MoneyFormatter
 
     public function format(): string
     {
-        $currencies = new ISOCurrencies();
+        $currencies = new ISOCurrencies;
 
         $numberFormatter = new NumberFormatter('en_US', NumberFormatter::CURRENCY);
         $moneyFormatter = new IntlMoneyFormatter($numberFormatter, $currencies);

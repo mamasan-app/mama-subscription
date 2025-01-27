@@ -3,22 +3,21 @@
 namespace App\Filament\Store\Resources;
 
 use App\Filament\Store\Resources\PlanResource\Pages;
-use App\Models\Plan;
 use App\Models\Frequency;
+use App\Models\Plan;
+use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Filament\Facades\Filament;
-
 
 class PlanResource extends Resource
 {
     protected static ?string $model = Plan::class;
 
     protected static ?string $modelLabel = 'Planes';
+
     protected static ?string $navigationIcon = 'heroicon-o-briefcase';
 
     public static function form(Form $form): Form
@@ -41,14 +40,14 @@ class PlanResource extends Resource
                         if ($currentStore) {
                             return $currentStore->addresses()->pluck('branch', 'id');
                         }
+
                         return [];
                     })
                     ->multiple()
                     ->required()
                     ->preload()
-                    ->default(fn($record) => $record ? $record->addresses->pluck('id')->toArray() : [])
+                    ->default(fn ($record) => $record ? $record->addresses->pluck('id')->toArray() : [])
                     ->relationship('addresses', 'branch'),
-
 
                 Forms\Components\Select::make('frequency_id')
                     ->label('Frecuencia')
@@ -95,9 +94,8 @@ class PlanResource extends Resource
                     ->numeric()
                     ->minValue(1)
                     ->placeholder('Ingresa la duración en días')
-                    ->required(fn($get) => !$get('infinite_duration')) // Requerido solo si la duración no es infinita
-                    ->hidden(fn($get) => $get('infinite_duration')), // Ocultar si es duración infinita
-
+                    ->required(fn ($get) => ! $get('infinite_duration')) // Requerido solo si la duración no es infinita
+                    ->hidden(fn ($get) => $get('infinite_duration')), // Ocultar si es duración infinita
 
                 Forms\Components\Toggle::make('published')
                     ->label('Publicado')
@@ -105,8 +103,6 @@ class PlanResource extends Resource
                 Forms\Components\Toggle::make('featured')
                     ->label('Destacado')
                     ->required(),
-
-
 
             ]);
     }
@@ -155,8 +151,6 @@ class PlanResource extends Resource
                     ->label('Duración')
                     ->sortable(),
 
-
-
             ])
             ->filters([
                 //
@@ -177,7 +171,6 @@ class PlanResource extends Resource
             //
         ];
     }
-
 
     public static function getPages(): array
     {

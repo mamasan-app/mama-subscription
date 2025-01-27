@@ -16,7 +16,6 @@ enum PaymentStatusEnum: string implements HasLabel
     case Uncollectible = 'uncollectible'; // La factura es incobrable.
     case Finalized = 'finalized'; // La factura ha sido finalizada y está lista.
 
-
     public function getLabel(): ?string
     {
         return match ($this) {
@@ -53,6 +52,4 @@ enum PaymentStatusEnum: string implements HasLabel
             default => 'secondary',
         };
     }
-
-
 }

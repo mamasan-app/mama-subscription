@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Middleware;   
+namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
@@ -33,7 +33,7 @@ class RouteToMainRegisterRoute
             $appUrl = config('mama-subscription.localhost');  // URL del dominio principal configurada en el archivo .env
 
             // Redirigir al dominio principal con la misma URI
-            return redirect()->to($appUrl . $uri);
+            return redirect()->to($appUrl.$uri);
         }
 
         return $next($request);  // Si no hay redirección, continuar con la solicitud

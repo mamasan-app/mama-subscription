@@ -3,7 +3,6 @@
 namespace App\Concerns;
 
 use App\Models\Store;
-use App\Providers\Filament\StorePanelPanelProvider;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -18,7 +17,7 @@ trait HasStore
             if (auth()->check() && Filament::getCurrentPanel()?->getId() === 'store') {
                 /** @var Store|null $store */
                 $store = Filament::getTenant();
-                if (!$store) {
+                if (! $store) {
                     return;
                 }
                 $query->whereBelongsTo($store);
@@ -30,7 +29,7 @@ trait HasStore
             if (auth()->check() && Filament::getCurrentPanel()?->getId() === 'store') {
                 /** @var Store|null $store */
                 $store = Filament::getTenant();
-                if (!$store) {
+                if (! $store) {
                     return;
                 }
 
@@ -41,7 +40,7 @@ trait HasStore
 
     /**
      * Relación con la tienda.
-     * 
+     *
      * @return BelongsTo<Store, self>
      */
     public function store(): BelongsTo

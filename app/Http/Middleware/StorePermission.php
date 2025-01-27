@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Models\Store;
-use App\Providers\Filament\StorePanelPanelProvider;
 use Closure;
 use Exception;
 use Filament\Facades\Filament;
@@ -29,7 +28,7 @@ class StorePermission
         }
 
         // Verificar si Filament está sirviendo una solicitud
-        if (!Filament::isServing()) {
+        if (! Filament::isServing()) {
             return $next($request);
         }
 
@@ -43,7 +42,7 @@ class StorePermission
         $store = Filament::getTenant();
 
         // Si hay una tienda, configuramos el ID para los permisos
-        if (!empty($store)) {
+        if (! empty($store)) {
             setPermissionsTeamId($store->id);  // Configurar permisos basados en la tienda actual
         }
 

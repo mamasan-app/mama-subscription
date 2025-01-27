@@ -4,10 +4,9 @@ namespace App\Filament\Store\Resources\EmployeeResource\Pages;
 
 use App\Filament\Store\Resources\EmployeeResource;
 use App\Models\User;
-use Filament\Actions;
-use Filament\Resources\Pages\CreateRecord;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
+use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Validation\ValidationException;
 
 class CreateEmployee extends CreateRecord
@@ -18,7 +17,7 @@ class CreateEmployee extends CreateRecord
     {
         // Generar el documento de identidad si los prefijos están presentes
         if (isset($data['identity_prefix'], $data['identity_number'])) {
-            $data['identity_document'] = $data['identity_prefix'] . '-' . $data['identity_number'];
+            $data['identity_document'] = $data['identity_prefix'].'-'.$data['identity_number'];
             unset($data['identity_prefix'], $data['identity_number']);
         }
 
@@ -36,7 +35,7 @@ class CreateEmployee extends CreateRecord
         }
 
         // Verificar unicidad del número de teléfono
-        if (!empty($data['phone_number']) && User::where('phone_number', $data['phone_number'])->exists()) {
+        if (! empty($data['phone_number']) && User::where('phone_number', $data['phone_number'])->exists()) {
             Notification::make()
                 ->title('Error')
                 ->body('El número de teléfono ya está registrado.')
@@ -74,7 +73,7 @@ class CreateEmployee extends CreateRecord
         } catch (\Exception $e) {
             Notification::make()
                 ->title('Error')
-                ->body('No se pudo asignar el rol de empleado: ' . $e->getMessage())
+                ->body('No se pudo asignar el rol de empleado: '.$e->getMessage())
                 ->danger()
                 ->send();
             abort(500, 'No se pudo asignar el rol de empleado.');
@@ -84,7 +83,7 @@ class CreateEmployee extends CreateRecord
         $currentStore = Filament::getTenant();
 
         // Validar si la tienda actual existe
-        if (!$currentStore) {
+        if (! $currentStore) {
             Notification::make()
                 ->title('Error')
                 ->body('No se pudo identificar la tienda actual.')
@@ -94,7 +93,7 @@ class CreateEmployee extends CreateRecord
         }
 
         // Asociar el empleado a tiendas adicionales seleccionadas
-        if (!empty($this->selectedStores)) {
+        if (! empty($this->selectedStores)) {
             try {
                 $storesWithRole = [];
                 foreach ($this->selectedStores as $storeId) {
@@ -104,7 +103,7 @@ class CreateEmployee extends CreateRecord
             } catch (\Exception $e) {
                 Notification::make()
                     ->title('Error')
-                    ->body('No se pudo asociar el empleado a las tiendas seleccionadas: ' . $e->getMessage())
+                    ->body('No se pudo asociar el empleado a las tiendas seleccionadas: '.$e->getMessage())
                     ->danger()
                     ->send();
                 abort(500, 'No se pudo asociar el empleado a las tiendas seleccionadas.');

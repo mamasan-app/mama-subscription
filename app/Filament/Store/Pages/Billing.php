@@ -12,8 +12,8 @@ use App\Filament\Forms\PaymentMethodCustomerForm;
 use App\Models\ExchangeRate;
 use App\Models\PaymentMethod;
 use App\Models\Plan;
-use App\Models\Subscription;
 use App\Models\Store;
+use App\Models\Subscription;
 use App\Models\Transaction;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -52,7 +52,7 @@ class Billing extends Page implements HasTable
 
     public static function canAccess(): bool
     {
-        if (!auth()->user()) {
+        if (! auth()->user()) {
             return false;
         }
 
@@ -79,7 +79,7 @@ class Billing extends Page implements HasTable
             ->defaultSort('date', 'desc')
             ->query(
                 Transaction::query()
-                    ->whereHasMorph('from', Store::class, fn(Builder $query) => $query->where('id', $this->store->id))
+                    ->whereHasMorph('from', Store::class, fn (Builder $query) => $query->where('id', $this->store->id))
                     ->whereNull('to_id')
                     ->where('type', TransactionTypeEnum::Subscription)
             )
@@ -90,7 +90,7 @@ class Billing extends Page implements HasTable
 
                 Tables\Columns\TextColumn::make('metadata.payment_method')
                     ->label('Tipo de pago')
-                    ->formatStateUsing(fn(string $state) => PaymentTypeEnum::from($state)->getLabel()),
+                    ->formatStateUsing(fn (string $state) => PaymentTypeEnum::from($state)->getLabel()),
 
                 Tables\Columns\TextColumn::make('date')
                     ->label('Fecha')
@@ -112,7 +112,7 @@ class Billing extends Page implements HasTable
             ->extraAttributes([
                 'class' => 'w-full',
             ])
-            ->outlined(fn(array $arguments) => !$arguments['featured'])
+            ->outlined(fn (array $arguments) => ! $arguments['featured'])
             ->action(function (array $arguments) {
                 /** @var int $serviceId */
                 $serviceId = $arguments['serviceId'];
@@ -184,10 +184,10 @@ class Billing extends Page implements HasTable
                     ->label('Tipo de pago')
                     ->native(false)
                     ->options(
-                        fn() => PaymentMethod::query()
+                        fn () => PaymentMethod::query()
                             ->where('enabled', true)
                             ->get()
-                            ->mapWithKeys(fn(PaymentMethod $paymentMethod) => [$paymentMethod->id => $paymentMethod->type->getLabel()])
+                            ->mapWithKeys(fn (PaymentMethod $paymentMethod) => [$paymentMethod->id => $paymentMethod->type->getLabel()])
                     )
                     ->live(),
 
@@ -197,7 +197,7 @@ class Billing extends Page implements HasTable
                     ->default(now('America/Caracas')),
 
                 Forms\Components\Fieldset::make('Información de pago')
-                    ->visible(fn(Forms\Get $get) => $get('payment_method_id'))
+                    ->visible(fn (Forms\Get $get) => $get('payment_method_id'))
                     ->schema([
                         Forms\Components\Placeholder::make('info')
                             ->label('')
@@ -206,7 +206,7 @@ class Billing extends Page implements HasTable
                                 /** @var int|null $paymentMethodId */
                                 $paymentMethodId = $get('payment_method_id');
 
-                                if (!$paymentMethodId) {
+                                if (! $paymentMethodId) {
                                     return '';
                                 }
 
@@ -229,7 +229,7 @@ class Billing extends Page implements HasTable
 
                                 $exchangeRate = ExchangeRate::latest()->first();
 
-                                if (!$exchangeRate || !$subscription->service) {
+                                if (! $exchangeRate || ! $subscription->service) {
                                     return '';
                                 }
 
@@ -264,7 +264,7 @@ class Billing extends Page implements HasTable
                     ]),
 
                 Forms\Components\Fieldset::make('Detalles de pago')
-                    ->visible(fn(Forms\Get $get) => $get('payment_method_id'))
+                    ->visible(fn (Forms\Get $get) => $get('payment_method_id'))
                     ->reactive()
                     ->schema(function (Forms\Get $get) {
                         /** @var int|null $paymentMethodId */
@@ -317,12 +317,12 @@ class Billing extends Page implements HasTable
         return Action::make('cancelSubscription')
             ->label('Cancelar')
             ->requiresConfirmation()
-            ->hidden(fn() => $this->store->subscription?->is_cancelled || $this->store->subscription?->is_about_to_be_cancelled)
+            ->hidden(fn () => $this->store->subscription?->is_cancelled || $this->store->subscription?->is_about_to_be_cancelled)
             ->color('danger')
             ->modalHeading('Cancelar subscripción')
             ->action(function () {
                 $subscription = $this->store->subscription;
-                if (!$subscription) {
+                if (! $subscription) {
                     return;
                 }
                 $subscription->cancel();
@@ -332,7 +332,7 @@ class Billing extends Page implements HasTable
                     ->title('Subscripción cancelada')
                     ->body(
                         'Tu subscripción estará disponible hasta el '
-                        . $subscription->ends_at?->timezone('America/Caracas')->format('d/m/Y')
+                        .$subscription->ends_at?->timezone('America/Caracas')->format('d/m/Y')
                     )
                     ->send();
             });
@@ -344,10 +344,10 @@ class Billing extends Page implements HasTable
             ->label('Reactivar')
             ->requiresConfirmation()
             ->modalHeading('Reactivar subscripción')
-            ->visible(fn() => $this->store->subscription?->is_about_to_be_cancelled)
+            ->visible(fn () => $this->store->subscription?->is_about_to_be_cancelled)
             ->action(function () {
                 $subscription = $this->store->subscription;
-                if (!$subscription) {
+                if (! $subscription) {
                     return;
                 }
                 $subscription->reactivate();
@@ -357,7 +357,7 @@ class Billing extends Page implements HasTable
                     ->title('Subscripción reactivada')
                     ->body(
                         'Tu subscripción será renovada el '
-                        . $subscription->renews_at?->timezone('America/Caracas')->format('d/m/Y')
+                        .$subscription->renews_at?->timezone('America/Caracas')->format('d/m/Y')
                     )
                     ->send();
             });

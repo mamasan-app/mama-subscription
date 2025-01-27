@@ -12,21 +12,19 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Wizard;
 use Filament\Forms\Form;
+use Filament\Http\Responses\Auth\Contracts\RegistrationResponse;
+use Filament\Notifications\Notification;
 use Filament\Pages\Auth\Register as FilamentRegister;
 use Filament\Support\Enums\MaxWidth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\HtmlString;
-use Illuminate\Validation\Rules\Password;
-use Filament\Http\Responses\Auth\Contracts\RegistrationResponse;
 use Illuminate\Support\Str;
-use Filament\Notifications\Notification;
+use Illuminate\Validation\Rules\Password;
 
 class UserRegister extends FilamentRegister
 {
     protected static string $view = 'filament.pages.auth.register';
-
-    protected static string $layout = 'filament.components.layout.register';
 
     protected ?string $maxWidth = MaxWidth::FourExtraLarge->value;
 
@@ -83,7 +81,7 @@ class UserRegister extends FilamentRegister
                                 ->label('Contraseña')
                                 ->placeholder('********')
                                 ->rule(Password::default())
-                                ->dehydrateStateUsing(fn($state) => Hash::make($state))
+                                ->dehydrateStateUsing(fn ($state) => Hash::make($state))
                                 ->same('password_confirmation')
                                 ->validationAttribute(__('filament-panels::pages/auth/register.form.password.validation_attribute')),
 
@@ -99,8 +97,7 @@ class UserRegister extends FilamentRegister
                     Wizard\Step::make('Información Representante Legal')
                         ->columns(2)
                         ->schema([
-                            IdentityDocumentTextInput::make()
-                                ->required(),
+                            IdentityDocumentTextInput::make(),
 
                             DatePicker::make('birth_date')
                                 ->label('Fecha de Nacimiento')
@@ -155,7 +152,6 @@ class UserRegister extends FilamentRegister
                                 ->required()
                                 ->placeholder('Av. 1 con Calle 1, Edificio 1, Piso 1, Apartamento 1'),
 
-
                             FileUpload::make('store_rif_path')
                                 ->label('RIF de la Tienda')
                                 ->disk(config('filesystems.stores'))
@@ -194,7 +190,7 @@ class UserRegister extends FilamentRegister
         }
 
         // Verificar si el número de teléfono ya existe
-        if (!empty($data['phone_number']) && User::where('phone_number', $data['phone_number'])->exists()) {
+        if (! empty($data['phone_number']) && User::where('phone_number', $data['phone_number'])->exists()) {
             Notification::make()
                 ->title('Error de validación')
                 ->body('El número de teléfono ya está registrado.')
@@ -204,8 +200,8 @@ class UserRegister extends FilamentRegister
         }
 
         // Verificar si el documento de identidad ya existe
-        if (!empty($data['identity_prefix']) && !empty($data['identity_number'])) {
-            $identityDocument = $data['identity_prefix'] . '-' . $data['identity_number'];
+        if (! empty($data['identity_prefix']) && ! empty($data['identity_number'])) {
+            $identityDocument = $data['identity_prefix'].'-'.$data['identity_number'];
             if (User::where('identity_document', $identityDocument)->exists()) {
                 Notification::make()
                     ->title('Error de validación')
@@ -226,7 +222,7 @@ class UserRegister extends FilamentRegister
             $errors = true;
         }
 
-        return !$errors; // Retorna `true` si no hubo errores, `false` si los hubo
+        return ! $errors; // Retorna `true` si no hubo errores, `false` si los hubo
     }
 
     protected function validateStoreAndNotify(array $data): bool
@@ -254,21 +250,21 @@ class UserRegister extends FilamentRegister
             $errors = true;
         }
 
-        return !$errors; // Retorna `true` si no hubo errores, `false` si los hubo
+        return ! $errors; // Retorna `true` si no hubo errores, `false` si los hubo
     }
 
-    public function register(): RegistrationResponse|null
+    public function register(): ?RegistrationResponse
     {
         $data = $this->form->getState();
 
         // Validar usuario y tienda con notificaciones en caso de errores
-        if (!$this->validateAndNotify($data) || !$this->validateStoreAndNotify($data)) {
+        if (! $this->validateAndNotify($data) || ! $this->validateStoreAndNotify($data)) {
             return null; // Detener el flujo si hay errores
         }
 
         try {
             // Crear el usuario
-            $data['identity_document'] = $data['identity_prefix'] . '-' . $data['identity_number'];
+            $data['identity_document'] = $data['identity_prefix'].'-'.$data['identity_number'];
             $user = User::create([
                 'first_name' => $data['first_name'],
                 'last_name' => $data['last_name'],
@@ -316,7 +312,7 @@ class UserRegister extends FilamentRegister
             // Manejar errores inesperados
             Notification::make()
                 ->title('Error crítico')
-                ->body('Ocurrió un error inesperado: ' . $e->getMessage())
+                ->body('Ocurrió un error inesperado: '.$e->getMessage())
                 ->danger()
                 ->send();
 
@@ -324,9 +320,8 @@ class UserRegister extends FilamentRegister
         }
     }
 
-    protected function registered(User $user): RegistrationResponse|null
+    protected function registered(User $user): ?RegistrationResponse
     {
         return app(RegistrationResponse::class);
     }
-
 }

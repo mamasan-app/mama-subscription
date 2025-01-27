@@ -2,23 +2,22 @@
 
 namespace App\Filament\Store\Pages;
 
-use App\Filament\Store\Actions\HelpAction;
 use App\Enums\SubscriptionStatusEnum;
-use App\Models\Plan;
-use App\Models\Subscription;
-use App\Models\User;
+use App\Filament\Store\Actions\HelpAction;
+use App\Filament\Store\Widgets\PaymentStatsWidget;
+use App\Filament\Store\Widgets\StoreRevenueChart;
 use App\Filament\Store\Widgets\SubscriptionChart;
 use App\Filament\Store\Widgets\SubscriptionStats;
 use App\Filament\Store\Widgets\TodaySubscriptionsTable;
-use App\Filament\Store\Widgets\PaymentStatsWidget;
-use App\Filament\Store\Widgets\StoreRevenueChart;
+use App\Models\Plan;
+use App\Models\Subscription;
+use App\Models\User;
+use Carbon\Carbon;
 use Filament\Actions\Action;
-use Filament\Forms\Components\DatePicker;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Pages\Dashboard as FilamentDashboard;
-use Carbon\Carbon;
-use Filament\Facades\Filament;
 
 class Dashboard extends FilamentDashboard
 {
@@ -26,43 +25,45 @@ class Dashboard extends FilamentDashboard
     {
         return [
             Action::make('addSubscription')
-                ->visible(fn() => auth()->user()?->can('create subscriptions')) // Verificar permisos
+                ->visible(fn () => auth()->user()?->can('create subscriptions')) // Verificar permisos
                 ->label('Registrar Suscripción')
                 ->form([
                     Select::make('service_id')
                         ->label('Plan')
-                        ->options(fn() => Plan::where('store_id', Filament::getTenant()->id)
+                        ->options(fn () => Plan::where('store_id', Filament::getTenant()->id)
                             ->where('published', true)
                             ->pluck('name', 'id'))
                         ->searchable()
                         ->required(),
                     Select::make('user_id')
                         ->label('Cliente')
-                        ->options(fn() => User::whereHas('stores', fn($query) => $query
+                        ->options(fn () => User::whereHas('stores', fn ($query) => $query
                             ->where('store_id', Filament::getTenant()->id)
                             ->where('store_user.role', 'customer'))
                             ->get()
-                            ->mapWithKeys(fn($user) => [$user->id => $user->name]))
+                            ->mapWithKeys(fn ($user) => [$user->id => $user->name]))
                         ->searchable()
                         ->required(),
 
                 ])
                 ->action(function (array $data) {
                     $currentStore = Filament::getTenant();
-                    if (!$currentStore) {
+                    if (! $currentStore) {
                         Notification::make()->danger()
                             ->title('Error')
                             ->body('No se encontró una tienda para asociar la suscripción.')
                             ->send();
+
                         return;
                     }
 
                     $plan = Plan::with('frequency')->find($data['service_id']);
-                    if (!$plan) {
+                    if (! $plan) {
                         Notification::make()->danger()
                             ->title('Error')
                             ->body('El plan seleccionado no se encontró.')
                             ->send();
+
                         return;
                     }
 
@@ -92,8 +93,8 @@ class Dashboard extends FilamentDashboard
                         ->send();
                 }),
 
-            HelpAction::iconButton()
-            //->modalContent(view('filament.store.actions.help.dashboard')),
+            HelpAction::iconButton(),
+            // ->modalContent(view('filament.store.actions.help.dashboard')),
         ];
     }
 

@@ -12,7 +12,6 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\Hash;
 
 class UserResource extends Resource
 {
@@ -35,7 +34,6 @@ class UserResource extends Resource
                     ->label('Apellido')
                     ->required()
                     ->maxLength(255),
-
 
                 Forms\Components\TextInput::make('email')
                     ->email()
@@ -68,7 +66,7 @@ class UserResource extends Resource
                     ->disk(config('filesystems.users'))
                     ->maxFiles(1)
                     ->columnSpanFull(),
-                
+
                 Forms\Components\Select::make('role')
                     ->label('Role')
                     ->options([
@@ -86,7 +84,7 @@ class UserResource extends Resource
                     ->hiddenOn('edit')
                     ->confirmed()
                     ->maxLength(255),
-                
+
                 Forms\Components\TextInput::make('password_confirmation')
                     ->label('Confirmar contraseña')
                     ->password()
@@ -158,8 +156,7 @@ class UserResource extends Resource
                     ->label('Email verificado')
                     ->dateTime()
                     ->sortable()
-                    ->formatStateUsing(fn($state) => $state ? $state->format('d-m-Y H:i') : 'No verificado'),
-
+                    ->formatStateUsing(fn ($state) => $state ? $state->format('d-m-Y H:i') : 'No verificado'),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()

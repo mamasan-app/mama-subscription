@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
-use Stripe\Stripe;
-use Stripe\Customer;
-use Stripe\Product;
-use Stripe\Price;
 use Stripe\Checkout\Session as StripeSession;
+use Stripe\Customer;
+use Stripe\Price;
+use Stripe\Product;
+use Stripe\Stripe;
 
 class StripeService
 {
@@ -17,7 +17,7 @@ class StripeService
 
     public function getOrCreateCustomer($user)
     {
-        if (!$user->stripe_customer_id) {
+        if (! $user->stripe_customer_id) {
             // Crear cliente en Stripe
             $customer = Customer::create([
                 'email' => $user->email,
@@ -32,8 +32,8 @@ class StripeService
                 $customer = Customer::retrieve($user->stripe_customer_id);
 
                 // Verificar que el cliente aún exista
-                if (!$customer || $customer->deleted ?? false) {
-                    throw new \Exception("Cliente no encontrado o eliminado en Stripe.");
+                if (! $customer || $customer->deleted ?? false) {
+                    throw new \Exception('Cliente no encontrado o eliminado en Stripe.');
                 }
             } catch (\Exception $e) {
                 // Si ocurre un error, crear un nuevo cliente
@@ -50,10 +50,9 @@ class StripeService
         return $customer;
     }
 
-
     public function getOrCreateProduct($service)
     {
-        if (!$service->stripe_product_id) {
+        if (! $service->stripe_product_id) {
             // Crear el producto en Stripe
             $product = Product::create([
                 'name' => $service->name,
@@ -72,8 +71,8 @@ class StripeService
                 $product = Product::retrieve($service->stripe_product_id);
 
                 // Validar si el producto existe o ha sido eliminado
-                if (!$product || $product->deleted ?? false) {
-                    throw new \Exception("Producto no encontrado o eliminado en Stripe.");
+                if (! $product || $product->deleted ?? false) {
+                    throw new \Exception('Producto no encontrado o eliminado en Stripe.');
                 }
 
                 // Actualizar metadata si cambió el período de gracia
@@ -102,7 +101,6 @@ class StripeService
 
         return $product;
     }
-
 
     public function createPrice($product, $amountCents, $interval, $intervalCount, $gracePeriod)
     {
@@ -141,5 +139,4 @@ class StripeService
             ]),
         ]);
     }
-
 }

@@ -4,22 +4,23 @@ namespace App\Filament\Store\Resources;
 
 use App\Filament\Store\Resources\TransactionResource\Pages;
 use App\Models\Transaction;
+use Filament\Facades\Filament;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\Tabs;
+use Filament\Infolists\Components\Tabs\Tab;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Infolists\Infolist;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\Tabs;
-use Filament\Infolists\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
-use Filament\Facades\Filament;
 
 class TransactionResource extends Resource
 {
     protected static ?string $model = Transaction::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
     protected static ?string $navigationGroup = 'Gestión de Pagos';
 
     protected static ?string $modelLabel = 'Transacciones';
@@ -52,14 +53,14 @@ class TransactionResource extends Resource
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
-                    ->formatStateUsing(fn($record) => $record->status->getLabel())
+                    ->formatStateUsing(fn ($record) => $record->status->getLabel())
                     ->badge()
-                    ->color(fn($record) => $record->status->getColor())
+                    ->color(fn ($record) => $record->status->getColor())
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('amount_cents')
                     ->label('Monto (USD)')
-                    ->formatStateUsing(fn($record) => '$' . number_format($record->amount / 100, 2)),
+                    ->formatStateUsing(fn ($record) => '$'.number_format($record->amount / 100, 2)),
 
                 Tables\Columns\TextColumn::make('date')
                     ->label('Fecha')
@@ -89,20 +90,20 @@ class TransactionResource extends Resource
                                     ->label('ID de Transacción'),
                                 TextEntry::make('type')
                                     ->label('Tipo de Transacción')
-                                    ->getStateUsing(fn($record) => $record->type->getLabel()),
+                                    ->getStateUsing(fn ($record) => $record->type->getLabel()),
                                 TextEntry::make('status')
                                     ->label('Estado')
                                     ->badge()
-                                    ->color(fn($record) => $record->status->getColor()),
+                                    ->color(fn ($record) => $record->status->getColor()),
                                 TextEntry::make('date')
                                     ->label('Fecha de Transacción')
                                     ->dateTime('d/m/Y'),
                                 TextEntry::make('amount_cents')
                                     ->label('Monto (USD)')
-                                    ->getStateUsing(fn($record) => number_format($record->amount_cents / 100, 2) . ' USD'),
+                                    ->getStateUsing(fn ($record) => number_format($record->amount_cents / 100, 2).' USD'),
                                 TextEntry::make('from_user_name')
                                     ->label('Usuario (From)')
-                                    ->getStateUsing(fn($record) => $record->from->name ?? 'No disponible'),
+                                    ->getStateUsing(fn ($record) => $record->from->name ?? 'No disponible'),
                                 TextEntry::make('to_name')
                                     ->label('Destino (To)')
                                     ->getStateUsing(function ($record) {
@@ -112,6 +113,7 @@ class TransactionResource extends Resource
                                         if ($record->to_type === 'App\\Models\\User') {
                                             return $record->to->name ?? 'No disponible';
                                         }
+
                                         return 'No disponible';
                                     }),
                             ])->columns(2),
@@ -130,7 +132,7 @@ class TransactionResource extends Resource
     {
         $currentStore = Filament::getTenant();
 
-        if (!$currentStore) {
+        if (! $currentStore) {
             // Devuelve una consulta vacía si no hay tienda en sesión
             return Transaction::query()->whereRaw('1 = 0');
         }

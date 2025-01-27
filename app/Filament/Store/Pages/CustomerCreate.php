@@ -3,34 +3,42 @@
 namespace App\Filament\Store\Pages;
 
 use App\Models\User;
-use App\Enums\IdentityPrefixEnum;
+use Filament\Facades\Filament;
 use Filament\Forms;
-use Filament\Pages\Page;
 use Filament\Notifications\Notification;
+use Filament\Pages\Page;
+use Illuminate\Validation\ValidationException;
 use MagicLink\Actions\LoginAction;
 use MagicLink\MagicLink;
-use Filament\Facades\Filament;
-use Illuminate\Validation\ValidationException;
 
 class CustomerCreate extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-plus-circle';
+
     protected static ?string $navigationGroup = 'Usuarios';
+
     protected static string $view = 'filament.pages.customer-create'; // Vista personalizada
 
     protected static ?string $title = 'Crear Clientes';
 
-
     public $email;
+
     public $first_name;
+
     public $last_name;
+
     public $phone_number;
+
     public $birth_date;
+
     public $identity_prefix; // Prefijo del documento de identidad
+
     public $identity_number; // Número del documento de identidad
+
     public $identity_document;
 
     public $showAdditionalFields = false; // Controla la visibilidad de los campos adicionales
+
     public $buttonLabel = 'Enviar Magic Link'; // Texto del botón
 
     public function mount(): void
@@ -75,25 +83,25 @@ class CustomerCreate extends Page
             Forms\Components\TextInput::make('first_name')
                 ->label('Nombre')
                 ->required()
-                ->hidden(fn($get) => !$get('showAdditionalFields')),
+                ->hidden(fn ($get) => ! $get('showAdditionalFields')),
 
             Forms\Components\TextInput::make('last_name')
                 ->label('Apellido')
                 ->required()
-                ->hidden(fn($get) => !$get('showAdditionalFields')),
+                ->hidden(fn ($get) => ! $get('showAdditionalFields')),
 
             Forms\Components\TextInput::make('phone_number')
                 ->label('Número de Teléfono')
                 ->required()
-                ->hidden(fn($get) => !$get('showAdditionalFields')),
+                ->hidden(fn ($get) => ! $get('showAdditionalFields')),
 
             \App\Filament\Inputs\IdentityDocumentTextInput::make()
-                ->hidden(fn($get) => !$get('showAdditionalFields')),
+                ->hidden(fn ($get) => ! $get('showAdditionalFields')),
 
             Forms\Components\DatePicker::make('birth_date')
                 ->label('Fecha de Nacimiento')
                 ->nullable()
-                ->hidden(fn($get) => !$get('showAdditionalFields')),
+                ->hidden(fn ($get) => ! $get('showAdditionalFields')),
 
         ];
     }
@@ -103,12 +111,13 @@ class CustomerCreate extends Page
         // Obtener la tienda actual usando Filament::getTenant()
         $currentStore = Filament::getTenant();
 
-        if (!$currentStore) {
+        if (! $currentStore) {
             Notification::make()
                 ->title('Error')
                 ->body('No se pudo identificar la tienda actual.')
                 ->danger()
                 ->send();
+
             return;
         }
 
@@ -125,6 +134,7 @@ class CustomerCreate extends Page
                     ->body('No puedes registrar al usuario en sesión como cliente.')
                     ->danger()
                     ->send();
+
                 return;
             }
 
@@ -140,6 +150,7 @@ class CustomerCreate extends Page
                     ->body('El usuario ya está asociado como cliente a esta tienda.')
                     ->warning()
                     ->send();
+
                 return;
             }
 
@@ -156,7 +167,7 @@ class CustomerCreate extends Page
         } else {
 
             try {
-                $this->identity_document = $this->identity_prefix . "-" . $this->identity_number;
+                $this->identity_document = $this->identity_prefix.'-'.$this->identity_number;
 
                 if (User::where('email', $this->email)->exists()) {
                     /* Notificación */
@@ -170,7 +181,7 @@ class CustomerCreate extends Page
                     ]);
 
                 }
-                if (!empty($this->phone_number) && User::where('phone_number', $this->phone_number)->exists()) {
+                if (! empty($this->phone_number) && User::where('phone_number', $this->phone_number)->exists()) {
                     /* Notificación */
                     Notification::make()
                         ->title('Error crítico')
@@ -208,7 +219,6 @@ class CustomerCreate extends Page
                 $newUser->assignRole('customer');
                 $newUser->stores()->attach($currentStoreId, ['role' => 'customer']);
 
-
                 Notification::make()
                     ->title('Cliente registrado')
                     ->body('El cliente fue registrado exitosamente y se le envió un enlace mágico.')
@@ -222,15 +232,12 @@ class CustomerCreate extends Page
             } catch (\Exception $e) {
                 Notification::make()
                     ->title('Error crítico')
-                    ->body('Ocurrió un error inesperado: ' . $e->getMessage())
+                    ->body('Ocurrió un error inesperado: '.$e->getMessage())
                     ->danger()
                     ->send();
             }
         }
     }
-
-
-
 
     protected function sendMagicLink(User $user): void
     {
@@ -242,5 +249,4 @@ class CustomerCreate extends Page
 
         $user->notify(new \App\Notifications\WelcomeCustomerNotification($magicLinkUrl, $storeName));
     }
-
 }

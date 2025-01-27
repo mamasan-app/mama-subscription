@@ -1,23 +1,23 @@
 <?php
+
 namespace App\Filament\App\Resources;
 
-use App\Models\Subscription;
-use App\Models\Store;
-use App\Models\Plan;
-use Filament\Forms;
-use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Table;
-use Filament\Tables\Actions\Action;
 use App\Filament\App\Resources\UserSubscriptionResource\Pages;
+use App\Models\Plan;
+use App\Models\Store;
+use App\Models\Subscription;
+use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Infolists\Infolist;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\Group;
 use Filament\Infolists\Components\ImageEntry;
-use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Tabs;
 use Filament\Infolists\Components\Tabs\Tab;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Table;
 
 class UserSubscriptionResource extends Resource
 {
@@ -36,23 +36,24 @@ class UserSubscriptionResource extends Resource
                 ->reactive()
                 ->options(function () {
                     $currentUser = auth()->user();
+
                     return $currentUser->stores()->select('stores.name', 'stores.id')->pluck('name', 'id');
                 })
                 ->afterStateHydrated(function (callable $set, callable $get) {
                     // Si el store_id viene en la URL, se establece como valor inicial
                     $storeId = request()->query('store_id');
-                    if ($storeId && !$get('store_id')) {
+                    if ($storeId && ! $get('store_id')) {
                         $set('store_id', $storeId);
                     }
                 })
-                ->afterStateUpdated(fn(callable $set) => $set('service_id', null)), // Limpia el servicio seleccionado al cambiar la tienda
-
+                ->afterStateUpdated(fn (callable $set) => $set('service_id', null)), // Limpia el servicio seleccionado al cambiar la tienda
 
             Forms\Components\Select::make('service_id')
                 ->label('Servicio')
                 ->required()
                 ->options(function (callable $get) {
                     $storeId = $get('store_id');
+
                     return $storeId
                         ? Plan::where('store_id', $storeId)->pluck('name', 'id')
                         : [];
@@ -72,19 +73,19 @@ class UserSubscriptionResource extends Resource
                     ->label('Estado')
                     ->badge()
                     ->sortable()
-                    ->formatStateUsing(fn($state) => $state?->getLabel())
-                    ->color(fn($record) => $record->status->getColor()),
+                    ->formatStateUsing(fn ($state) => $state?->getLabel())
+                    ->color(fn ($record) => $record->status->getColor()),
                 Tables\Columns\TextColumn::make('trial_ends_at')->label('Fin del Período de Prueba')->date('d/m/Y')->placeholder('No disponible'),
                 Tables\Columns\TextColumn::make('expires_at')->label('Fecha de Expiración')->date('d/m/Y')->placeholder('No disponible'),
             ])
             ->actions([
                 Action::make('Pagar')
-                    ->url(fn(Subscription $record): string => Pages\UserSubscriptionPayment::getUrl(['record' => $record]))
+                    ->url(fn (Subscription $record): string => Pages\UserSubscriptionPayment::getUrl(['record' => $record]))
                     ->color('success')
                     ->icon('heroicon-o-currency-dollar')
                     ->label('Pagar')
                     ->button()
-                    ->visible(fn(Subscription $record) => $record->payments->flatMap->transactions->isEmpty()), // Mostrar solo si no hay transacciones
+                    ->visible(fn (Subscription $record) => $record->payments->flatMap->transactions->isEmpty()), // Mostrar solo si no hay transacciones
             ]);
 
     }
@@ -100,9 +101,9 @@ class UserSubscriptionResource extends Resource
                             ->schema([
                                 TextEntry::make('status')
                                     ->label('Estado')
-                                    ->getStateUsing(fn($record) => $record->status->getLabel())
+                                    ->getStateUsing(fn ($record) => $record->status->getLabel())
                                     ->badge()
-                                    ->color(fn($record) => $record->status->getColor()),
+                                    ->color(fn ($record) => $record->status->getColor()),
                                 TextEntry::make('trial_ends_at')
                                     ->label('Fin del Periodo de Prueba')
                                     ->date('d/m/Y')
@@ -163,9 +164,9 @@ class UserSubscriptionResource extends Resource
                                             ->placeholder('No disponible'),
                                         TextEntry::make('store.verified')
                                             ->label('Verificada')
-                                            ->getStateUsing(fn($record) => $record->store?->verified ? 'Sí' : 'No')
+                                            ->getStateUsing(fn ($record) => $record->store?->verified ? 'Sí' : 'No')
                                             ->badge()
-                                            ->color(fn($state) => $state === 'Sí' ? 'success' : 'danger'),
+                                            ->color(fn ($state) => $state === 'Sí' ? 'success' : 'danger'),
                                         TextEntry::make('store.owner.name')
                                             ->label('Nombre del Propietario')
                                             ->placeholder('No disponible'),
@@ -182,9 +183,6 @@ class UserSubscriptionResource extends Resource
                     ])->columnSpanFull(),
             ]);
     }
-
-
-
 
     public static function getTableQuery()
     {

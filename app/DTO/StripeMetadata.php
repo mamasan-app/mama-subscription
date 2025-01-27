@@ -5,18 +5,31 @@ namespace App\DTO;
 class StripeMetadata
 {
     public string $id;
+
     public string $object;
+
     public int $amount;
+
     public int $amount_received;
+
     public string $currency;
+
     public ?string $status;
+
     public ?string $client_secret;
+
     public string $capture_method;
+
     public string $confirmation_method;
+
     public \DateTime $created;
+
     public bool $livemode;
+
     public array $payment_method_types;
+
     public ?string $cancellation_reason;
+
     public array $custom_metadata;
 
     public function __construct(array $data)
@@ -30,7 +43,7 @@ class StripeMetadata
         $this->client_secret = $data['client_secret'] ?? null;
         $this->capture_method = $data['capture_method'] ?? 'automatic';
         $this->confirmation_method = $data['confirmation_method'] ?? 'automatic';
-        $this->created = isset($data['created']) ? (new \DateTime())->setTimestamp($data['created']) : new \DateTime();
+        $this->created = isset($data['created']) ? (new \DateTime)->setTimestamp($data['created']) : new \DateTime;
         $this->livemode = $data['livemode'] ?? false;
         $this->payment_method_types = $data['payment_method_types'] ?? [];
         $this->cancellation_reason = $data['cancellation_reason'] ?? null;

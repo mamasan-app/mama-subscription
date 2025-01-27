@@ -20,7 +20,7 @@ class EditUser extends EditRecord
     protected function mutateFormDataBeforeSave(array $data): array
     {
         // Si se está actualizando la contraseña, hashearla
-        if (!empty($data['new_password'])) {
+        if (! empty($data['new_password'])) {
             $data['password'] = bcrypt($data['new_password']);
         }
 
@@ -41,4 +41,3 @@ class EditUser extends EditRecord
         $this->record->syncRoles($this->role);
     }
 }
-

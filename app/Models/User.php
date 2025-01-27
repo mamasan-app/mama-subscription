@@ -3,25 +3,24 @@
 namespace App\Models;
 
 use App\Notifications\CustomVerifyEmail;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasTenants;
+use Filament\Panel;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Filament\Panel;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Traits\HasRoles;
-use Filament\Models\Contracts\FilamentUser;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 use NorbyBaru\Passwordless\CanUsePasswordlessAuthenticatable;
 use NorbyBaru\Passwordless\Traits\PasswordlessAuthenticatable;
+use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements FilamentUser, MustVerifyEmail, HasTenants, CanUsePasswordlessAuthenticatable
+class User extends Authenticatable implements CanUsePasswordlessAuthenticatable, FilamentUser, HasTenants, MustVerifyEmail
 {
-    use HasFactory, Notifiable, HasRoles, SoftDeletes, PasswordlessAuthenticatable;
+    use HasFactory, HasRoles, Notifiable, PasswordlessAuthenticatable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -81,7 +80,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
     public function name(): Attribute
     {
         return Attribute::make(
-            get: fn() => $this->first_name . ' ' . $this->last_name,
+            get: fn () => $this->first_name.' '.$this->last_name,
         );
     }
 
@@ -89,7 +88,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
     {
         $panelId = $panel->getId();
 
-        //dd($panelId, auth()->user()->roles->pluck('name'));
+        // dd($panelId, auth()->user()->roles->pluck('name'));
 
         // Lógica para el panel de admin
         if ($panelId === 'admin') {
@@ -196,5 +195,4 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
         $panel = request()->segment(1); // Captura el panel actual desde la URL (app, tienda, admin)
         $this->notify(new CustomVerifyEmail($panel));
     }
-
 }

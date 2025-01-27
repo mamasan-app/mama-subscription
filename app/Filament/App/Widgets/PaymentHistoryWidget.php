@@ -35,7 +35,7 @@ class PaymentHistoryWidget extends BaseWidget
                     ->sortable(),
                 Tables\Columns\TextColumn::make('amount_cents')
                     ->label('Monto (USD)')
-                    ->getStateUsing(fn($record) => number_format($record->amount_cents / 100, 2) . ' USD'),
+                    ->getStateUsing(fn ($record) => number_format($record->amount_cents / 100, 2).' USD'),
                 Tables\Columns\TextColumn::make('subscription.service_name')
                     ->label('Servicio')
                     ->sortable()
@@ -43,7 +43,7 @@ class PaymentHistoryWidget extends BaseWidget
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
                     ->badge()
-                    ->color(fn($state) => match ($state) {
+                    ->color(fn ($state) => match ($state) {
                         'Completado' => 'success',
                         'Pendiente' => 'warning',
                         'Fallido', 'Cancelado' => 'danger',

@@ -24,11 +24,9 @@ class CreateUser extends CreateRecord
         return $data;
     }
 
-
     protected function afterCreate(): void
     {
         // Asignar el rol basado en la selección del formulario
         $this->record->assignRole($this->role);
     }
 }
-

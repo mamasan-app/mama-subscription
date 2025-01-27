@@ -2,13 +2,13 @@
 
 namespace App\Filament\App\Widgets;
 
-use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
-use App\Models\Subscription;
-use App\Models\Payment;
-use App\Enums\SubscriptionStatusEnum;
 use App\Enums\PaymentStatusEnum;
+use App\Enums\SubscriptionStatusEnum;
+use App\Models\Payment;
+use App\Models\Subscription;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
 
 class PaymentCalendarWidget extends FullCalendarWidget
 {
@@ -35,7 +35,7 @@ class PaymentCalendarWidget extends FullCalendarWidget
                 if ($subscription->trial_ends_at->between($start, $end)) {
                     $events[] = [
                         'id' => $subscription->id,
-                        'title' => $subscription->service_name . ' (Prueba)',
+                        'title' => $subscription->service_name.' (Prueba)',
                         'start' => $subscription->trial_ends_at->toDateString(),
                         'color' => 'warning', // Amarillo para "En periodo de prueba"
                     ];

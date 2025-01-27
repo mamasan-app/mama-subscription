@@ -2,33 +2,36 @@
 
 namespace App\Jobs;
 
+use App\Models\Subscription as LocalSubscription;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 use Stripe\Invoice;
 use Stripe\PaymentIntent;
 use Stripe\Subscription;
-use App\Models\Subscription as LocalSubscription;
-use Illuminate\Support\Facades\Log;
 
 class RetryInvoicePayment implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $invoiceId;
+
     protected $gracePeriod;
+
     protected $attemptCount;
+
     protected $subscriptionId;
 
     /**
      * Create a new job instance.
      *
-     * @param string $invoiceId
-     * @param int $gracePeriod
-     * @param int $attemptCount
-     * @param string $subscriptionId
+     * @param  string  $invoiceId
+     * @param  int  $gracePeriod
+     * @param  int  $attemptCount
+     * @param  string  $subscriptionId
      */
     public function __construct($invoiceId, $gracePeriod, $attemptCount, $subscriptionId)
     {

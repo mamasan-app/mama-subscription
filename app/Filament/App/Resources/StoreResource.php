@@ -5,31 +5,30 @@ namespace App\Filament\App\Resources;
 use App\Filament\App\Resources\StoreResource\Pages;
 use App\Models\Store;
 use Filament\Forms\Form;
-use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Table;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Infolists\Infolist;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\Group;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Tabs;
 use Filament\Infolists\Components\Tabs\Tab;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
 
 class StoreResource extends Resource
 {
-
     protected static ?string $model = Store::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
+
     protected static ?string $modelLabel = 'Tiendas';
 
     public static function canCreate(): bool
     {
         return false; // No permite crear nuevas tiendas desde el panel
     }
-
 
     public static function form(Form $form): Form
     {
@@ -60,8 +59,6 @@ class StoreResource extends Resource
             ]);
     }
 
-
-
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist
@@ -83,16 +80,16 @@ class StoreResource extends Resource
                                             ->placeholder('No disponible'),
                                         TextEntry::make('url')
                                             ->label('URL')
-                                            ->url(fn($record) => $record->url)
+                                            ->url(fn ($record) => $record->url)
                                             ->placeholder('No disponible'),
                                         TextEntry::make('slug')
                                             ->label('Slug')
                                             ->placeholder('No disponible'),
                                         TextEntry::make('verified')
                                             ->label('Verificada')
-                                            ->getStateUsing(fn($record) => $record->verified ? 'Sí' : 'No')
+                                            ->getStateUsing(fn ($record) => $record->verified ? 'Sí' : 'No')
                                             ->badge()
-                                            ->color(fn($state) => $state === 'Sí' ? 'success' : 'danger'),
+                                            ->color(fn ($state) => $state === 'Sí' ? 'success' : 'danger'),
                                     ]),
                             ])->columnSpanFull(),
 
@@ -114,8 +111,6 @@ class StoreResource extends Resource
                     ])->columnSpanFull(),
             ]);
     }
-
-
 
     public static function getRelations(): array
     {

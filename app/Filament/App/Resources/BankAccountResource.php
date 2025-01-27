@@ -2,24 +2,18 @@
 
 namespace App\Filament\App\Resources;
 
-use App\Filament\App\Resources\BankAccountResource\Pages;
-use App\Filament\App\Resources\BankAccountResource\RelationManagers;
-use App\Models\BankAccount;
 use App\Enums\BankEnum;
 use App\Enums\PhonePrefixEnum;
-use App\Enums\IdentityPrefixEnum;
-use Filament\Forms;
+use App\Filament\App\Resources\BankAccountResource\Pages;
+use App\Models\BankAccount;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\TextInput;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-
+use Filament\Tables\Table;
 
 class BankAccountResource extends Resource
 {
@@ -28,7 +22,6 @@ class BankAccountResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-building-library';
 
     protected static ?string $navigationGroup = 'Gestión de Pagos';
-
 
     protected static ?string $modelLabel = 'Cuentas en Bs';
 
@@ -39,7 +32,7 @@ class BankAccountResource extends Resource
                 Select::make('bank_code')
                     ->label('Banco')
                     ->options(
-                        collect(BankEnum::cases())->mapWithKeys(fn($bank) => [$bank->code() => $bank->getLabel()])->toArray()
+                        collect(BankEnum::cases())->mapWithKeys(fn ($bank) => [$bank->code() => $bank->getLabel()])->toArray()
                     )
                     ->required(),
 
@@ -49,7 +42,7 @@ class BankAccountResource extends Resource
                             ->label('Prefijo Telefónico')
                             ->options(
                                 collect(PhonePrefixEnum::cases())
-                                    ->mapWithKeys(fn($prefix) => [$prefix->value => $prefix->getLabel()])
+                                    ->mapWithKeys(fn ($prefix) => [$prefix->value => $prefix->getLabel()])
                                     ->toArray()
                             )
                             ->required(),
@@ -76,7 +69,7 @@ class BankAccountResource extends Resource
                     ->formatStateUsing(function ($state) {
                         // Buscar el enum correspondiente al código del banco
                         $bank = collect(BankEnum::cases())
-                            ->first(fn($bank) => $bank->code() === $state);
+                            ->first(fn ($bank) => $bank->code() === $state);
 
                         return $bank?->getLabel() ?? 'Desconocido';
                     }),

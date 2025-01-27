@@ -11,7 +11,7 @@ class PlanObserver
         // Obtener las direcciones seleccionadas por el usuario desde la sesión
         $addresses = session('address_id', []);
 
-        if (!empty($addresses)) {
+        if (! empty($addresses)) {
             // Asociar las direcciones al servicio creado
             $plan->addresses()->attach($addresses);
         }
@@ -20,4 +20,3 @@ class PlanObserver
         session()->forget('address_id');
     }
 }
-

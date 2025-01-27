@@ -3,16 +3,13 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\StoreResource\Pages;
-use App\Filament\Admin\Resources\StoreResource\RelationManagers;
 use App\Models\Store;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Models\User;
 
 class StoreResource extends Resource
 {
@@ -21,7 +18,6 @@ class StoreResource extends Resource
     protected static ?string $modelLabel = 'Tiendas';
 
     protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
-
 
     public static function form(Form $form): Form
     {
@@ -69,19 +65,19 @@ class StoreResource extends Resource
                     ->label('Dirección')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('owner.name')
-                ->label('Propietario')
+                    ->label('Propietario')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\IconColumn::make('verified')
-                ->label('Verificada')
+                    ->label('Verificada')
                     ->boolean(),
                 Tables\Columns\TextColumn::make('created_at')
-                ->label('Creación')
+                    ->label('Creación')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
-                ->label('Modificación')
+                    ->label('Modificación')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

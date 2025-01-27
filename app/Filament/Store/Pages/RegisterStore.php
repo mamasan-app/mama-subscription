@@ -8,7 +8,6 @@ use App\Filament\Store\Fields\StoreFileUpload;
 use App\Models\Address;  // Importamos el modelo Address
 use App\Models\Store;
 use App\Models\User;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Pages\Tenancy\RegisterTenant;
@@ -40,7 +39,7 @@ class RegisterStore extends RegisterTenant
                     ->maxLength(20)
                     ->unique(Store::class, 'slug') // Asegúrate de que sea único en la tabla Store
                     ->prefix('https://')
-                    ->suffix('.' . config('app.domain'))
+                    ->suffix('.'.config('app.domain'))
                     ->placeholder('mitienda')
                     ->regex('/^[a-z0-9]+(?:-[a-z0-9]+)*$/'),
 
@@ -83,6 +82,7 @@ class RegisterStore extends RegisterTenant
                 'location' => $data['long_address'],
                 'store_id' => $store->id, // Asocia la dirección a la tienda creada  // Asociamos la dirección a la tienda
             ]);
+
             return $store;
         });
     }

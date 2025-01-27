@@ -2,10 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Concerns\HasStore;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Permission\Models\Role as SpatieRole;
 
 class Role extends SpatieRole
@@ -14,7 +12,7 @@ class Role extends SpatieRole
 
     /**
      * Relación con los usuarios (empleados).
-     * 
+     *
      * @return BelongsToMany<User>
      */
     public function employees(): BelongsToMany

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Store\Pages\Auth;
 
-use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
@@ -24,53 +23,53 @@ class EditProfile extends BaseEditProfile
                     ->label('Nombre')
                     ->required()
                     ->maxLength(255)
-                    ->default(fn() => Auth::user()->first_name), // Cargar el nombre del usuario autenticado
+                    ->default(fn () => Auth::user()->first_name), // Cargar el nombre del usuario autenticado
 
                 TextInput::make('last_name')
                     ->label('Apellido')
                     ->required()
                     ->maxLength(255)
-                    ->default(fn() => Auth::user()->last_name), // Cargar el apellido
+                    ->default(fn () => Auth::user()->last_name), // Cargar el apellido
 
                 TextInput::make('email')
                     ->label('Correo Electrónico')
                     ->email()
                     ->required()
-                    ->unique('users', 'email', fn() => Auth::id()) // Validar que el email no esté duplicado
-                    ->default(fn() => Auth::user()->email),
+                    ->unique('users', 'email', fn () => Auth::id()) // Validar que el email no esté duplicado
+                    ->default(fn () => Auth::user()->email),
 
                 TextInput::make('phone_number')
                     ->label('Número de Teléfono')
                     ->tel()
                     ->maxLength(20)
-                    ->unique('users', 'phone_number', fn() => Auth::id())
-                    ->default(fn() => Auth::user()->phone_number),
+                    ->unique('users', 'phone_number', fn () => Auth::id())
+                    ->default(fn () => Auth::user()->phone_number),
 
                 TextInput::make('identity_document')
                     ->label('Cédula de Identidad')
                     ->maxLength(20)
-                    ->unique('users', 'identity_document', fn() => Auth::id())
-                    ->default(fn() => Auth::user()->identity_document),
+                    ->unique('users', 'identity_document', fn () => Auth::id())
+                    ->default(fn () => Auth::user()->identity_document),
 
                 DatePicker::make('birth_date')
                     ->label('Fecha de Nacimiento')
-                    ->default(fn() => Auth::user()->birth_date),
+                    ->default(fn () => Auth::user()->birth_date),
 
                 Textarea::make('address')
                     ->label('Dirección')
-                    ->default(fn() => Auth::user()->address),
+                    ->default(fn () => Auth::user()->address),
 
                 FileUpload::make('selfie_path')
                     ->label('Foto de Perfil')
                     ->directory('users/selfies')
                     ->image()
-                    ->default(fn() => Auth::user()->selfie_path),
+                    ->default(fn () => Auth::user()->selfie_path),
 
                 FileUpload::make('ci_picture_path')
                     ->label('Foto de Cédula')
                     ->directory('users/documents')
                     ->image()
-                    ->default(fn() => Auth::user()->ci_picture_path),
+                    ->default(fn () => Auth::user()->ci_picture_path),
 
                 $this->getPasswordFormComponent(), // Contraseña
                 $this->getPasswordConfirmationFormComponent(), // Confirmación de Contraseña

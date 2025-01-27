@@ -3,7 +3,6 @@
 namespace App\Filament\App\Resources\BankAccountResource\Pages;
 
 use App\Filament\App\Resources\BankAccountResource;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateBankAccount extends CreateRecord
@@ -21,7 +20,7 @@ class CreateBankAccount extends CreateRecord
         $data['identity_number'] = str_replace('-', '', $user->identity_document);
 
         // Concatenar el prefijo telefónico y el número telefónico
-        $data['phone_number'] = $data['phone_prefix'] . $data['phone_number'];
+        $data['phone_number'] = $data['phone_prefix'].$data['phone_number'];
 
         // Eliminar el campo `phone_prefix` ya que no es necesario almacenarlo por separado
         unset($data['phone_prefix']);

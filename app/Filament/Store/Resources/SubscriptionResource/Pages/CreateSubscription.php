@@ -2,15 +2,13 @@
 
 namespace App\Filament\Store\Resources\SubscriptionResource\Pages;
 
-use App\Filament\Store\Resources\SubscriptionResource;
 use App\Enums\SubscriptionStatusEnum;
-use Filament\Resources\Pages\CreateRecord;
+use App\Filament\Store\Resources\SubscriptionResource;
+use App\Models\Frequency;
+use App\Models\Plan;
 use Carbon\Carbon;
 use Filament\Facades\Filament;
-use App\Models\User;
-use Filament\Notifications\Notification;
-use App\Models\Plan;
-use App\Models\Frequency;
+use Filament\Resources\Pages\CreateRecord;
 
 class CreateSubscription extends CreateRecord
 {
@@ -21,7 +19,7 @@ class CreateSubscription extends CreateRecord
         // Obtener la tienda actual desde el Tenant
         $currentStore = Filament::getTenant();
 
-        if (!$currentStore) {
+        if (! $currentStore) {
             throw new \Exception('No se ha encontrado una tienda actual para asociar la suscripción.');
         }
 
@@ -31,7 +29,7 @@ class CreateSubscription extends CreateRecord
         // Obtener el Plan relacionado
         $plan = Plan::with('frequency')->find($data['service_id']); // Asegúrate de cargar la relación 'frequency'
 
-        if (!$plan) {
+        if (! $plan) {
             throw new \Exception('El servicio seleccionado no se encontró.');
         }
 
@@ -72,5 +70,4 @@ class CreateSubscription extends CreateRecord
 
         return $data;
     }
-
 }

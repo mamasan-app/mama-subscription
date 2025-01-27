@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use App\Enums\BankEnum;
 use App\Enums\NetworkCodeEnum;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class MBNotificaController extends Controller
 {
@@ -15,8 +15,9 @@ class MBNotificaController extends Controller
 
         // Verificar si el token de autorización es válido
         $authorizationHeader = $request->header('Authorization');
-        if (!$authorizationHeader || $authorizationHeader !== config('banking.token_key')) {
+        if (! $authorizationHeader || $authorizationHeader !== config('banking.token_key')) {
             Log::warning('Token de autorización inválido o ausente', ['header' => $authorizationHeader]);
+
             return response()->json(['abono' => false], 401);
         }
 
@@ -30,7 +31,7 @@ class MBNotificaController extends Controller
                 'Monto' => 'required|regex:/^\d+(\.\d{1,2})?$/',
                 'FechaHora' => [
                     'required',
-                    'regex:/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/'
+                    'regex:/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/',
                 ],
                 'Referencia' => 'required|string|max:50',
                 'CodigoRed' => 'required|string|max:2',
@@ -38,6 +39,7 @@ class MBNotificaController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Error en la validación de datos', ['error' => $e->getMessage()]);
+
             return response()->json(['abono' => false]);
         }
         Log::info('Validación de datos completada', ['data' => $request->all()]);
@@ -47,17 +49,18 @@ class MBNotificaController extends Controller
         Log::info('Código de banco ajustado', ['codigoBanco' => $codigoBanco]);
 
         // Validar el código del banco usando el enum BankEnum
-        $bancoValido = collect(BankEnum::cases())->first(fn($enum) => $enum->code() === $codigoBanco);
-        if (!$bancoValido) {
+        $bancoValido = collect(BankEnum::cases())->first(fn ($enum) => $enum->code() === $codigoBanco);
+        if (! $bancoValido) {
             Log::warning('Código de banco inválido', ['BancoEmisor' => $codigoBanco]);
+
             return response()->json(['abono' => false]);
         }
 
-
         // Validar el código de red usando el enum NetworkCodeEnum
         $codigoRedValido = NetworkCodeEnum::tryFrom($request->CodigoRed) !== null;
-        if (!$codigoRedValido) {
+        if (! $codigoRedValido) {
             Log::warning('Código de red inválido', ['CodigoRed' => $request->CodigoRed]);
+
             return response()->json(['abono' => false]);
         }
 
@@ -67,5 +70,4 @@ class MBNotificaController extends Controller
 
         return response()->json(['abono' => $abono]);
     }
-
 }

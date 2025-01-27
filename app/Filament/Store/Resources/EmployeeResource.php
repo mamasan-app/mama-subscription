@@ -2,16 +2,16 @@
 
 namespace App\Filament\Store\Resources;
 
+use App\Filament\Inputs\IdentityDocumentTextInput;
 use App\Filament\Store\Resources\EmployeeResource\Pages;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Filament\Facades\Filament;
-use App\Filament\Inputs\IdentityDocumentTextInput;
 
 class EmployeeResource extends Resource
 {
@@ -47,7 +47,6 @@ class EmployeeResource extends Resource
                     ->maxLength(255),
 
                 IdentityDocumentTextInput::make('identity_prefix', 'identity_number'),
-
 
                 Forms\Components\Select::make('stores')
                     ->label('Tiendas')
@@ -133,7 +132,7 @@ class EmployeeResource extends Resource
                     ->label('Email verificado')
                     ->dateTime()
                     ->sortable()
-                    ->formatStateUsing(fn($state) => $state ? $state->format('d-m-Y H:i') : 'No verificado'),
+                    ->formatStateUsing(fn ($state) => $state ? $state->format('d-m-Y H:i') : 'No verificado'),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
@@ -175,7 +174,7 @@ class EmployeeResource extends Resource
         // Obtener la tienda actual desde la sesión (usando Filament::getTenant())
         $currentStore = Filament::getTenant();
 
-        if (!$currentStore) {
+        if (! $currentStore) {
             // Si no hay tienda en sesión, devolver una consulta vacía
             return User::query()->whereRaw('1 = 0');
         }

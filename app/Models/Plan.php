@@ -2,10 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Support\Facades\Cache;
 
 class Plan extends Model
 {
@@ -14,7 +13,9 @@ class Plan extends Model
     protected $table = 'plans';
 
     protected $primaryKey = 'id';
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
@@ -48,8 +49,8 @@ class Plan extends Model
     public function price(): Attribute
     {
         return Attribute::make(
-            get: fn(): float => $this->price_cents / 100,
-            set: fn(float $value): array => [
+            get: fn (): float => $this->price_cents / 100,
+            set: fn (float $value): array => [
                 'price_cents' => $value * 100,
             ]
         );
@@ -61,7 +62,7 @@ class Plan extends Model
     public function formattedPrice(): Attribute
     {
         return Attribute::make(
-            get: fn(): string => number_format($this->price, 2),
+            get: fn (): string => number_format($this->price, 2),
         );
     }
 
@@ -70,7 +71,7 @@ class Plan extends Model
      */
     public function getFormattedPrice(): string
     {
-        return number_format($this->price, 2) . ' USD';  // Devuelve el precio con dos decimales y la etiqueta "USD"
+        return number_format($this->price, 2).' USD';  // Devuelve el precio con dos decimales y la etiqueta "USD"
     }
 
     /**
@@ -79,7 +80,7 @@ class Plan extends Model
     public function isPublished(): Attribute
     {
         return Attribute::make(
-            get: fn() => $this->published,
+            get: fn () => $this->published,
         );
     }
 
@@ -96,7 +97,6 @@ class Plan extends Model
         return Frequency::where('id', $this->frequency_id)->value('days_count') ?? 0;
     }
 
-
     /**
      * Relación muchos a muchos con 'Address'.
      */
@@ -107,7 +107,7 @@ class Plan extends Model
 
     /**
      * Relación de uno a muchos con 'Store'.
-     * 
+     *
      * Relación directa con la tabla 'stores' usando 'store_id'.
      */
     public function store()
@@ -121,7 +121,7 @@ class Plan extends Model
     public function isInfiniteDuration(): Attribute
     {
         return Attribute::make(
-            get: fn() => $this->infinite_duration,
+            get: fn () => $this->infinite_duration,
         );
     }
 
@@ -135,7 +135,6 @@ class Plan extends Model
             return 'Infinito';
         }
 
-        return $this->duration . ' días';
+        return $this->duration.' días';
     }
-
 }

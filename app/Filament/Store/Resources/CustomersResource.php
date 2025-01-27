@@ -4,11 +4,11 @@ namespace App\Filament\Store\Resources;
 
 use App\Filament\Store\Resources\CustomersResource\Pages;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Filament\Facades\Filament;
 
 class CustomersResource extends Resource
 {
@@ -92,7 +92,7 @@ class CustomersResource extends Resource
     {
         $currentStore = Filament::getTenant();
 
-        if (!$currentStore) {
+        if (! $currentStore) {
             // Si no hay tienda en sesión, devuelve una consulta vacía
             return User::query()->whereRaw('1 = 0');
         }

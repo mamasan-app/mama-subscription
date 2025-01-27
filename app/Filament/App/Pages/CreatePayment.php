@@ -2,37 +2,46 @@
 
 namespace App\Filament\App\Pages;
 
-use App\Models\Subscription;
-use App\Enums\SubscriptionStatusEnum;
-use Filament\Forms;
-use Filament\Pages\Page;
-use Filament\Notifications\Notification;
-use App\Enums\PhonePrefixEnum;
-use App\Enums\IdentityPrefixEnum;
 use App\Enums\BankEnum;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Grid;
-use Filament\Pages\Actions\Action;
-use Illuminate\Support\Facades\Http;
+use App\Enums\IdentityPrefixEnum;
+use App\Enums\PhonePrefixEnum;
+use App\Enums\SubscriptionStatusEnum;
+use App\Models\Subscription;
 use Exception;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
+use Filament\Pages\Actions\Action;
+use Filament\Pages\Page;
+use Illuminate\Support\Facades\Http;
 
 class CreatePayment extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-credit-card';
+
     protected static ?string $navigationGroup = 'Gestión de Pagos';
+
     protected static string $view = 'filament.pages.subscription-payment';
 
     protected static ?string $title = 'Crear Pagos';
 
     public $subscription_id;
+
     public $otp;
+
     public $bank;
+
     public $phone_prefix;
+
     public $phone_number;
+
     public $identity_prefix;
+
     public $identity_number;
+
     public $amount;
+
     public $showOtpFields = false; // Valor predeterminado corregido
 
     public function mount(): void
@@ -87,11 +96,11 @@ class CreatePayment extends Page
                 ->label('Banco')
                 ->options(
                     collect(BankEnum::cases())
-                        ->mapWithKeys(fn($bank) => [$bank->code() => $bank->getLabel()])
+                        ->mapWithKeys(fn ($bank) => [$bank->code() => $bank->getLabel()])
                         ->toArray()
                 )
                 ->required()
-                ->hidden(fn($get) => $get('showOtpFields')), // Reactivo a la visibilidad de `showOtpFields`
+                ->hidden(fn ($get) => $get('showOtpFields')), // Reactivo a la visibilidad de `showOtpFields`
 
             Grid::make(2)
                 ->schema([
@@ -99,18 +108,18 @@ class CreatePayment extends Page
                         ->label('Prefijo Telefónico')
                         ->options(
                             collect(PhonePrefixEnum::cases())
-                                ->mapWithKeys(fn($prefix) => [$prefix->value => $prefix->getLabel()])
+                                ->mapWithKeys(fn ($prefix) => [$prefix->value => $prefix->getLabel()])
                                 ->toArray()
                         )
                         ->required()
-                        ->hidden(fn($get) => $get('showOtpFields')),
+                        ->hidden(fn ($get) => $get('showOtpFields')),
                     TextInput::make('phone_number')
                         ->label('Número Telefónico')
                         ->numeric()
                         ->minLength(7)
                         ->maxLength(7)
                         ->required()
-                        ->hidden(fn($get) => $get('showOtpFields')),
+                        ->hidden(fn ($get) => $get('showOtpFields')),
                 ]),
 
             Grid::make(2)
@@ -119,25 +128,25 @@ class CreatePayment extends Page
                         ->label('Tipo de Cédula')
                         ->options(
                             collect(IdentityPrefixEnum::cases())
-                                ->mapWithKeys(fn($prefix) => [$prefix->value => $prefix->getLabel()])
+                                ->mapWithKeys(fn ($prefix) => [$prefix->value => $prefix->getLabel()])
                                 ->toArray()
                         )
                         ->required()
-                        ->hidden(fn($get) => $get('showOtpFields')),
+                        ->hidden(fn ($get) => $get('showOtpFields')),
                     TextInput::make('identity_number')
                         ->label('Número de Cédula')
                         ->numeric()
                         ->minLength(6)
                         ->maxLength(20)
                         ->required()
-                        ->hidden(fn($get) => $get('showOtpFields')),
+                        ->hidden(fn ($get) => $get('showOtpFields')),
                 ]),
 
             TextInput::make('amount')
                 ->label('Monto')
                 ->disabled()
-                ->default(fn() => $this->amount)
-                ->hidden(fn($get) => $get('showOtpFields')),
+                ->default(fn () => $this->amount)
+                ->hidden(fn ($get) => $get('showOtpFields')),
         ];
     }
 
@@ -148,7 +157,7 @@ class CreatePayment extends Page
                 ->label('Procesar Pago')
                 ->color('primary')
                 ->action(function (array $data) {
-                    if (!$this->showOtpFields) {
+                    if (! $this->showOtpFields) {
                         $this->submitBolivaresPayment($data);
                     } else {
                         // Redirigir al pago de la suscripción para períodos de prueba
@@ -170,18 +179,19 @@ class CreatePayment extends Page
     public function submitBolivaresPayment(array $data)
     {
         $this->bank = $data['bank'];
-        $this->phone = $data['phone_prefix'] . $data['phone_number'];
-        $this->identity = $data['identity_prefix'] . $data['identity_number'];
+        $this->phone = $data['phone_prefix'].$data['phone_number'];
+        $this->identity = $data['identity_prefix'].$data['identity_number'];
 
         try {
             $otpResponse = $this->generateOtp();
 
-            if (!isset($otpResponse['success']) || !$otpResponse['success']) {
+            if (! isset($otpResponse['success']) || ! $otpResponse['success']) {
                 Notification::make()
                     ->title('Error')
                     ->body('No se pudo generar el OTP. Intente nuevamente.')
                     ->danger()
                     ->send();
+
                 return;
             }
 
@@ -222,11 +232,11 @@ class CreatePayment extends Page
             'Authorization' => $tokenAuthorization,
             'Commerce' => config('banking.commerce_id'),
         ])->post(config('banking.otp_url'), [
-                    'Banco' => $bank,
-                    'Monto' => $amount,
-                    'Telefono' => $phone,
-                    'Cedula' => $identity,
-                ]);
+            'Banco' => $bank,
+            'Monto' => $amount,
+            'Telefono' => $phone,
+            'Cedula' => $identity,
+        ]);
 
         return $response->json();
     }

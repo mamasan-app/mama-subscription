@@ -2,12 +2,12 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\Store;
 use App\Models\Address;
 use App\Models\Frequency;
-use Illuminate\Database\Seeder;
 use App\Models\Plan;
+use App\Models\Store;
+use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {

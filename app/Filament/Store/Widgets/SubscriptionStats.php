@@ -6,10 +6,10 @@ namespace App\Filament\Store\Widgets;
 
 use App\Models\Subscription;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Database\Eloquent\Builder;
-use Filament\Facades\Filament;
 
 class SubscriptionStats extends BaseWidget
 {
@@ -28,7 +28,7 @@ class SubscriptionStats extends BaseWidget
         $currentStore = Filament::getTenant();
 
         // Si no hay tienda activa, devolver valores vacíos
-        if (!$currentStore) {
+        if (! $currentStore) {
             return [
                 Stat::make('Suscripciones últimos 7 días', 0),
                 Stat::make('Suscripciones este mes', 0),
