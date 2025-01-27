@@ -72,7 +72,6 @@ class MonitorTransactionStatus implements ShouldQueue
             $currentDate = now()->setTimezone('America/Caracas');
 
             if ($statusCode === 'ACCP') {
-                
 
                 $transaction->update([
                     'status' => TransactionStatusEnum::Succeeded,
@@ -83,17 +82,13 @@ class MonitorTransactionStatus implements ShouldQueue
                     'status' => PaymentStatusEnum::Completed,
                 ]);
 
-
-
                 if ($subscription && $subscription->isOnTrial) {
-                    $renewDate = $currentDate->addDays($subscription->frequency_days)->toDateString();
-                    $expireDate = $currentDate->addDays($subscription->frequency_days)->addDays($subscription->service_grace_period)->toDateString();
+                    $renewDate = $currentDate->clone()->addDays($subscription->frequency_days)->toDateString();
+                    $expireDate = $currentDate->clone()->addDays($subscription->frequency_days)->addDays($subscription->service_grace_period)->toDateString();
                     
                     $plan = $subscription->service;
                     
                     if ($plan) {
-
-
                         if (!$plan->infinite) {
                             // Plan finito: calcular la fecha de expiración
                             $endDate = $currentDate->addDays($plan->duration)->toDateString();
