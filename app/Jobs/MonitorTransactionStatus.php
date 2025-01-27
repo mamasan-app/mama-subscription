@@ -94,10 +94,10 @@ class MonitorTransactionStatus implements ShouldQueue
 
                             $subscription->update([
                                 'status' => SubscriptionStatusEnum::Active,
-                                'trial_ends_at' => $currentDate->copy(), // Finaliza el periodo de prueba
-                                'renews_at' => $renewDate,
-                                'expires_at' => $expireDate,
-                                'ends_at' => $endDate,
+                                'trial_ends_at' => $currentDate, // Finaliza el periodo de prueba
+                                'renews_at' => $currentDate,
+                                'expires_at' => $currentDate,
+                                'ends_at' => $currentDate,
                             ]);
 
                             Notification::make()
