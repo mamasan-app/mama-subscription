@@ -3,10 +3,9 @@
 namespace App\Filament\Store\Widgets;
 
 use App\Models\Payment;
-use Filament\Widgets\LineChartWidget;
-use Filament\Facades\Filament;
-use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Filament\Facades\Filament;
+use Filament\Widgets\LineChartWidget;
 
 class StoreRevenueChart extends LineChartWidget
 {
@@ -53,7 +52,7 @@ class StoreRevenueChart extends LineChartWidget
         // Obtener el store_id del tenant actual
         $currentStore = Filament::getTenant();
 
-        if (!$currentStore) {
+        if (! $currentStore) {
             return [
                 'datasets' => [],
                 'labels' => [],

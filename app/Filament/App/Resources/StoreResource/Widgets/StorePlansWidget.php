@@ -2,15 +2,15 @@
 
 namespace App\Filament\App\Resources\StoreResource\Widgets;
 
-use Filament\Tables;
-use Filament\Tables\Table;
-use Filament\Widgets\TableWidget as BaseWidget;
 use App\Models\Plan;
 use App\Models\Subscription;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
-use Filament\Tables\Actions\Action;
 use Filament\Notifications\Notification;
+use Filament\Tables;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Table;
+use Filament\Widgets\TableWidget as BaseWidget;
+use Illuminate\Support\Facades\Auth;
 
 class StorePlansWidget extends BaseWidget
 {
@@ -79,7 +79,7 @@ class StorePlansWidget extends BaseWidget
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             throw new \Exception('Debe estar autenticado para suscribirse.');
         }
 
@@ -103,13 +103,11 @@ class StorePlansWidget extends BaseWidget
             'expires_at' => $now->clone()->addDays($freeDays + $gracePeriod),
         ]);
 
-
-
         // Dentro del método subscribeToPlan
         Notification::make()
             ->title('¡Suscripción creada con éxito!')
             ->success()
-            ->body('Te has suscrito al plan: ' . $plan->name)
+            ->body('Te has suscrito al plan: '.$plan->name)
             ->send();
 
     }

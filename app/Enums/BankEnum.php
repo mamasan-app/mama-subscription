@@ -61,7 +61,7 @@ enum BankEnum: string implements HasLabel
 
     public function getLabel(): ?string
     {
-        return $this->code() . ' - ' . match ($this) {
+        return $this->code().' - '.match ($this) {
             self::Venezuela => 'Banco de Venezuela, S.A. Banco Universal',
             self::VenezolanoDeCredito => 'Banco Venezolano de Crédito, S.A. Banco Universal',
             self::Mercantil => 'Banco Mercantil C.A., Banco Universal',

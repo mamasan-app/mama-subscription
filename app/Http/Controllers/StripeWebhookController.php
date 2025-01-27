@@ -2,22 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use App\Enums\PaymentStatusEnum;
+use App\Enums\SubscriptionStatusEnum;
+use App\Enums\TransactionStatusEnum;
+use App\Enums\TransactionTypeEnum;
 use App\Models\Payment;
+use App\Models\Plan;
+use App\Models\Store;
 use App\Models\Subscription;
 use App\Models\Transaction;
 use App\Models\User;
-use App\Models\Store;
-use App\Models\Plan;
-use App\Enums\TransactionTypeEnum;
-use App\Enums\TransactionStatusEnum;
-use App\Enums\PaymentStatusEnum;
-use App\Enums\SubscriptionStatusEnum;
 use Filament\Notifications\Notification;
-use Stripe\Webhook;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Stripe\Exception\SignatureVerificationException;
-
+use Stripe\Webhook;
 
 class StripeWebhookController extends Controller
 {
@@ -49,7 +48,7 @@ class StripeWebhookController extends Controller
                 $this->handleSessionExpired($eventData);
                 break;
 
-            //Subscription events
+                // Subscription events
             case 'customer.subscription.deleted':
                 $this->handleSubscriptionDeleted($eventData);
                 break;
@@ -60,7 +59,7 @@ class StripeWebhookController extends Controller
                 $this->handleSubscriptionUpdated($eventData);
                 break;
 
-            //Invoice events
+                // Invoice events
             case 'invoice.created':
                 $this->handleInvoiceCreated($eventData);
                 break;
@@ -80,7 +79,7 @@ class StripeWebhookController extends Controller
                 $this->handleInvoiceFinalized($eventData);
                 break;
 
-            //Payment Intent events
+                // Payment Intent events
             case 'payment_intent.created':
                 $this->handlePaymentIntentCreated($eventData);
                 break;
@@ -133,7 +132,7 @@ class StripeWebhookController extends Controller
 
                 if ($plan) {
                     // Verifica si el plan es finito
-                    if (!$plan->infinite_duration) {
+                    if (! $plan->infinite_duration) {
                         $endDate = now()->setTimezone('America/Caracas')->addDays($plan->duration)->toDateString();
 
                         try {
@@ -193,7 +192,7 @@ class StripeWebhookController extends Controller
         }
     }
 
-    //Subscription handlers
+    // Subscription handlers
     protected function handleSubscriptionUpdated($subscription)
     {
         Log::info('Subscription updated in Stripe', ['subscription' => $subscription]);
@@ -210,7 +209,6 @@ class StripeWebhookController extends Controller
                     ? now()->setTimestamp($subscription->cancel_at)->setTimezone('America/Caracas')
                     : null,
             ]);
-
 
             Log::info('Subscription updated in local database', ['subscription_id' => $localSubscription->id]);
         } else {
@@ -253,7 +251,7 @@ class StripeWebhookController extends Controller
         }
     }
 
-    //Invoice handlers
+    // Invoice handlers
     protected function handleInvoiceCreated($invoice)
     {
         Log::info('Invoice created event received', [
@@ -265,18 +263,20 @@ class StripeWebhookController extends Controller
 
         $subscriptionId = $invoice->subscription ?? null;
 
-        if (!$subscriptionId) {
+        if (! $subscriptionId) {
             Log::error('No subscription ID found in invoice', ['invoice_id' => $invoice->id ?? 'N/A']);
+
             return;
         }
 
         $subscription = Subscription::where('stripe_subscription_id', $subscriptionId)->first();
 
-        if (!$subscription) {
+        if (! $subscription) {
             Log::error('Subscription not found in database', [
                 'stripe_subscription_id' => $subscriptionId,
                 'invoice_id' => $invoice->id ?? 'N/A',
             ]);
+
             return;
         }
 
@@ -285,7 +285,7 @@ class StripeWebhookController extends Controller
 
             $payment = Payment::where('stripe_invoice_id', $invoice->id)->first();
 
-            if (!$payment) {
+            if (! $payment) {
                 $payment = Payment::updateOrCreate(
                     ['stripe_invoice_id' => $invoice->id],
                     [
@@ -307,7 +307,6 @@ class StripeWebhookController extends Controller
                     ]);
                 }
 
-
                 Log::info('Payment y transacciones actualizados', [
                     'payment_id' => $payment->id,
                     'transaction_count' => $transactions->count(),
@@ -323,7 +322,6 @@ class StripeWebhookController extends Controller
             throw $e;
         }
     }
-
 
     protected function handleInvoiceUpdated($invoice)
     {
@@ -351,8 +349,9 @@ class StripeWebhookController extends Controller
         } else {
             $subscriptionId = $invoice->subscription ?? null;
 
-            if (!$subscriptionId) {
+            if (! $subscriptionId) {
                 Log::error('No subscription ID found in invoice', ['invoice_id' => $invoice->id ?? 'N/A']);
+
                 return;
             }
 
@@ -381,7 +380,6 @@ class StripeWebhookController extends Controller
                 ]);
             }
 
-
             Log::info('Payment y transacciones actualizados', [
                 'payment_id' => $payment->id,
                 'transaction_count' => $transactions->count(),
@@ -402,8 +400,9 @@ class StripeWebhookController extends Controller
             $payment->markAsPaid();
         } else {
 
-            if (!$subscriptionId) {
+            if (! $subscriptionId) {
                 Log::error('No subscription ID found in invoice', ['invoice_id' => $invoice->id ?? 'N/A']);
+
                 return;
             }
 
@@ -441,16 +440,18 @@ class StripeWebhookController extends Controller
         $subscriptionId = $invoice->subscription ?? null;
         $attemptCount = $invoice->attempt_count ?? 0;
 
-        if (!$subscriptionId) {
+        if (! $subscriptionId) {
             Log::error('No subscription ID found in invoice', ['invoice_id' => $invoice->id]);
+
             return;
         }
 
         // Buscar la suscripción local
         $subscription = Subscription::where('stripe_subscription_id', $subscriptionId)->first();
 
-        if (!$subscription) {
+        if (! $subscription) {
             Log::error('Subscription not found for invoice', ['invoice_id' => $invoice->id]);
+
             return;
         }
 
@@ -503,15 +504,15 @@ class StripeWebhookController extends Controller
         ]);
     }
 
-
     protected function handleInvoiceUpcoming($invoice)
     {
         Log::info('Invoice upcoming', ['invoice_id' => $invoice->id, 'due_date' => $invoice->due_date]);
 
         $subscriptionId = $invoice->subscription ?? null;
 
-        if (!$subscriptionId) {
+        if (! $subscriptionId) {
             Log::warning('No subscription ID found in upcoming invoice', ['invoice_id' => $invoice->id]);
+
             return;
         }
 
@@ -537,15 +538,15 @@ class StripeWebhookController extends Controller
         }
     }
 
-
     protected function handleInvoiceFinalized($invoice)
     {
         Log::info('Invoice finalized', ['invoice_id' => $invoice->id]);
 
         $subscriptionId = $invoice->subscription ?? null;
 
-        if (!$subscriptionId) {
+        if (! $subscriptionId) {
             Log::warning('No subscription ID found in finalized invoice', ['invoice_id' => $invoice->id]);
+
             return;
         }
 
@@ -578,8 +579,7 @@ class StripeWebhookController extends Controller
         }
     }
 
-
-    //Payment Intent
+    // Payment Intent
     protected function handlePaymentIntentCreated($paymentIntent)
     {
         Log::info('Payment Intent succeeded', ['payment_intent' => $paymentIntent]);
@@ -593,7 +593,7 @@ class StripeWebhookController extends Controller
             $payment = Payment::where('stripe_invoice_id', $invoiceId)->first();
             $customer = User::where('stripe_customer_id', $customerId)->first();
             if ($payment) {
-                if (!$transaction) {
+                if (! $transaction) {
                     $subscription = Subscription::where('id', $payment->subscription_id)->first();
                     $store = Store::where('id', $subscription->store_id)->first();
                     Transaction::create([
@@ -613,7 +613,7 @@ class StripeWebhookController extends Controller
 
                 }
             } else {
-                if (!$transaction) {
+                if (! $transaction) {
                     Transaction::create([
                         'from_type' => get_class($customer), // Valor temporal hasta que se cree el invoice
                         'from_id' => $customer ? $customer->id : null, // Asignar el ID del cliente si está disponible
@@ -698,7 +698,6 @@ class StripeWebhookController extends Controller
             Log::error('Invoice ID no encontrado en PaymentIntent', ['payment_intent' => $paymentIntent]);
         }
     }
-
 
     protected function handlePaymentIntentFailed($paymentIntent)
     {
@@ -802,7 +801,6 @@ class StripeWebhookController extends Controller
         }
     }
 
-
     protected function updateTransactionStatus($paymentIntent, TransactionStatusEnum $status)
     {
         $invoiceId = $paymentIntent->invoice ?? null;
@@ -813,6 +811,7 @@ class StripeWebhookController extends Controller
 
             if ($transactions->isEmpty()) {
                 Log::info('No transactions found for invoice', ['invoice_id' => $invoiceId]);
+
                 return;
             }
 
@@ -829,5 +828,4 @@ class StripeWebhookController extends Controller
             Log::error('Invoice ID missing from PaymentIntent', ['payment_intent_id' => $paymentIntent->id]);
         }
     }
-
 }

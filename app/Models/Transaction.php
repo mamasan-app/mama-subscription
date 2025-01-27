@@ -2,15 +2,14 @@
 
 namespace App\Models;
 
+use App\DTO\MiBancoMetadata;
+use App\DTO\StripeMetadata;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionTypeEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\DTO\StripeMetadata;
-use App\DTO\MiBancoMetadata;
-
 
 class Transaction extends Model
 {
@@ -55,7 +54,6 @@ class Transaction extends Model
         return $this->amount_cents / 100;
     }
 
-
     /**
      * Relación con Payment.
      */
@@ -75,8 +73,7 @@ class Transaction extends Model
     /**
      * Crear una transacción desde un Payment Intent.
      *
-     * @param \Stripe\PaymentIntent $paymentIntent
-     * @param Payment $payment
+     * @param  \Stripe\PaymentIntent  $paymentIntent
      * @return static
      */
     public static function createFromPaymentIntent($paymentIntent, Payment $payment): self
@@ -99,7 +96,6 @@ class Transaction extends Model
     /**
      * Mapear el estado de Stripe a un estado local.
      *
-     * @param string $stripeStatus
      * @return string
      */
     protected static function mapStripeStatusToLocal(string $stripeStatus): TransactionStatusEnum
@@ -123,7 +119,7 @@ class Transaction extends Model
      */
     public function getMetadataAsObject()
     {
-        if (!isset($this->metadata) || !is_array($this->metadata)) {
+        if (! isset($this->metadata) || ! is_array($this->metadata)) {
             return null;
         }
 
@@ -139,5 +135,4 @@ class Transaction extends Model
 
         return null; // No se puede identificar el tipo de metadata
     }
-
 }

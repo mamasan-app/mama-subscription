@@ -16,14 +16,14 @@ return new class extends Migration
 
             // Clave foránea hacia la tabla 'services'
             $table->foreignId('service_id')
-                  ->constrained('services')
-                  ->onDelete('cascade');
+                ->constrained('services')
+                ->onDelete('cascade');
 
             // Clave foránea hacia la tabla 'address'
             $table->foreignId('address_id')
-                  ->constrained('address')
-                  ->onDelete('cascade');
-                  
+                ->constrained('address')
+                ->onDelete('cascade');
+
             $table->timestamps();
         });
     }

@@ -2,13 +2,13 @@
 
 namespace App\Filament\App\Resources\UserSubscriptionResource\Pages;
 
+use App\Enums\SubscriptionStatusEnum;
 use App\Filament\App\Resources\UserSubscriptionResource;
 use App\Models\Plan;
-use App\Enums\SubscriptionStatusEnum;
 use Carbon\Carbon;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Auth;
-use Filament\Notifications\Notification;
 
 class CreateUserSubscription extends CreateRecord
 {
@@ -19,7 +19,7 @@ class CreateUserSubscription extends CreateRecord
         // Obtener el usuario autenticado
         $currentUser = Auth::user();
 
-        if (!$currentUser) {
+        if (! $currentUser) {
             throw new \Exception('No se encontró un usuario autenticado.');
         }
 
@@ -29,7 +29,7 @@ class CreateUserSubscription extends CreateRecord
         // Obtener el Plan relacionado
         $plan = Plan::with('frequency')->find($data['service_id']); // Asegúrate de cargar la relación 'frequency'
 
-        if (!$plan) {
+        if (! $plan) {
             throw new \Exception('El servicio seleccionado no se encontró.');
         }
 
@@ -80,8 +80,7 @@ class CreateUserSubscription extends CreateRecord
         Notification::make()
             ->title('¡Suscripción creada con éxito!')
             ->success()
-            ->body('Te has suscrito al plan: ' . ($plan->name ?? 'Plan desconocido'))
+            ->body('Te has suscrito al plan: '.($plan->name ?? 'Plan desconocido'))
             ->send();
     }
-
 }

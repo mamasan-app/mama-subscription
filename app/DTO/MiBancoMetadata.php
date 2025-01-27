@@ -5,8 +5,11 @@ namespace App\DTO;
 class MiBancoMetadata
 {
     public string $code;
+
     public string $message;
+
     public string $reference;
+
     public string $id;
 
     public function __construct(array $data)

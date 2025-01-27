@@ -3,12 +3,11 @@
 namespace App\Filament\Store\Widgets;
 
 use App\Models\Subscription;
-use App\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Collection;
-use Filament\Facades\Filament;
 
 class SubscriptionChart extends ChartWidget
 {
@@ -55,7 +54,7 @@ class SubscriptionChart extends ChartWidget
         $currentStore = Filament::getTenant();
 
         // Si no hay una tienda en sesión, devolvemos datos vacíos
-        if (!$currentStore) {
+        if (! $currentStore) {
             return [
                 'datasets' => [
                     [
@@ -81,7 +80,7 @@ class SubscriptionChart extends ChartWidget
                 ];
             })
             ->groupBy('created_at')
-            ->map(fn(Collection $group, string $key) => [
+            ->map(fn (Collection $group, string $key) => [
                 'aggregate' => $group->count(),
                 'date' => $key,
             ])
@@ -107,11 +106,11 @@ class SubscriptionChart extends ChartWidget
             'datasets' => [
                 [
                     'label' => 'Suscripciones',
-                    'data' => $data->map(fn(array $value) => $value['aggregate']),
+                    'data' => $data->map(fn (array $value) => $value['aggregate']),
                 ],
             ],
             'labels' => $data
-                ->map(fn(array $value) => Carbon::createFromFormat('Y-m-d', $value['date'])?->format('M d')),
+                ->map(fn (array $value) => Carbon::createFromFormat('Y-m-d', $value['date'])?->format('M d')),
         ];
     }
 

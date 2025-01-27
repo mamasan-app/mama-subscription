@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use MagicLink\Actions\LoginAction;
 use MagicLink\MagicLink;
-use App\Models\User;
 
 class MagicLinkLoginController extends Controller
 {

@@ -6,7 +6,6 @@ namespace App\Http\Middleware\Store;
 
 use App\Filament\Store\Pages\Billing;
 use App\Models\Store;
-use App\Providers\Filament\StorePanelPanelProvider;
 use Closure;
 use Exception;
 use Filament\Facades\Filament;
@@ -33,16 +32,16 @@ class RedirectIfNotSubscribed
         }
 
         // Si no hay tienda, proceder normalmente
-        if (!$store) {
+        if (! $store) {
             return $next($request);
         }
 
         // Verificar el estado de la suscripción de la tienda
         if (
-            !$store->subscription ||
-            (!$store->subscription->is_active &&
-                !$store->subscription->is_on_trial &&
-                !$store->subscription->is_past_due)
+            ! $store->subscription ||
+            (! $store->subscription->is_active &&
+                ! $store->subscription->is_on_trial &&
+                ! $store->subscription->is_past_due)
         ) {
 
             // Redirigir al usuario a la página de facturación si no tiene una suscripción válida

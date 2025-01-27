@@ -19,7 +19,6 @@ enum PaymentTypeEnum: string implements HasLabel
         };
     }
 
-
     public function isBs(): bool
     {
         return in_array($this, [self::DirectDebit]);

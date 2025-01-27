@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentStatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Enums\PaymentStatusEnum;
 
 class Payment extends Model
 {
@@ -106,13 +106,13 @@ class Payment extends Model
      */
     public function hasStripeInvoice(): bool
     {
-        return !is_null($this->stripe_invoice_id);
+        return ! is_null($this->stripe_invoice_id);
     }
 
     /**
      * Sincronizar el estado del pago con una invoice de Stripe.
      *
-     * @param \Stripe\Invoice $invoice
+     * @param  \Stripe\Invoice  $invoice
      */
     public function syncWithStripeInvoice($invoice): void
     {
@@ -125,9 +125,6 @@ class Payment extends Model
 
     /**
      * Mapear el estado de una invoice de Stripe a un estado local.
-     *
-     * @param string $stripeStatus
-     * @return PaymentStatusEnum
      */
     protected function mapStripeInvoiceStatus(string $stripeStatus): PaymentStatusEnum
     {

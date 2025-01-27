@@ -2,10 +2,10 @@
 
 namespace App\Filament\Inputs;
 
+use App\Enums\IdentityPrefixEnum;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use App\Enums\IdentityPrefixEnum;
 
 class IdentityDocumentTextInput
 {
@@ -17,7 +17,7 @@ class IdentityDocumentTextInput
                     ->label('Tipo de Cédula')
                     ->options(
                         collect(IdentityPrefixEnum::cases())
-                            ->mapWithKeys(fn($prefix) => [$prefix->value => $prefix->getLabel()])
+                            ->mapWithKeys(fn ($prefix) => [$prefix->value => $prefix->getLabel()])
                             ->toArray()
                     )
                     ->required(),

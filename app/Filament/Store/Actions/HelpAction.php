@@ -18,7 +18,7 @@ class HelpAction
             ->modalHeading('Ayuda para Tienda')
             ->slideOver() // Usar una ventana deslizable
             ->iconButton() // Especifica que es un botón con ícono
-            //->icon('alert-circle') // Asegúrate de tener este ícono disponible en tu proyecto
+            // ->icon('alert-circle') // Asegúrate de tener este ícono disponible en tu proyecto
             ->modalWidth(MaxWidth::TwoExtraLarge) // Tamaño de la ventana modal
             ->modalSubmitAction(false) // Deshabilitar el botón de submit en la ayuda
             ->modalCancelAction(false); // Deshabilitar el botón de cancelar en la ayuda

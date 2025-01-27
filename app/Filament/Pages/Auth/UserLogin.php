@@ -2,15 +2,15 @@
 
 namespace App\Filament\Pages\Auth;
 
+use App\Models\User;
+use App\Notifications\MagicLinkNotification;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
-use Filament\Pages\Auth\Login as BaseUserLogin;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Filament\Notifications\Notification;
-use App\Models\User;
+use Filament\Pages\Auth\Login as BaseUserLogin;
 use MagicLink\Actions\LoginAction;
 use MagicLink\MagicLink;
-use App\Notifications\MagicLinkNotification;
 
 class UserLogin extends BaseUserLogin
 {
@@ -38,7 +38,7 @@ class UserLogin extends BaseUserLogin
         $data = $this->form->getState();
 
         // Validaciones adicionales y notificaciones
-        if (!$this->validateAndNotify($data)) {
+        if (! $this->validateAndNotify($data)) {
             return null; // Detener flujo si hay errores
         }
 
@@ -83,7 +83,7 @@ class UserLogin extends BaseUserLogin
         }
 
         // Validar formato de correo electrónico
-        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+        if (! filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             Notification::make()
                 ->title('Error de validación')
                 ->body('El correo electrónico no tiene un formato válido.')
@@ -93,7 +93,7 @@ class UserLogin extends BaseUserLogin
         }
 
         // Validar si el correo existe en la base de datos
-        if (!User::where('email', $data['email'])->exists()) {
+        if (! User::where('email', $data['email'])->exists()) {
             Notification::make()
                 ->title('Correo no encontrado')
                 ->body('El correo electrónico ingresado no está registrado en el sistema.')
@@ -102,7 +102,7 @@ class UserLogin extends BaseUserLogin
             $errors = true;
         }
 
-        return !$errors; // Retorna true si no hay errores
+        return ! $errors; // Retorna true si no hay errores
     }
 
     /**

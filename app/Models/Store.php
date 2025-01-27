@@ -2,20 +2,23 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Store extends Model
 {
     use HasFactory;
 
     protected $table = 'stores';
+
     protected $primaryKey = 'id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [
@@ -45,10 +48,9 @@ class Store extends Model
     public function url(): Attribute
     {
         return Attribute::make(
-            get: fn() => 'https://' . $this->slug . '.mama-subscription.localhost',
+            get: fn () => 'https://'.$this->slug.'.mama-subscription.localhost',
         );
     }
-
 
     // Relación con los usuarios (owner_store, employees, customers)
     public function users()
@@ -84,7 +86,7 @@ class Store extends Model
     public function logoUrl(): Attribute
     {
         return Attribute::make(
-            get: fn() => $this->logo
+            get: fn () => $this->logo
             ? Storage::disk('stores')->url($this->logo)  // Obtener la URL pública del logo
             : asset('images/default-logo.png'),  // Si no hay logo, usar una imagen por defecto
         );
@@ -102,12 +104,8 @@ class Store extends Model
         );
     }
 
-
     public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class, 'store_id');
     }
-
-
-
 }

@@ -3,12 +3,10 @@
 namespace App\Filament\Store\Resources\PlanResource\Pages;
 
 use App\Filament\Store\Resources\PlanResource;
-use Filament\Actions;
-use Filament\Resources\Pages\CreateRecord;
 use App\Models\Plan;
-use Illuminate\Support\Facades\Session;
 use Filament\Facades\Filament;
-
+use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Support\Facades\Session;
 
 class CreatePlan extends CreateRecord
 {
@@ -38,5 +36,4 @@ class CreatePlan extends CreateRecord
 
         return $data;
     }
-
 }

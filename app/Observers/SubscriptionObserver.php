@@ -21,7 +21,7 @@ class SubscriptionObserver
             // Crear una notificación con título y mensaje personalizado
             Notification::make()
                 ->title('Subscripción Creada')
-                ->body('Recuerda pagar el servicio antes del ' . $subscription->expires_at->format('d/m/Y'))
+                ->body('Recuerda pagar el servicio antes del '.$subscription->expires_at->format('d/m/Y'))
                 ->sendToDatabase($client);
         }
     }

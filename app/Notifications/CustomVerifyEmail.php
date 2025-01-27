@@ -16,8 +16,6 @@ class CustomVerifyEmail extends Notification
 
     /**
      * Crear una nueva instancia de la notificación.
-     *
-     * @param string $panel
      */
     public function __construct(string $panel)
     {

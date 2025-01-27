@@ -30,7 +30,7 @@ class ViewStore extends ViewRecord
     {
         return [
             Actions\Action::make('Crear Suscripción')
-                ->url(fn() => \App\Filament\App\Resources\UserSubscriptionResource::getUrl('create', [
+                ->url(fn () => \App\Filament\App\Resources\UserSubscriptionResource::getUrl('create', [
                     'store_id' => $this->record->id,
                 ]))
                 ->color('primary')

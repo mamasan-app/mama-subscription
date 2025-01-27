@@ -2,13 +2,12 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Filament\Facades\Filament;
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Plan;
+use App\Models\Subscription;
 use App\Observers\PlanObserver;
 use App\Observers\SubscriptionObserver;
-use App\Models\Subscription;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //Model::unguard(true);
+        // Model::unguard(true);
 
         Plan::observe(PlanObserver::class);
         Subscription::observe(SubscriptionObserver::class);

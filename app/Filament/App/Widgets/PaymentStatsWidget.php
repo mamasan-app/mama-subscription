@@ -2,10 +2,10 @@
 
 namespace App\Filament\App\Widgets;
 
-use Filament\Widgets\StatsOverviewWidget as BaseWidget;
-use Filament\Widgets\StatsOverviewWidget\Stat;
 use App\Models\Payment;
 use App\Models\Subscription;
+use Filament\Widgets\StatsOverviewWidget as BaseWidget;
+use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class PaymentStatsWidget extends BaseWidget
 {
@@ -47,15 +47,15 @@ class PaymentStatsWidget extends BaseWidget
             ->first();
 
         $nextPaymentStat = $nextPayment
-            ? Stat::make('Próximo Pago', '$' . number_format($nextPayment->service_price_cents / 100, 2))
+            ? Stat::make('Próximo Pago', '$'.number_format($nextPayment->service_price_cents / 100, 2))
                 ->description($nextPayment->renews_at->format('d/m/Y')) // Coloca la fecha debajo
             : Stat::make('Próximo Pago', '$0.00') // Cambiamos el monto a $0.00
                 ->description('No tiene pagos pendientes'); // Texto pequeño como la fecha
 
         return [
-            Stat::make('Total Pagado', '$' . number_format($totalPaidDollars, 2)),
-            Stat::make('Pagos Próximos 7 días', '$' . number_format($upcomingWeekTotalDollars, 2)),
-            Stat::make('Pendientes y Pruebas', '$' . number_format($totalPendingDollars, 2)),
+            Stat::make('Total Pagado', '$'.number_format($totalPaidDollars, 2)),
+            Stat::make('Pagos Próximos 7 días', '$'.number_format($upcomingWeekTotalDollars, 2)),
+            Stat::make('Pendientes y Pruebas', '$'.number_format($totalPendingDollars, 2)),
             $nextPaymentStat,
         ];
     }

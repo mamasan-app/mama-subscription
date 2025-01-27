@@ -3,7 +3,6 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -13,14 +12,14 @@ class WelcomeCustomerNotification extends Notification
 
     /**
      * URL del enlace mágico para inicio de sesión.
-     * 
+     *
      * @var string
      */
     protected $magicLinkUrl;
 
     /**
      * Nombre de la tienda.
-     * 
+     *
      * @var string
      */
     protected $storeName;
@@ -50,13 +49,13 @@ class WelcomeCustomerNotification extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('¡Bienvenido al Sistema de ' . $this->storeName . '!')
-            ->greeting('¡Hola ' . $notifiable->first_name . '!')
-            ->line('Gracias por unirte al sistema de ' . $this->storeName . '. Estamos emocionados de tenerte con nosotros.')
+            ->subject('¡Bienvenido al Sistema de '.$this->storeName.'!')
+            ->greeting('¡Hola '.$notifiable->first_name.'!')
+            ->line('Gracias por unirte al sistema de '.$this->storeName.'. Estamos emocionados de tenerte con nosotros.')
             ->action('Acceder a tu Cuenta', $this->magicLinkUrl)
             ->line('Haz clic en el botón para acceder a tu cuenta fácilmente.')
             ->line('Si tienes alguna duda, no dudes en contactarnos.')
-            ->salutation('Atentamente, el equipo de ' . $this->storeName . '.');
+            ->salutation('Atentamente, el equipo de '.$this->storeName.'.');
     }
 
     /**

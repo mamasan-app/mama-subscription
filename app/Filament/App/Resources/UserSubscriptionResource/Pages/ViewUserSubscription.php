@@ -34,7 +34,7 @@ class ViewUserSubscription extends ViewRecord
         return [
             Actions\Action::make('Pagar')
                 ->url(
-                    fn($record): string => $record->payments->flatMap->transactions->isEmpty()
+                    fn ($record): string => $record->payments->flatMap->transactions->isEmpty()
                     ? \App\Filament\App\Resources\UserSubscriptionResource\Pages\UserSubscriptionPayment::getUrl(['record' => $record])
                     : '/'
                 )
@@ -42,7 +42,7 @@ class ViewUserSubscription extends ViewRecord
                 ->icon('heroicon-o-currency-dollar')
                 ->label('Pagar')
                 ->button()
-                ->visible(fn($record) => $record->stripe_subscription_id === null),
+                ->visible(fn ($record) => $record->stripe_subscription_id === null),
         ];
     }
 }

@@ -25,6 +25,7 @@ class ExchangeRate extends Model
     public function convertToVE(int $amountUsdCents): string
     {
         $totalUsd = $amountUsdCents / 100;
+
         return number_format($totalUsd * $this->rate, 2);  // Conversión de USD a VE usando la tasa de cambio
     }
 }

@@ -2,30 +2,29 @@
 
 namespace App\Filament\App\Resources\UserSubscriptionResource\Pages;
 
-use App\Filament\App\Resources\UserSubscriptionResource;
-use App\Models\Subscription;
-use App\Models\Payment;
-use App\Models\Transaction;
-use App\Enums\PhonePrefixEnum;
-use App\Enums\TransactionTypeEnum;
-use App\Enums\PaymentStatusEnum;
-use App\Enums\TransactionStatusEnum;
 use App\Enums\BankEnum;
-use App\Services\StripeService;
+use App\Enums\PhonePrefixEnum;
+use App\Enums\TransactionStatusEnum;
+use App\Enums\TransactionTypeEnum;
+use App\Filament\App\Resources\UserSubscriptionResource;
 use App\Jobs\MonitorTransactionStatus;
+use App\Models\Payment;
+use App\Models\Subscription;
+use App\Models\Transaction;
+use App\Services\StripeService;
+use Exception;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Pages\Actions\Action;
 use Filament\Resources\Pages\Page;
-use Filament\Notifications\Notification;
-use Filament\Forms\Components\TextInput;
 use Illuminate\Support\Facades\Http;
-use Exception;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Grid;
-
 
 class UserSubscriptionPayment extends Page
 {
     protected static string $resource = UserSubscriptionResource::class;
+
     protected static string $view = 'filament.pages.user-subscription-payment';
 
     public function getTitle(): string
@@ -34,10 +33,15 @@ class UserSubscriptionPayment extends Page
     }
 
     public Subscription $subscription;
+
     public $bank;
+
     public $phone;
+
     public $identity;
+
     public $amount;
+
     public $otp = null;
 
     public $amountInBs; // Monto en bolívares
@@ -49,14 +53,14 @@ class UserSubscriptionPayment extends Page
         $this->amountInBs = $this->convertToBs($this->amount); // Convertir a bolívares
         $this->otp = null;
 
-        if ($filter = request()->query('success') === "1") {
+        if ($filter = request()->query('success') === '1') {
             Notification::make()
                 ->title('Pago exitoso')
                 ->body('Tu suscripción se activó correctamente.')
                 ->success()
                 ->send();
             redirect(UserSubscriptionResource::getUrl('index'));
-        } elseif ($filter = request()->query('success') === "0") {
+        } elseif ($filter = request()->query('success') === '0') {
             Notification::make()
                 ->title('Pago cancelado')
                 ->body('No se pudo completar el pago de tu suscripción. Inténtalo nuevamente.')
@@ -72,9 +76,9 @@ class UserSubscriptionPayment extends Page
                 'Content-Type' => 'application/json',
                 'Authorization' => $this->generateBcvToken(),
             ])->post(config('banking.tasa_bcv'), [
-                        'Moneda' => 'USD',
-                        'Fechavalor' => now()->format('Y-m-d'),
-                    ]);
+                'Moneda' => 'USD',
+                'Fechavalor' => now()->format('Y-m-d'),
+            ]);
 
             $rate = $response->json()['tipocambio'] ?? null;
 
@@ -86,19 +90,20 @@ class UserSubscriptionPayment extends Page
         } catch (\Exception $e) {
             Notification::make()
                 ->title('Error al obtener la tasa')
-                ->body('No se pudo obtener la tasa de cambio del BCV. Detalles: ' . $e->getMessage())
+                ->body('No se pudo obtener la tasa de cambio del BCV. Detalles: '.$e->getMessage())
                 ->danger()
                 ->send();
+
             return null;
         }
     }
 
     protected function generateBcvToken()
     {
-        $data = now()->format('Y-m-d') . 'USD';
+        $data = now()->format('Y-m-d').'USD';
+
         return hash_hmac('sha256', $data, config('banking.commerce_id'));
     }
-
 
     public function createStripeSession(StripeService $stripeService)
     {
@@ -151,7 +156,7 @@ class UserSubscriptionPayment extends Page
             // Mostrar notificación de error
             Notification::make()
                 ->title('Error al crear la sesión de Stripe')
-                ->body('Ocurrió un problema al crear la sesión de Stripe. Detalles: ' . $e->getMessage())
+                ->body('Ocurrió un problema al crear la sesión de Stripe. Detalles: '.$e->getMessage())
                 ->danger()
                 ->send();
         }
@@ -181,12 +186,13 @@ class UserSubscriptionPayment extends Page
         try {
             $otpResponse = $this->generateOtp();
 
-            if (!isset($otpResponse['success']) || !$otpResponse['success']) {
+            if (! isset($otpResponse['success']) || ! $otpResponse['success']) {
                 Notification::make()
                     ->title('Error')
                     ->body('No se pudo generar el OTP. Intente nuevamente.')
                     ->danger()
                     ->send();
+
                 return;
             }
 
@@ -206,7 +212,6 @@ class UserSubscriptionPayment extends Page
         }
     }
 
-
     protected function generateOtp()
     {
         // Transformar todos los valores a string
@@ -217,7 +222,7 @@ class UserSubscriptionPayment extends Page
 
         // Concatenar los datos para el HMAC-SHA256
         $stringToHash = "{$bank}{$amount}{$phone}{$identity}";
-        //dd('String a Hashear', $stringToHash);
+        // dd('String a Hashear', $stringToHash);
 
         // Generar el token HMAC-SHA256
         $tokenAuthorization = hash_hmac(
@@ -232,12 +237,12 @@ class UserSubscriptionPayment extends Page
             'Authorization' => $tokenAuthorization,
             'Commerce' => config('banking.commerce_id'), // Verificar este valor en la configuración
         ])->post(config('banking.otp_url'), [
-                    'Banco' => $bank, // Código del banco (4 dígitos)
-                    'Monto' => $amount, // Cadena con dos decimales
-                    'Telefono' => $phone, // Teléfono completo (11 dígitos)
-                    'Cedula' => $identity, // Cédula con prefijo
-                ]);
-        //dd('Respuesta de la API', $response->json());
+            'Banco' => $bank, // Código del banco (4 dígitos)
+            'Monto' => $amount, // Cadena con dos decimales
+            'Telefono' => $phone, // Teléfono completo (11 dígitos)
+            'Cedula' => $identity, // Cédula con prefijo
+        ]);
+        // dd('Respuesta de la API', $response->json());
 
         return $response->json();
     }
@@ -252,6 +257,7 @@ class UserSubscriptionPayment extends Page
                 ->body('Debe ingresar un OTP para confirmar el pago.')
                 ->danger()
                 ->send();
+
             return;
         }
 
@@ -318,14 +324,14 @@ class UserSubscriptionPayment extends Page
             'Authorization' => $tokenAuthorization,
             'Commerce' => config('banking.commerce_id'),
         ])->post(config('banking.debit_url'), [
-                    'Banco' => $bank,
-                    'Monto' => $amount,
-                    'Telefono' => $phone,
-                    'Cedula' => $identity,
-                    'Nombre' => $nombre,
-                    'Concepto' => 'pago de suscripcion',
-                    'OTP' => $otp,
-                ]);
+            'Banco' => $bank,
+            'Monto' => $amount,
+            'Telefono' => $phone,
+            'Cedula' => $identity,
+            'Nombre' => $nombre,
+            'Concepto' => 'pago de suscripcion',
+            'OTP' => $otp,
+        ]);
 
         Transaction::create([
             'from_type' => get_class($user),
@@ -344,7 +350,6 @@ class UserSubscriptionPayment extends Page
         return $response->json();
 
     }
-
 
     protected function getActions(): array
     {
@@ -371,7 +376,7 @@ class UserSubscriptionPayment extends Page
                                 ->label('Banco')
                                 ->options(
                                     collect(BankEnum::cases())
-                                        ->mapWithKeys(fn($bank) => [$bank->code() => $bank->getLabel()])
+                                        ->mapWithKeys(fn ($bank) => [$bank->code() => $bank->getLabel()])
                                         ->toArray()
                                 )
                                 ->required(),
@@ -381,7 +386,7 @@ class UserSubscriptionPayment extends Page
                                         ->label('Prefijo Telefónico')
                                         ->options(
                                             collect(PhonePrefixEnum::cases())
-                                                ->mapWithKeys(fn($prefix) => [$prefix->value => $prefix->getLabel()])
+                                                ->mapWithKeys(fn ($prefix) => [$prefix->value => $prefix->getLabel()])
                                                 ->toArray()
                                         )
                                         ->required(),
@@ -398,7 +403,7 @@ class UserSubscriptionPayment extends Page
 
                             $user->bankAccounts()->create([
                                 'bank_code' => $data['bank'],
-                                'phone_number' => $data['phone_prefix'] . $data['phone_number'],
+                                'phone_number' => $data['phone_prefix'].$data['phone_number'],
                                 'identity_number' => str_replace('-', '', $user->identity_document),
                             ]);
 
@@ -408,7 +413,7 @@ class UserSubscriptionPayment extends Page
                                 ->success()
                                 ->send();
                         })
-                        ->hidden(fn() => $this->otp !== null), // Ocultar este botón si el OTP fue generado.
+                        ->hidden(fn () => $this->otp !== null), // Ocultar este botón si el OTP fue generado.
 
                     // Botón para usar una cuenta existente
                     Action::make('useExistingAccount')
@@ -420,8 +425,8 @@ class UserSubscriptionPayment extends Page
                                 ->options(
                                     auth()->user()->bankAccounts()
                                         ->get()
-                                        ->mapWithKeys(fn($account) => [
-                                            $account->id => "{$account->bank_code} - {$account->phone_number} - {$account->identity_number}"
+                                        ->mapWithKeys(fn ($account) => [
+                                            $account->id => "{$account->bank_code} - {$account->phone_number} - {$account->identity_number}",
                                         ])
                                         ->toArray()
                                 )
@@ -441,7 +446,7 @@ class UserSubscriptionPayment extends Page
                                 'identity' => $bankAccount->identity_number,
                             ]);
                         })
-                        ->hidden(fn() => $this->otp !== null), // Ocultar este botón si el OTP fue generado.
+                        ->hidden(fn () => $this->otp !== null), // Ocultar este botón si el OTP fue generado.
 
                     // Botón para confirmar OTP
                     Action::make('confirmOtp')
@@ -454,7 +459,7 @@ class UserSubscriptionPayment extends Page
                         ])
                         ->action(function (array $data) {
                             $this->otp = $data['otp']; // Asignar el OTP ingresado por el usuario.
-                
+
                             // Aquí puedes usar los datos del submitBolivaresPayment:
                             $this->confirmOtp([
                                 'bank' => $this->bank,
@@ -464,7 +469,7 @@ class UserSubscriptionPayment extends Page
                                 'otp' => $this->otp,
                             ]);
                         })
-                        ->visible(fn() => $this->otp !== null), // Mostrar solo si el OTP ha sido generado.
+                        ->visible(fn () => $this->otp !== null), // Mostrar solo si el OTP ha sido generado.
                 ]),
         ];
     }

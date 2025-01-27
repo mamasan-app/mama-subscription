@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Transaction;
-use App\Jobs\MonitorTransactionStatus;
-use Illuminate\Console\Command;
 use App\Enums\TransactionStatusEnum;
+use App\Jobs\MonitorTransactionStatus;
+use App\Models\Transaction;
+use Illuminate\Console\Command;
 
 class ProcessPendingTransactions extends Command
 {
@@ -33,6 +33,7 @@ class ProcessPendingTransactions extends Command
 
         if ($transactions->isEmpty()) {
             $this->info('No hay transacciones en estado "Processing".');
+
             return;
         }
 

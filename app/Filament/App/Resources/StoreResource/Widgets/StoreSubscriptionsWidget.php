@@ -2,13 +2,11 @@
 
 namespace App\Filament\App\Resources\StoreResource\Widgets;
 
+use App\Models\Subscription;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Subscription;
-use Filament\Tables\Actions\Action;
 
 class StoreSubscriptionsWidget extends BaseWidget
 {
@@ -40,7 +38,7 @@ class StoreSubscriptionsWidget extends BaseWidget
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
                     ->sortable()
-                    ->formatStateUsing(fn($state) => $state?->getLabel()),
+                    ->formatStateUsing(fn ($state) => $state?->getLabel()),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Fecha de Creación')
@@ -57,12 +55,12 @@ class StoreSubscriptionsWidget extends BaseWidget
             ])
             ->actions([
                 Action::make('Pagar')
-                    ->url(fn(Subscription $record): string => \App\Filament\App\Resources\UserSubscriptionResource\Pages\UserSubscriptionPayment::getUrl(['record' => $record]))
+                    ->url(fn (Subscription $record): string => \App\Filament\App\Resources\UserSubscriptionResource\Pages\UserSubscriptionPayment::getUrl(['record' => $record]))
                     ->color('success')
                     ->icon('heroicon-o-currency-dollar')
                     ->label('Pagar')
                     ->button()
-                    ->visible(fn(Subscription $record) => $record->payments->flatMap->transactions->isEmpty()), // Mostrar solo si no hay transacciones
+                    ->visible(fn (Subscription $record) => $record->payments->flatMap->transactions->isEmpty()), // Mostrar solo si no hay transacciones
             ]);
     }
 
@@ -80,7 +78,6 @@ class StoreSubscriptionsWidget extends BaseWidget
             ->pluck('id');
 
         $intersectedSubscriptions = $userSubscriptions->intersect($storeSubscriptions);
-
 
         return Subscription::query()
             ->whereIn('id', $intersectedSubscriptions);
