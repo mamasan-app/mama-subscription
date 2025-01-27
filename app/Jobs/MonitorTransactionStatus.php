@@ -87,8 +87,10 @@ class MonitorTransactionStatus implements ShouldQueue
 
                 if ($subscription && $subscription->isOnTrial) {
                     $renewDate = $currentDate->addDays($subscription->frequency_days)->toDateString();
-                    $expireDate = $currentDate->addDays($subscription->frequency_days)->addDays($subscription->service_grace_period);
+                    $expireDate = $currentDate->addDays($subscription->frequency_days)->addDays($subscription->service_grace_period)->toDateString();
+                    
                     $plan = $subscription->service;
+                    
                     if ($plan) {
 
 
