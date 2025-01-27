@@ -98,7 +98,7 @@ class MonitorTransactionStatus implements ShouldQueue
                             $subscription->update([
                                 'status' => SubscriptionStatusEnum::Active,
                                 'trial_ends_at' => $currentDate->toDateString(), // Finaliza el periodo de prueba
-                                'renews_at' => now()->setTimezone('America/Caracas')->addDays($subscription->frequency_days)->toDateString(),
+                                'renews_at' => $renewDate,
                                 'expires_at' => $expireDate,
                                 'ends_at' => $endDate,
                             ]);
