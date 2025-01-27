@@ -92,6 +92,9 @@ class MonitorTransactionStatus implements ShouldQueue
                             // Plan finito: calcular la fecha de expiración
                             $endDate = $currentDate->copy()->addDays($plan->duration)->toDateString();
 
+                            dd($currentDate->toDateString());
+                            
+
                             $subscription->update([
                                 'status' => SubscriptionStatusEnum::Active,
                                 'trial_ends_at' => $currentDate->toDateString(), // Finaliza el periodo de prueba
