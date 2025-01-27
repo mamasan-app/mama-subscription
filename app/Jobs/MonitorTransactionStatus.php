@@ -68,6 +68,7 @@ class MonitorTransactionStatus implements ShouldQueue
 
             $payment = $transaction->payment;
             $subscription = $payment->subscription;
+            $currentDate = now()->setTimezone('America/Caracas');
 
             if ($statusCode === 'ACCP') {
 
@@ -82,18 +83,18 @@ class MonitorTransactionStatus implements ShouldQueue
 
                 if ($subscription && $subscription->isOnTrial) {
                     // Calcular las fechas de forma independiente
-                    $renewDate = now()->setTimezone('America/Caracas')->addDays($subscription->frequency_days)->toDateString();
-                    $expireDate = now()->setTimezone('America/Caracas')->addDays($subscription->frequency_days + $subscription->service_grace_period)->toDateString();
+                    $renewDate = $currentDate->copy()->addDays($subscription->frequency_days)->toDateString();
+                    $expireDate = $currentDate->copy()->addDays($subscription->frequency_days + $subscription->service_grace_period)->toDateString();
                     $plan = $subscription->service;
 
                     if ($plan) {
                         if (!$plan->infinite) {
                             // Plan finito: calcular la fecha de expiración
-                            $endDate = now()->setTimezone('America/Caracas')->addDays($plan->duration)->toDateString();
+                            $endDate = $currentDate->copy()->addDays($plan->duration)->toDateString();
 
                             $subscription->update([
                                 'status' => SubscriptionStatusEnum::Active,
-                                'trial_ends_at' => now()->setTimezone('America/Caracas'), // Finaliza el periodo de prueba
+                                'trial_ends_at' => $currentDate->copy(), // Finaliza el periodo de prueba
                                 'renews_at' => $renewDate,
                                 'expires_at' => $expireDate,
                                 'ends_at' => $endDate,
@@ -108,7 +109,7 @@ class MonitorTransactionStatus implements ShouldQueue
                             // Plan infinito: no tiene fecha de expiración
                             $subscription->update([
                                 'status' => SubscriptionStatusEnum::Active,
-                                'trial_ends_at' => now()->setTimezone('America/Caracas')->toDateString(), // Finaliza el periodo de prueba
+                                'trial_ends_at' => $currentDate->copy()->toDateString(), // Finaliza el periodo de prueba
                                 'renews_at' => $renewDate,
                                 'expires_at' => null, // Infinito
                                 'ends_at' => null,
@@ -143,13 +144,13 @@ class MonitorTransactionStatus implements ShouldQueue
                     'status' => PaymentStatusEnum::Failed,
                 ]);
 
-                if ($subscription && !$subscription->isOnTrial && now()->setTimezone('America/Caracas')->greaterThanOrEqualTo($subscription->expires_at)) {
+                if ($subscription && !$subscription->isOnTrial && $currentDate->copy()->greaterThanOrEqualTo($subscription->expires_at)) {
                     $subscription->update([
                         'status' => SubscriptionStatusEnum::Cancelled,
                     ]);
-                } else if ($subscription && $subscription->isActive && now()->setTimezone('America/Caracas')->greaterThan($subscription->renews_at)) {
+                } else if ($subscription && $subscription->isActive && $currentDate->copy()->greaterThan($subscription->renews_at)) {
 
-                    if (now()->setTimezone('America/Caracas')->lessThan($subscription->expires_at)) {
+                    if ($currentDate->copy()->lessThan($subscription->expires_at)) {
                         $subscription->update([
                             'status' => SubscriptionStatusEnum::PastDue,
                         ]);
