@@ -83,21 +83,19 @@ class MonitorTransactionStatus implements ShouldQueue
                 ]);
 
                 if ($subscription && $subscription->isOnTrial) {
-                    $renewDate = $currentDate->clone()->addDays($subscription->frequency_days)->toDateString();
-                    $expireDate = $currentDate->clone()->addDays($subscription->frequency_days)->addDays($subscription->service_grace_period)->toDateString();
-                    
+                    // Calcular las fechas de forma independiente
+                    $renewDate = $currentDate->copy()->addDays($subscription->frequency_days)->toDateString();
+                    $expireDate = $currentDate->copy()->addDays($subscription->frequency_days + $subscription->service_grace_period)->toDateString();
                     $plan = $subscription->service;
-                    
+
                     if ($plan) {
                         if (!$plan->infinite) {
                             // Plan finito: calcular la fecha de expiración
-                            $endDate = $currentDate->addDays($plan->duration)->toDateString();
-
-
+                            $endDate = $currentDate->copy()->addDays($plan->duration)->toDateString();
 
                             $subscription->update([
                                 'status' => SubscriptionStatusEnum::Active,
-                                'trial_ends_at' => $currentDate, // Finaliza el periodo de prueba
+                                'trial_ends_at' => $currentDate->toDateString(), // Finaliza el periodo de prueba
                                 'renews_at' => $renewDate,
                                 'expires_at' => $expireDate,
                                 'ends_at' => $endDate,
@@ -112,10 +110,10 @@ class MonitorTransactionStatus implements ShouldQueue
                             // Plan infinito: no tiene fecha de expiración
                             $subscription->update([
                                 'status' => SubscriptionStatusEnum::Active,
-                                'trial_ends_at' => $currentDate, // Finaliza el periodo de prueba
+                                'trial_ends_at' => $currentDate->toDateString(), // Finaliza el periodo de prueba
                                 'renews_at' => $renewDate,
-                                'expires_at' => $expireDate, // Infinito
-                                'end_at' => null,
+                                'expires_at' => null, // Infinito
+                                'ends_at' => null,
                             ]);
 
                             Notification::make()
@@ -128,15 +126,14 @@ class MonitorTransactionStatus implements ShouldQueue
                         throw new \Exception("Plan no encontrado para la suscripción: {$subscription->id}");
                     }
                 } else if ($subscription && !$subscription->isOnTrial) {
-                    $renewDate = $subscription->renews_at->addDays($subscription->frequency_days);
-                    $expireDate = $renewDate->addDays($subscription->service_grace_period);
+                    $renewDate = $subscription->renews_at->copy()->addDays($subscription->frequency_days)->toDateString();
+                    $expireDate = $subscription->renews_at->copy()->addDays($subscription->frequency_days + $subscription->service_grace_period)->toDateString();
 
                     $subscription->update([
                         'status' => SubscriptionStatusEnum::Active,
-                        'renews_at' => $renewDate->toDateString(),
-                        'expires_at' => $expireDate->toDateString(),
+                        'renews_at' => $renewDate,
+                        'expires_at' => $expireDate,
                     ]);
-
                 }
             } else {
                 $transaction->update([
