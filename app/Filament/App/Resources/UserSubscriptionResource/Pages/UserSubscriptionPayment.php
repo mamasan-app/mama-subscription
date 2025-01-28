@@ -75,12 +75,15 @@ class UserSubscriptionPayment extends Page
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => $this->generateBcvToken(),
+                'Commerce' => config('banking.commerce_id'),
             ])->post(config('banking.tasa_bcv'), [
                 'Moneda' => 'USD',
                 'Fechavalor' => now()->format('Y-m-d'),
             ]);
 
             $rate = $response->json()['tipocambio'] ?? null;
+
+            dd($response->json());
 
             if ($rate) {
                 return round($amountInUSD * $rate, 2);
