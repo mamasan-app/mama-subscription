@@ -83,7 +83,7 @@ class UserSubscriptionPayment extends Page
 
             $rate = $response->json()['tipocambio'] ?? null;
 
-            dd($response->json());
+            //dd($response->json());
 
             if ($rate) {
                 return round($amountInUSD * $rate, 2);
@@ -219,7 +219,7 @@ class UserSubscriptionPayment extends Page
     {
         // Transformar todos los valores a string
         $bank = (string) $this->bank;
-        $amount = (string) number_format((float) $this->amount, 2, '.', ''); // Convertir a string con dos decimales
+        $amount = (string) number_format((float) $this->amountInBs, 2, '.', ''); // Convertir a string con dos decimales
         $phone = (string) $this->phone;
         $identity = (string) $this->identity;
 
@@ -309,7 +309,7 @@ class UserSubscriptionPayment extends Page
 
         $nombre = $user->name ?? "{$user->first_name} {$user->last_name}"; // Obtener el nombre completo
         $bank = (string) $this->bank;
-        $amount = (string) number_format((float) $this->amount, 2, '.', ''); // Convertir a string con dos decimales
+        $amount = (string) number_format((float) $this->amountInBs, 2, '.', ''); // Convertir a string con dos decimales
         $phone = (string) $this->phone;
         $identity = (string) $this->identity;
         $otp = (string) $this->otp;
@@ -436,7 +436,7 @@ class UserSubscriptionPayment extends Page
                                 ->required(),
                             TextInput::make('amountInBs')
                                 ->label('Monto en Bolívares')
-                                ->default($this->amount) // Usa default() para establecer el valor inicial
+                                ->default($this->amountInBs) // Usa default() para establecer el valor inicial
                                 ->disabled(), // Deshabilitar para que sea de solo lectura
 
                         ])
@@ -468,7 +468,7 @@ class UserSubscriptionPayment extends Page
                                 'bank' => $this->bank,
                                 'phone' => $this->phone,
                                 'identity' => $this->identity,
-                                'amount' => $this->amount,
+                                'amount' => $this->amountInBs,
                                 'otp' => $this->otp,
                             ]);
                         })
