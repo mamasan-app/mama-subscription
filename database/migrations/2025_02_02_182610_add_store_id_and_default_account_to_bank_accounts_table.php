@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::table('bank_accounts', function (Blueprint $table) {
             // Añadir columna store_id como nullable
-            $table->foreignId('store_id')
+            $table->foreignUlid('store_id')
                 ->nullable() // Permitir valores null
                 ->constrained('stores') // Relación con la tabla stores
                 ->nullOnDelete(); // Si se elimina la tienda, la columna se establece como null
