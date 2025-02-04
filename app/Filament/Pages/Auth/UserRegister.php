@@ -21,6 +21,10 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
+use App\Enums\BankEnum;
+use App\Enums\PhonePrefixEnum;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Select;
 
 class UserRegister extends FilamentRegister
 {
@@ -81,7 +85,7 @@ class UserRegister extends FilamentRegister
                                 ->label('Contraseña')
                                 ->placeholder('********')
                                 ->rule(Password::default())
-                                ->dehydrateStateUsing(fn ($state) => Hash::make($state))
+                                ->dehydrateStateUsing(fn($state) => Hash::make($state))
                                 ->same('password_confirmation')
                                 ->validationAttribute(__('filament-panels::pages/auth/register.form.password.validation_attribute')),
 
@@ -133,6 +137,7 @@ class UserRegister extends FilamentRegister
                     Wizard\Step::make('Información de la Tienda')
                         ->columns(2)
                         ->schema([
+                            // Información general de la tienda
                             TextInput::make('store_name')
                                 ->label('Nombre de la Tienda')
                                 ->required(),
@@ -148,7 +153,7 @@ class UserRegister extends FilamentRegister
                                 ->required(),
 
                             Textarea::make('long_address')
-                                ->label('Direccion del Negocio')
+                                ->label('Dirección del Negocio')
                                 ->required()
                                 ->placeholder('Av. 1 con Calle 1, Edificio 1, Piso 1, Apartamento 1'),
 
@@ -163,6 +168,45 @@ class UserRegister extends FilamentRegister
                                 ->disk(config('filesystems.stores'))
                                 ->maxFiles(1)
                                 ->placeholder('certificate.jpg'),
+
+                            // Sección para la cuenta bancaria
+                            \Filament\Forms\Components\Section::make('Información de la Cuenta Bancaria')
+                                ->description('Por favor, proporciona los datos de la cuenta bancaria de la tienda.')
+                                ->schema([
+                                    Select::make('bank_code')
+                                        ->label('Banco')
+                                        ->options(
+                                            collect(BankEnum::cases())
+                                                ->mapWithKeys(fn($bank) => [$bank->code() => $bank->getLabel()])
+                                                ->toArray()
+                                        )
+                                        ->required(),
+
+                                    Grid::make(2)
+                                        ->schema([
+                                            Select::make('phone_prefix')
+                                                ->label('Prefijo Telefónico')
+                                                ->options(
+                                                    collect(PhonePrefixEnum::cases())
+                                                        ->mapWithKeys(fn($prefix) => [$prefix->value => $prefix->getLabel()])
+                                                        ->toArray()
+                                                )
+                                                ->required(),
+
+                                            TextInput::make('phone_number')
+                                                ->label('Número Telefónico')
+                                                ->numeric()
+                                                ->minLength(7)
+                                                ->maxLength(7)
+                                                ->required(),
+                                        ]),
+
+                                    TextInput::make('store_identity_number')
+                                        ->label('Número de Identidad')
+                                        ->required()
+                                        ->placeholder('V-12345678'),
+                                ])
+                                ->columns(2), // Organiza los campos en dos columnas dentro de la sección
                         ]),
                 ])->submitAction(new HtmlString(Blade::render(<<<'BLADE'
                     <x-filament::button
@@ -190,7 +234,7 @@ class UserRegister extends FilamentRegister
         }
 
         // Verificar si el número de teléfono ya existe
-        if (! empty($data['phone_number']) && User::where('phone_number', $data['phone_number'])->exists()) {
+        if (!empty($data['phone_number']) && User::where('phone_number', $data['phone_number'])->exists()) {
             Notification::make()
                 ->title('Error de validación')
                 ->body('El número de teléfono ya está registrado.')
@@ -200,8 +244,8 @@ class UserRegister extends FilamentRegister
         }
 
         // Verificar si el documento de identidad ya existe
-        if (! empty($data['identity_prefix']) && ! empty($data['identity_number'])) {
-            $identityDocument = $data['identity_prefix'].'-'.$data['identity_number'];
+        if (!empty($data['identity_prefix']) && !empty($data['identity_number'])) {
+            $identityDocument = $data['identity_prefix'] . '-' . $data['identity_number'];
             if (User::where('identity_document', $identityDocument)->exists()) {
                 Notification::make()
                     ->title('Error de validación')
@@ -222,7 +266,7 @@ class UserRegister extends FilamentRegister
             $errors = true;
         }
 
-        return ! $errors; // Retorna `true` si no hubo errores, `false` si los hubo
+        return !$errors; // Retorna `true` si no hubo errores, `false` si los hubo
     }
 
     protected function validateStoreAndNotify(array $data): bool
@@ -250,7 +294,7 @@ class UserRegister extends FilamentRegister
             $errors = true;
         }
 
-        return ! $errors; // Retorna `true` si no hubo errores, `false` si los hubo
+        return !$errors; // Retorna `true` si no hubo errores, `false` si los hubo
     }
 
     public function register(): ?RegistrationResponse
@@ -258,13 +302,13 @@ class UserRegister extends FilamentRegister
         $data = $this->form->getState();
 
         // Validar usuario y tienda con notificaciones en caso de errores
-        if (! $this->validateAndNotify($data) || ! $this->validateStoreAndNotify($data)) {
+        if (!$this->validateAndNotify($data) || !$this->validateStoreAndNotify($data)) {
             return null; // Detener el flujo si hay errores
         }
 
         try {
             // Crear el usuario
-            $data['identity_document'] = $data['identity_prefix'].'-'.$data['identity_number'];
+            $data['identity_document'] = $data['identity_prefix'] . '-' . $data['identity_number'];
             $user = User::create([
                 'first_name' => $data['first_name'],
                 'last_name' => $data['last_name'],
@@ -298,6 +342,15 @@ class UserRegister extends FilamentRegister
                 'store_id' => $store->id,
             ]);
 
+            // Crear la cuenta bancaria de la tienda
+            \App\Models\BankAccount::create([
+                'store_id' => $store->id,
+                'bank_code' => $data['store_bank_code'],
+                'phone_number' => $data['store_phone_number'],
+                'identity_number' => $data['store_identity_number'],
+                'default_account' => true, // Marcar como cuenta predeterminada
+            ]);
+
             // Asociar la tienda al usuario
             $user->stores()->attach($store->id, ['role' => 'owner_store']);
 
@@ -312,7 +365,7 @@ class UserRegister extends FilamentRegister
             // Manejar errores inesperados
             Notification::make()
                 ->title('Error crítico')
-                ->body('Ocurrió un error inesperado: '.$e->getMessage())
+                ->body('Ocurrió un error inesperado: ' . $e->getMessage())
                 ->danger()
                 ->send();
 

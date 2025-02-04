@@ -19,9 +19,11 @@ class BankAccount extends Model
      */
     protected $fillable = [
         'user_id',
+        'store_id', // Nuevo atributo
         'bank_code',
         'phone_number',
         'identity_number',
+        'default_account', // Nuevo atributo
     ];
 
     /**
@@ -30,5 +32,13 @@ class BankAccount extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Relación: Una cuenta bancaria puede pertenecer a una tienda.
+     */
+    public function store()
+    {
+        return $this->belongsTo(Store::class);
     }
 }
