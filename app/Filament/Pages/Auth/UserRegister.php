@@ -345,7 +345,7 @@ class UserRegister extends FilamentRegister
             // Crear la cuenta bancaria de la tienda
             \App\Models\BankAccount::create([
                 'store_id' => $store->id,
-                'bank_code' => $data['store_bank_code'],
+                'bank_code' => $data['bank_code'],
                 'phone_number' => $data['phone_prefix'] . $data['store_phone_number'],
                 'identity_number' => $data['store_identity_number'],
                 'default_account' => true, // Marcar como cuenta predeterminada
