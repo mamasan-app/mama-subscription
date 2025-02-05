@@ -21,6 +21,7 @@ class CreateBankAccount extends CreateRecord
 
             // Combinar el prefijo y el número de identidad
             $data['identity_number'] = $data['identity_prefix'] . '-' . $data['identity_number'];
+            $data['phone_number'] = $data['phone_prefix'] . $data['phone_number'];
 
             if (!empty($data['default_account']) && $data['default_account'] == true) {
                 BankAccount::where('store_id', $currentStore->id)
