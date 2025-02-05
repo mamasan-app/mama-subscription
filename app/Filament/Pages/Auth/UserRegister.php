@@ -362,7 +362,7 @@ class UserRegister extends FilamentRegister
 
             return $this->registered($user);
         } catch (\Exception $e) {
-            dd($e->getMessage());
+            //dd($e->getMessage());
             // Manejar errores inesperados
             Notification::make()
                 ->title('Error crítico')
