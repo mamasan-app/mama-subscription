@@ -16,6 +16,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Forms;
 
 
 class BankAccountResource extends Resource
@@ -52,9 +53,9 @@ class BankAccountResource extends Resource
                             ->maxLength(7)
                             ->required(),
                     ]),
-                TextColumn::make('default_account')
-                    ->label('Predeterminada')
-                    ->boolean(),
+                Forms\Components\Toggle::make('default_account')
+                    ->label('Publicado')
+                    ->required(),
             ]);
     }
 
