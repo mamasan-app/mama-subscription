@@ -346,7 +346,7 @@ class UserRegister extends FilamentRegister
             \App\Models\BankAccount::create([
                 'store_id' => $store->id,
                 'bank_code' => $data['store_bank_code'],
-                'phone_number' => $data['store_phone_number'],
+                'phone_number' => $data['phone_prefix'] . $data['store_phone_number'],
                 'identity_number' => $data['store_identity_number'],
                 'default_account' => true, // Marcar como cuenta predeterminada
             ]);
@@ -362,6 +362,7 @@ class UserRegister extends FilamentRegister
 
             return $this->registered($user);
         } catch (\Exception $e) {
+            dd($e->getMessage());
             // Manejar errores inesperados
             Notification::make()
                 ->title('Error crítico')
