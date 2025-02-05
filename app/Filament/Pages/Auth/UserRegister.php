@@ -193,7 +193,7 @@ class UserRegister extends FilamentRegister
                                                 )
                                                 ->required(),
 
-                                            TextInput::make('phone_number')
+                                            TextInput::make('bank_phone_number')
                                                 ->label('Número Telefónico')
                                                 ->numeric()
                                                 ->minLength(7)
@@ -346,7 +346,7 @@ class UserRegister extends FilamentRegister
             \App\Models\BankAccount::create([
                 'store_id' => $store->id,
                 'bank_code' => $data['bank_code'],
-                'phone_number' => $data['phone_prefix'] . $data['store_phone_number'],
+                'phone_number' => $data['phone_prefix'] . $data['bank_phone_number'],
                 'identity_number' => $data['store_identity_number'],
                 'default_account' => true, // Marcar como cuenta predeterminada
             ]);
