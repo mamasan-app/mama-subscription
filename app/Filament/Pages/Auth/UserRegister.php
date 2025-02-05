@@ -307,6 +307,9 @@ class UserRegister extends FilamentRegister
         }
 
         try {
+            // Iniciar una transacción
+            \DB::beginTransaction();
+
             // Crear el usuario
             $data['identity_document'] = $data['identity_prefix'] . '-' . $data['identity_number'];
             $user = User::create([
@@ -354,6 +357,9 @@ class UserRegister extends FilamentRegister
             // Asociar la tienda al usuario
             $user->stores()->attach($store->id, ['role' => 'owner_store']);
 
+            // Confirmar la transacción
+            \DB::commit();
+
             Notification::make()
                 ->title('Registro exitoso')
                 ->body('El usuario y la tienda se registraron correctamente.')
@@ -362,8 +368,9 @@ class UserRegister extends FilamentRegister
 
             return $this->registered($user);
         } catch (\Exception $e) {
-            //dd($e->getMessage());
-            // Manejar errores inesperados
+            // Revertir la transacción en caso de error
+            \DB::rollBack();
+
             Notification::make()
                 ->title('Error crítico')
                 ->body('Ocurrió un error inesperado: ' . $e->getMessage())
@@ -373,6 +380,7 @@ class UserRegister extends FilamentRegister
             return null;
         }
     }
+
 
     protected function registered(User $user): ?RegistrationResponse
     {
