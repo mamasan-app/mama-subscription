@@ -3,6 +3,7 @@
 namespace App\Filament\Store\Resources;
 
 use App\Filament\Store\Resources\BankAccountResource\Pages;
+use App\Filament\Inputs\IdentityDocumentTextInput;
 use App\Models\BankAccount;
 use App\Enums\BankEnum;
 use App\Enums\PhonePrefixEnum;
@@ -17,7 +18,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms;
-
 
 class BankAccountResource extends Resource
 {
@@ -54,8 +54,10 @@ class BankAccountResource extends Resource
                             ->required(),
                     ]),
                 Forms\Components\Toggle::make('default_account')
-                    ->label('Publicado')
+                    ->label('Predeterminada')
                     ->required(),
+
+                IdentityDocumentTextInput::make('identity_prefix', 'identity_number'),
             ]);
     }
 
