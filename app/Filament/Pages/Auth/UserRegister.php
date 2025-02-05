@@ -352,6 +352,7 @@ class UserRegister extends FilamentRegister
                 'phone_number' => $data['phone_prefix'] . $data['bank_phone_number'],
                 'identity_number' => $data['store_identity_number'],
                 'default_account' => true, // Marcar como cuenta predeterminada
+                'user_id' => $user->id, // Agregar el ID del usuario
             ]);
 
             // Asociar la tienda al usuario
