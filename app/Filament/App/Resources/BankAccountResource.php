@@ -6,6 +6,7 @@ use App\Enums\BankEnum;
 use App\Enums\PhonePrefixEnum;
 use App\Filament\App\Resources\BankAccountResource\Pages;
 use App\Models\BankAccount;
+use Filament\Forms;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -14,7 +15,6 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Filament\Forms;
 
 class BankAccountResource extends Resource
 {
@@ -33,7 +33,7 @@ class BankAccountResource extends Resource
                 Select::make('bank_code')
                     ->label('Banco')
                     ->options(
-                        collect(BankEnum::cases())->mapWithKeys(fn($bank) => [$bank->code() => $bank->getLabel()])->toArray()
+                        collect(BankEnum::cases())->mapWithKeys(fn ($bank) => [$bank->code() => $bank->getLabel()])->toArray()
                     )
                     ->required(),
 
@@ -43,7 +43,7 @@ class BankAccountResource extends Resource
                             ->label('Prefijo Telefónico')
                             ->options(
                                 collect(PhonePrefixEnum::cases())
-                                    ->mapWithKeys(fn($prefix) => [$prefix->value => $prefix->getLabel()])
+                                    ->mapWithKeys(fn ($prefix) => [$prefix->value => $prefix->getLabel()])
                                     ->toArray()
                             )
                             ->required(),
@@ -73,7 +73,7 @@ class BankAccountResource extends Resource
                     ->formatStateUsing(function ($state) {
                         // Buscar el enum correspondiente al código del banco
                         $bank = collect(BankEnum::cases())
-                            ->first(fn($bank) => $bank->code() === $state);
+                            ->first(fn ($bank) => $bank->code() === $state);
 
                         return $bank?->getLabel() ?? 'Desconocido';
                     }),

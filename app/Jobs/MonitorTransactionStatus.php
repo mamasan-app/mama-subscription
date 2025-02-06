@@ -43,7 +43,7 @@ class MonitorTransactionStatus implements ShouldQueue
                 ->where('is_bs', true)
                 ->first();
 
-            if (!$transaction) {
+            if (! $transaction) {
                 throw new \Exception("Transacción no encontrada para el ID de operación: {$this->operationId}");
             }
 
@@ -57,8 +57,8 @@ class MonitorTransactionStatus implements ShouldQueue
                 ),
                 'Commerce' => config('banking.commerce_id'),
             ])->post(config('banking.consult_debit'), [
-                        'Id' => $this->operationId,
-                    ]);
+                'Id' => $this->operationId,
+            ]);
 
             $statusCode = $response->json()['code'] ?? null;
 
@@ -91,7 +91,7 @@ class MonitorTransactionStatus implements ShouldQueue
                     $plan = Plan::find($subscription->service_id);
 
                     if ($plan) {
-                        if (!$plan->infinite_duration) {
+                        if (! $plan->infinite_duration) {
                             // Plan finito: calcular la fecha de expiración
                             $endDate = $currentDate->copy()->addDays($plan->duration)->toDateString();
 
@@ -127,7 +127,7 @@ class MonitorTransactionStatus implements ShouldQueue
                     } else {
                         throw new \Exception("Plan no encontrado para la suscripción: {$subscription->id}");
                     }
-                } elseif ($subscription && !$subscription->isOnTrial) {
+                } elseif ($subscription && ! $subscription->isOnTrial) {
                     $renewDate = $subscription->renews_at->copy()->addDays($subscription->frequency_days)->toDateString();
                     $expireDate = $subscription->renews_at->copy()->addDays($subscription->frequency_days + $subscription->service_grace_period)->toDateString();
 
@@ -147,7 +147,7 @@ class MonitorTransactionStatus implements ShouldQueue
                     'status' => PaymentStatusEnum::Failed,
                 ]);
 
-                if ($subscription && !$subscription->isOnTrial && $currentDate->copy()->greaterThanOrEqualTo($subscription->expires_at)) {
+                if ($subscription && ! $subscription->isOnTrial && $currentDate->copy()->greaterThanOrEqualTo($subscription->expires_at)) {
                     $subscription->update([
                         'status' => SubscriptionStatusEnum::Cancelled,
                     ]);
@@ -173,7 +173,7 @@ class MonitorTransactionStatus implements ShouldQueue
         } catch (\Exception $e) {
             Notification::make()
                 ->title('Error en la verificación de la transacción')
-                ->body('Detalles: ' . $e->getMessage())
+                ->body('Detalles: '.$e->getMessage())
                 ->danger()
                 ->send();
         }

@@ -77,13 +77,13 @@ class UserSubscriptionPayment extends Page
                 'Authorization' => $this->generateBcvToken(),
                 'Commerce' => config('banking.commerce_id'),
             ])->post(config('banking.tasa_bcv'), [
-                        'Moneda' => 'USD',
-                        'Fechavalor' => now()->format('Y-m-d'),
-                    ]);
+                'Moneda' => 'USD',
+                'Fechavalor' => now()->format('Y-m-d'),
+            ]);
 
             $rate = $response->json()['tipocambio'] ?? null;
 
-            //dd($response->json());
+            // dd($response->json());
 
             if ($rate) {
                 return round($amountInUSD * $rate, 2);
@@ -93,7 +93,7 @@ class UserSubscriptionPayment extends Page
         } catch (\Exception $e) {
             Notification::make()
                 ->title('Error al obtener la tasa')
-                ->body('No se pudo obtener la tasa de cambio del BCV. Detalles: ' . $e->getMessage())
+                ->body('No se pudo obtener la tasa de cambio del BCV. Detalles: '.$e->getMessage())
                 ->danger()
                 ->send();
 
@@ -103,7 +103,7 @@ class UserSubscriptionPayment extends Page
 
     protected function generateBcvToken()
     {
-        $data = now()->format('Y-m-d') . 'USD';
+        $data = now()->format('Y-m-d').'USD';
 
         return hash_hmac('sha256', $data, config('banking.commerce_id'));
     }
@@ -159,7 +159,7 @@ class UserSubscriptionPayment extends Page
             // Mostrar notificación de error
             Notification::make()
                 ->title('Error al crear la sesión de Stripe')
-                ->body('Ocurrió un problema al crear la sesión de Stripe. Detalles: ' . $e->getMessage())
+                ->body('Ocurrió un problema al crear la sesión de Stripe. Detalles: '.$e->getMessage())
                 ->danger()
                 ->send();
         }
@@ -189,7 +189,7 @@ class UserSubscriptionPayment extends Page
         try {
             $otpResponse = $this->generateOtp();
 
-            if (!isset($otpResponse['success']) || !$otpResponse['success']) {
+            if (! isset($otpResponse['success']) || ! $otpResponse['success']) {
                 Notification::make()
                     ->title('Error')
                     ->body('No se pudo generar el OTP. Intente nuevamente.')
@@ -240,11 +240,11 @@ class UserSubscriptionPayment extends Page
             'Authorization' => $tokenAuthorization,
             'Commerce' => config('banking.commerce_id'), // Verificar este valor en la configuración
         ])->post(config('banking.otp_url'), [
-                    'Banco' => $bank, // Código del banco (4 dígitos)
-                    'Monto' => $amount, // Cadena con dos decimales
-                    'Telefono' => $phone, // Teléfono completo (11 dígitos)
-                    'Cedula' => $identity, // Cédula con prefijo
-                ]);
+            'Banco' => $bank, // Código del banco (4 dígitos)
+            'Monto' => $amount, // Cadena con dos decimales
+            'Telefono' => $phone, // Teléfono completo (11 dígitos)
+            'Cedula' => $identity, // Cédula con prefijo
+        ]);
         // dd('Respuesta de la API', $response->json());
 
         return $response->json();
@@ -327,14 +327,14 @@ class UserSubscriptionPayment extends Page
             'Authorization' => $tokenAuthorization,
             'Commerce' => config('banking.commerce_id'),
         ])->post(config('banking.debit_url'), [
-                    'Banco' => $bank,
-                    'Monto' => $amount,
-                    'Telefono' => $phone,
-                    'Cedula' => $identity,
-                    'Nombre' => $nombre,
-                    'Concepto' => 'pago de suscripcion',
-                    'OTP' => $otp,
-                ]);
+            'Banco' => $bank,
+            'Monto' => $amount,
+            'Telefono' => $phone,
+            'Cedula' => $identity,
+            'Nombre' => $nombre,
+            'Concepto' => 'pago de suscripcion',
+            'OTP' => $otp,
+        ]);
 
         Transaction::create([
             'from_type' => get_class($user),
@@ -379,7 +379,7 @@ class UserSubscriptionPayment extends Page
                                 ->label('Banco')
                                 ->options(
                                     collect(BankEnum::cases())
-                                        ->mapWithKeys(fn($bank) => [$bank->code() => $bank->getLabel()])
+                                        ->mapWithKeys(fn ($bank) => [$bank->code() => $bank->getLabel()])
                                         ->toArray()
                                 )
                                 ->required(),
@@ -389,7 +389,7 @@ class UserSubscriptionPayment extends Page
                                         ->label('Prefijo Telefónico')
                                         ->options(
                                             collect(PhonePrefixEnum::cases())
-                                                ->mapWithKeys(fn($prefix) => [$prefix->value => $prefix->getLabel()])
+                                                ->mapWithKeys(fn ($prefix) => [$prefix->value => $prefix->getLabel()])
                                                 ->toArray()
                                         )
                                         ->required(),
@@ -410,9 +410,9 @@ class UserSubscriptionPayment extends Page
                             // Registrar la nueva cuenta
                             $newAccount = $user->bankAccounts()->create([
                                 'bank_code' => $data['bank'],
-                                'phone_number' => $data['phone_prefix'] . $data['phone_number'],
+                                'phone_number' => $data['phone_prefix'].$data['phone_number'],
                                 'identity_number' => str_replace('-', '', $user->identity_document),
-                                'default_account' => !$hasAccounts, // Si no tiene cuentas, esta es la predeterminada
+                                'default_account' => ! $hasAccounts, // Si no tiene cuentas, esta es la predeterminada
                             ]);
 
                             // Generar OTP para la nueva cuenta
@@ -422,7 +422,7 @@ class UserSubscriptionPayment extends Page
                                 'identity' => $newAccount->identity_number,
                             ]);
                         })
-                        ->hidden(fn() => $this->otp !== null), // Ocultar este botón si el OTP fue generado.
+                        ->hidden(fn () => $this->otp !== null), // Ocultar este botón si el OTP fue generado.
 
                     // Botón para usar una cuenta existente
                     Action::make('useExistingAccount')
@@ -434,8 +434,8 @@ class UserSubscriptionPayment extends Page
                                 ->options(
                                     auth()->user()->bankAccounts()
                                         ->get()
-                                        ->mapWithKeys(fn($account) => [
-                                            $account->id => "{$account->bank_code} - {$account->phone_number} - {$account->identity_number}" .
+                                        ->mapWithKeys(fn ($account) => [
+                                            $account->id => "{$account->bank_code} - {$account->phone_number} - {$account->identity_number}".
                                                 ($account->default_account ? ' (Predeterminada)' : ''),
                                         ])
                                         ->toArray()
@@ -460,8 +460,7 @@ class UserSubscriptionPayment extends Page
                                 'identity' => $bankAccount->identity_number,
                             ]);
                         })
-                        ->hidden(fn() => $this->otp !== null), // Ocultar este botón si el OTP fue generado.
-
+                        ->hidden(fn () => $this->otp !== null), // Ocultar este botón si el OTP fue generado.
 
                     // Botón para confirmar OTP
                     Action::make('confirmOtp')
@@ -474,7 +473,7 @@ class UserSubscriptionPayment extends Page
                         ])
                         ->action(function (array $data) {
                             $this->otp = $data['otp']; // Asignar el OTP ingresado por el usuario.
-                
+
                             // Aquí puedes usar los datos del submitBolivaresPayment:
                             $this->confirmOtp([
                                 'bank' => $this->bank,
@@ -484,7 +483,7 @@ class UserSubscriptionPayment extends Page
                                 'otp' => $this->otp,
                             ]);
                         })
-                        ->visible(fn() => $this->otp !== null), // Mostrar solo si el OTP ha sido generado.
+                        ->visible(fn () => $this->otp !== null), // Mostrar solo si el OTP ha sido generado.
                 ]),
         ];
     }

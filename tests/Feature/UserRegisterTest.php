@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Store;
 use App\Models\User;
-use App\Models\BankAccount;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -14,8 +13,6 @@ class UserRegisterTest extends TestCase
 
     /**
      * Prueba para verificar que el registro de usuario y tienda funciona correctamente.
-     *
-     * @return void
      */
     public function test_user_and_store_registration_with_bank_account(): void
     {
@@ -72,7 +69,7 @@ class UserRegisterTest extends TestCase
         $this->assertDatabaseHas('bank_accounts', [
             'store_id' => $store->id,
             'bank_code' => $data['bank_code'],
-            'phone_number' => $data['phone_prefix'] . $data['bank_phone_number'],
+            'phone_number' => $data['phone_prefix'].$data['bank_phone_number'],
             'identity_number' => $data['store_identity_number'],
             'default_account' => true,
         ]);
@@ -83,8 +80,6 @@ class UserRegisterTest extends TestCase
 
     /**
      * Prueba para validar que no se puede registrar un usuario con un correo existente.
-     *
-     * @return void
      */
     public function test_user_cannot_register_with_existing_email(): void
     {
