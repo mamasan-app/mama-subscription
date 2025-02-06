@@ -24,7 +24,7 @@ Route::get('/magiclink/send', [MagicLinkLoginController::class, 'sendMagicLink']
 Route::get('/magiclink/login', [MagicLinkLoginController::class, 'loginWithMagicLink'])->name('magiclink.login');
 
 Route::get('/', function () {
-    return redirect('/app');
+    return inertia('WelcomePage');
 });
 
 Route::get('/horizon-check', function () {
