@@ -2,12 +2,16 @@
 
 namespace App\Filament\Pages\Auth;
 
+use App\Enums\BankEnum;
+use App\Enums\PhonePrefixEnum;
 use App\Filament\Inputs\IdentityDocumentTextInput;
 use App\Models\Store;
 use App\Models\User;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Wizard;
@@ -21,10 +25,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
-use App\Enums\BankEnum;
-use App\Enums\PhonePrefixEnum;
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Select;
 
 class UserRegister extends FilamentRegister
 {
@@ -85,7 +85,7 @@ class UserRegister extends FilamentRegister
                                 ->label('Contraseña')
                                 ->placeholder('********')
                                 ->rule(Password::default())
-                                ->dehydrateStateUsing(fn($state) => Hash::make($state))
+                                ->dehydrateStateUsing(fn ($state) => Hash::make($state))
                                 ->same('password_confirmation')
                                 ->validationAttribute(__('filament-panels::pages/auth/register.form.password.validation_attribute')),
 
@@ -177,7 +177,7 @@ class UserRegister extends FilamentRegister
                                         ->label('Banco')
                                         ->options(
                                             collect(BankEnum::cases())
-                                                ->mapWithKeys(fn($bank) => [$bank->code() => $bank->getLabel()])
+                                                ->mapWithKeys(fn ($bank) => [$bank->code() => $bank->getLabel()])
                                                 ->toArray()
                                         )
                                         ->required(),
@@ -188,7 +188,7 @@ class UserRegister extends FilamentRegister
                                                 ->label('Prefijo Telefónico')
                                                 ->options(
                                                     collect(PhonePrefixEnum::cases())
-                                                        ->mapWithKeys(fn($prefix) => [$prefix->value => $prefix->getLabel()])
+                                                        ->mapWithKeys(fn ($prefix) => [$prefix->value => $prefix->getLabel()])
                                                         ->toArray()
                                                 )
                                                 ->required(),
@@ -234,7 +234,7 @@ class UserRegister extends FilamentRegister
         }
 
         // Verificar si el número de teléfono ya existe
-        if (!empty($data['phone_number']) && User::where('phone_number', $data['phone_number'])->exists()) {
+        if (! empty($data['phone_number']) && User::where('phone_number', $data['phone_number'])->exists()) {
             Notification::make()
                 ->title('Error de validación')
                 ->body('El número de teléfono ya está registrado.')
@@ -244,8 +244,8 @@ class UserRegister extends FilamentRegister
         }
 
         // Verificar si el documento de identidad ya existe
-        if (!empty($data['identity_prefix']) && !empty($data['identity_number'])) {
-            $identityDocument = $data['identity_prefix'] . '-' . $data['identity_number'];
+        if (! empty($data['identity_prefix']) && ! empty($data['identity_number'])) {
+            $identityDocument = $data['identity_prefix'].'-'.$data['identity_number'];
             if (User::where('identity_document', $identityDocument)->exists()) {
                 Notification::make()
                     ->title('Error de validación')
@@ -266,7 +266,7 @@ class UserRegister extends FilamentRegister
             $errors = true;
         }
 
-        return !$errors; // Retorna `true` si no hubo errores, `false` si los hubo
+        return ! $errors; // Retorna `true` si no hubo errores, `false` si los hubo
     }
 
     protected function validateStoreAndNotify(array $data): bool
@@ -294,7 +294,7 @@ class UserRegister extends FilamentRegister
             $errors = true;
         }
 
-        return !$errors; // Retorna `true` si no hubo errores, `false` si los hubo
+        return ! $errors; // Retorna `true` si no hubo errores, `false` si los hubo
     }
 
     public function register(): ?RegistrationResponse
@@ -302,7 +302,7 @@ class UserRegister extends FilamentRegister
         $data = $this->form->getState();
 
         // Validar usuario y tienda con notificaciones en caso de errores
-        if (!$this->validateAndNotify($data) || !$this->validateStoreAndNotify($data)) {
+        if (! $this->validateAndNotify($data) || ! $this->validateStoreAndNotify($data)) {
             return null; // Detener el flujo si hay errores
         }
 
@@ -311,7 +311,7 @@ class UserRegister extends FilamentRegister
             \DB::beginTransaction();
 
             // Crear el usuario
-            $data['identity_document'] = $data['identity_prefix'] . '-' . $data['identity_number'];
+            $data['identity_document'] = $data['identity_prefix'].'-'.$data['identity_number'];
             $user = User::create([
                 'first_name' => $data['first_name'],
                 'last_name' => $data['last_name'],
@@ -349,7 +349,7 @@ class UserRegister extends FilamentRegister
             \App\Models\BankAccount::create([
                 'store_id' => $store->id,
                 'bank_code' => $data['bank_code'],
-                'phone_number' => $data['phone_prefix'] . $data['bank_phone_number'],
+                'phone_number' => $data['phone_prefix'].$data['bank_phone_number'],
                 'identity_number' => $data['store_identity_number'],
                 'default_account' => true, // Marcar como cuenta predeterminada
                 'user_id' => $user->id, // Agregar el ID del usuario
@@ -374,14 +374,13 @@ class UserRegister extends FilamentRegister
 
             Notification::make()
                 ->title('Error crítico')
-                ->body('Ocurrió un error inesperado: ' . $e->getMessage())
+                ->body('Ocurrió un error inesperado: '.$e->getMessage())
                 ->danger()
                 ->send();
 
             return null;
         }
     }
-
 
     protected function registered(User $user): ?RegistrationResponse
     {

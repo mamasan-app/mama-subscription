@@ -48,7 +48,7 @@ class Store extends Model
     public function url(): Attribute
     {
         return Attribute::make(
-            get: fn() => 'https://' . $this->slug . '.mama-subscription.localhost',
+            get: fn () => 'https://'.$this->slug.'.mama-subscription.localhost',
         );
     }
 
@@ -86,7 +86,7 @@ class Store extends Model
     public function logoUrl(): Attribute
     {
         return Attribute::make(
-            get: fn() => $this->logo
+            get: fn () => $this->logo
             ? Storage::disk('stores')->url($this->logo)  // Obtener la URL pública del logo
             : asset('images/default-logo.png'),  // Si no hay logo, usar una imagen por defecto
         );
@@ -108,7 +108,6 @@ class Store extends Model
     {
         return $this->hasMany(BankAccount::class, 'store_id');
     }
-
 
     public function subscriptions(): HasMany
     {
