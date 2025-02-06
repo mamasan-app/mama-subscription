@@ -14,6 +14,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Filament\Forms;
 
 class BankAccountResource extends Resource
 {
@@ -32,7 +33,7 @@ class BankAccountResource extends Resource
                 Select::make('bank_code')
                     ->label('Banco')
                     ->options(
-                        collect(BankEnum::cases())->mapWithKeys(fn ($bank) => [$bank->code() => $bank->getLabel()])->toArray()
+                        collect(BankEnum::cases())->mapWithKeys(fn($bank) => [$bank->code() => $bank->getLabel()])->toArray()
                     )
                     ->required(),
 
@@ -42,7 +43,7 @@ class BankAccountResource extends Resource
                             ->label('Prefijo Telefónico')
                             ->options(
                                 collect(PhonePrefixEnum::cases())
-                                    ->mapWithKeys(fn ($prefix) => [$prefix->value => $prefix->getLabel()])
+                                    ->mapWithKeys(fn($prefix) => [$prefix->value => $prefix->getLabel()])
                                     ->toArray()
                             )
                             ->required(),
@@ -53,6 +54,9 @@ class BankAccountResource extends Resource
                             ->maxLength(7)
                             ->required(),
                     ]),
+                Forms\Components\Toggle::make('default_account')
+                    ->label('Predeterminada')
+                    ->required(),
 
             ]);
     }
@@ -69,7 +73,7 @@ class BankAccountResource extends Resource
                     ->formatStateUsing(function ($state) {
                         // Buscar el enum correspondiente al código del banco
                         $bank = collect(BankEnum::cases())
-                            ->first(fn ($bank) => $bank->code() === $state);
+                            ->first(fn($bank) => $bank->code() === $state);
 
                         return $bank?->getLabel() ?? 'Desconocido';
                     }),
@@ -77,6 +81,9 @@ class BankAccountResource extends Resource
                     ->label('Número de teléfono'),
                 TextColumn::make('identity_number')
                     ->label('Número de identidad'),
+                Tables\Columns\IconColumn::make('default_account')
+                    ->label('Publicado')
+                    ->boolean(),
                 TextColumn::make('created_at')
                     ->label('Creado')
                     ->dateTime('d/m/Y'),
