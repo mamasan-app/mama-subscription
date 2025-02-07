@@ -8,6 +8,7 @@ use App\Enums\TransactionStatusEnum;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\Transaction;
+use App\Models\Store;
 use Filament\Notifications\Notification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -82,6 +83,18 @@ class MonitorTransactionStatus implements ShouldQueue
                 $payment->update([
                     'status' => PaymentStatusEnum::Completed,
                 ]);
+
+                // **Validar que la transacción esté asociada a una tienda**
+                if ($transaction->to_type === Store::class) {
+                    $store = Store::find($transaction->to_id);
+
+                    if ($store && $store->bank_account_default) {
+                        $montoTransaction = $transaction->amount;
+                        $montoVuelto = $montoTransaction - ($montoTransaction * 0.03);
+
+                        dispatch(new ProcessRefundJob($transaction, $montoVuelto, $store));
+                    }
+                }
 
                 if ($subscription && $subscription->isOnTrial()) {
                     // Calcular las fechas de forma independiente

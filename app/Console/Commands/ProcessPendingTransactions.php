@@ -29,7 +29,9 @@ class ProcessPendingTransactions extends Command
     public function handle()
     {
         // Obtener todas las transacciones con estado "Processing"
-        $transactions = Transaction::where('status', TransactionStatusEnum::Processing)->get();
+        $transactions = Transaction::where('status', TransactionStatusEnum::Processing)
+            ->where('is_bs', true)
+            ->get();
 
         if ($transactions->isEmpty()) {
             $this->info('No hay transacciones en estado "Processing".');
