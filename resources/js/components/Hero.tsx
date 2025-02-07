@@ -3,7 +3,7 @@ import Logo from '../../assets/img/logo-a.png';
 
 export const Hero = () => {
   return (
-    <div className="relative bg-white px-6 py-2">
+    <div className="relative bg-white px-6 pb-20 pt-2">
       <div className="absolute right-4 top-4 flex gap-2">
         <Button
           variant="outline"
@@ -38,12 +38,12 @@ export const Hero = () => {
             >
               Comenzar Ahora
             </Button>
-            <Button
+            {/* <Button
               variant="outline"
               className="border-primary text-primary hover:bg-primary/10 px-8 py-6 text-lg"
             >
               Solicitar Demo
-            </Button>
+            </Button> */}
           </div>
         </div>
       </div>

@@ -12,7 +12,7 @@ export default function WelcomePage() {
       <Benefits />
       <HowItWorks />
       <Services />
-      <Pricing />
+      {/* <Pricing /> */}
       <ContactForm />
     </div>
   );
