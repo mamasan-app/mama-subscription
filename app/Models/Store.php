@@ -113,4 +113,14 @@ class Store extends Model
     {
         return $this->hasMany(Subscription::class, 'store_id');
     }
+
+    /**
+     * Obtiene la cuenta bancaria por defecto de la tienda.
+     *
+     * @return BankAccount|null
+     */
+    public function getDefaultBankAccount()
+    {
+        return $this->bankAccounts()->where('is_default', true)->first();
+    }
 }

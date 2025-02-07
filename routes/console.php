@@ -9,3 +9,6 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote')->hourly();
 
 Schedule::command('transactions:process')->everyFiveSeconds();
+
+// Ejecutar el comando de recordatorio de suscripciones a la medianoche
+Schedule::command('subscriptions:send-reminders')->dailyAt('00:00');
