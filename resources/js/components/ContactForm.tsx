@@ -20,17 +20,17 @@ export const ContactForm = () => {
             </h3>
             <div className="space-y-6">
               <div className="flex items-center gap-4">
-                <Mail className="text-primary h-5 w-5" />
+                <Mail className="h-5 w-5 text-primary" />
                 <span>soporte@cobrafacil.com</span>
               </div>
-              <div className="flex items-center gap-4">
-                <Phone className="text-primary h-5 w-5" />
+              {/* <div className="flex items-center gap-4">
+                <Phone className="h-5 w-5 text-primary" />
                 <span>+58 (424) 123-4567</span>
-              </div>
-              <div className="flex items-center gap-4">
+              </div> */}
+              {/* <div className="flex items-center gap-4">
                 <MessageSquare className="text-primary h-5 w-5" />
                 <span>Chat en vivo disponible</span>
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -49,28 +49,28 @@ export const ContactForm = () => {
             <div className="flex gap-6">
               <a
                 href="#"
-                className="text-primary hover:text-primary-dark transition-colors"
+                className="text-primary transition-colors hover:text-primary-dark"
                 aria-label="Facebook"
               >
                 <Facebook className="h-6 w-6" />
               </a>
               <a
                 href="#"
-                className="text-primary hover:text-primary-dark transition-colors"
+                className="text-primary transition-colors hover:text-primary-dark"
                 aria-label="Instagram"
               >
                 <InstagramIcon className="h-6 w-6" />
               </a>
               <a
                 href="#"
-                className="text-primary hover:text-primary-dark transition-colors"
+                className="text-primary transition-colors hover:text-primary-dark"
                 aria-label="Twitter"
               >
                 <XIcon className="h-6 w-6" />
               </a>
               <a
                 href="#"
-                className="text-primary hover:text-primary-dark transition-colors"
+                className="text-primary transition-colors hover:text-primary-dark"
                 aria-label="LinkedIn"
               >
                 <Linkedin className="h-6 w-6" />

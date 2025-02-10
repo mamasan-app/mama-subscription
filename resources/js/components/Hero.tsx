@@ -8,15 +8,11 @@ export const Hero = () => {
         <Button
           variant="outline"
           className="border-primary text-primary hover:bg-primary/10"
-          onClick={() => {}}
         >
-          Iniciar Sesión
+          <a href="tienda/ingresar">Iniciar Sesión</a>
         </Button>
-        <Button
-          className="bg-primary hover:bg-primary-dark text-white"
-          onClick={() => {}}
-        >
-          Registrarse
+        <Button className="bg-primary text-white hover:bg-primary-dark" asChild>
+          <a href="/tienda/registrar">Registrarse</a>
         </Button>
       </div>
       <div className="text-center">
@@ -24,7 +20,7 @@ export const Hero = () => {
           <img src={Logo} alt="Cobra Fácil Logo" className="h-auto w-64" />
         </div>
         <div className="mt-0">
-          <h1 className="from-primary to-primary-dark mb-4 bg-gradient-to-r bg-clip-text text-5xl font-bold text-transparent">
+          <h1 className="mb-4 bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-5xl font-bold text-transparent">
             Cobra más fácil, más rápido y sin complicaciones
           </h1>
           <p className="mx-auto mb-8 max-w-2xl text-xl text-gray-600">
@@ -33,10 +29,11 @@ export const Hero = () => {
           </p>
           <div className="flex justify-center gap-4">
             <Button
-              className="bg-primary hover:bg-primary-dark px-8 py-6 text-lg text-white"
+              asChild
+              className="bg-primary px-8 py-6 text-lg text-white hover:bg-primary-dark"
               onClick={() => {}}
             >
-              Comenzar Ahora
+              <a href="/tienda/registrar">Comenzar Ahora</a>
             </Button>
             {/* <Button
               variant="outline"
