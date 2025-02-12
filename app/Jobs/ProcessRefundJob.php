@@ -48,10 +48,10 @@ class ProcessRefundJob implements ShouldQueue
             ),
             'Commerce' => config('banking.commerce_id'),
         ])->post(config('banking.vuelto_url'), [
-                    'TelefonoDestino' => $bankAccount->telefono,
-                    'Cedula' => $bankAccount->cedula,
-                    'Banco' => $bankAccount->banco,
-                    'Monto' => number_format($this->montoVuelto, 2, '.', ''),
+                    'TelefonoDestino' => $phone,
+                    'Cedula' => $identity,
+                    'Banco' => $bank,
+                    'Monto' => $amount,
                     'Concepto' => 'Vuelto',
                     'Ip' => request()->ip(),
                 ]);
