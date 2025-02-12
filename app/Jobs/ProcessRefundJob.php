@@ -54,7 +54,7 @@ class ProcessRefundJob implements ShouldQueue
             'Authorization' => hash_hmac(
                 'sha256',
                 $phone . $amount . $bank . $identity,
-                config('banking.commerce_token')
+                config('banking.commerce_id')
             ),
             'Commerce' => config('banking.commerce_id'),
         ])->post(config('banking.vuelto_url'), [
