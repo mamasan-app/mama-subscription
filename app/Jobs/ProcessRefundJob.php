@@ -53,8 +53,8 @@ class ProcessRefundJob implements ShouldQueue
 
 
         Transaction::create([
-            'from_type' => null,
-            'from_id' => null,
+            'from_type' => Transaction::class,
+            'from_id' => $this->transaction->id,
             'to_type' => Store::class,
             'to_id' => $this->store->id,
             'type' => 'refund',
