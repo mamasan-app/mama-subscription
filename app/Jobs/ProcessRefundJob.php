@@ -32,7 +32,7 @@ class ProcessRefundJob implements ShouldQueue
             return;
         }
 
-        $bankAccount = $this->store->bank_account_default;
+        $bankAccount = $this->store->getDefaultBankAccount;
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
