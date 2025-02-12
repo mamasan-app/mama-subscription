@@ -97,7 +97,7 @@ class MonitorTransactionStatus implements ShouldQueue
                         Log::error("No se encontró Store para la transacción.");
                     }
 
-                    if ($store && $store->getDefaultBankAccount) {
+                    if ($store) {
                         Log::info("Store tiene una cuenta bancaria por defecto.");
 
                         $montoTransaction = $transaction->amount;
@@ -105,8 +105,16 @@ class MonitorTransactionStatus implements ShouldQueue
 
                         Log::info("Monto de la transacción: $montoTransaction | Monto del vuelto: $montoVuelto");
 
-                        dispatch(new ProcessRefundJob($transaction, $montoVuelto, $store));
-                        Log::info("ProcessRefundJob enviado correctamente.");
+                        $bankAccount = $store->defaultBankAccount();
+
+                        if ($bankAccount) {
+                            Log::info("Store tiene una cuenta bancaria por defecto.", ['bank_account_id' => $bankAccount->id]);
+                            
+                            dispatch(new ProcessRefundJob($transaction, $montoVuelto, $store));
+                            Log::info("ProcessRefundJob enviado correctamente.");
+                        }
+
+
                     } else {
                         Log::error("No se pudo procesar el reembolso, la tienda no tiene cuenta bancaria predeterminada.");
                     }

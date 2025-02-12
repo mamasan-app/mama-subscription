@@ -120,9 +120,9 @@ class Store extends Model
      *
      * @return BankAccount|null
      */
-    public function getDefaultBankAccount()
-    {
-        return $this->hasOne(BankAccount::class)->where('default_account', 1)->first();
-    }
 
+    public function defaultBankAccount(): ?BankAccount
+    {
+        return $this->hasOne(BankAccount::class, 'store_id')->where('default_account', 1)->first();
+    }
 }
