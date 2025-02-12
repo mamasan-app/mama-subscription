@@ -122,7 +122,7 @@ class Store extends Model
      */
     public function getDefaultBankAccount()
     {
-        return $this->hasOne(BankAccount::class)->where('is_default', 1)->first();
+        return $this->hasOne(BankAccount::class)->where('default_account', 1)->first();
     }
 
 }
