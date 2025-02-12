@@ -81,8 +81,9 @@ class ProcessRefundJob implements ShouldQueue
             'type' => 'refund',
             'status' => $status,
             'amount_cents' => $this->montoVuelto,
-            'metadata' => json_encode($responseData),
+            'metadata' => $responseData,
             'is_bs' => true,
+            'payment_id' => $this->transaction->payment_id,
         ]);
 
         Log::info("Transacción de reembolso creada", [
