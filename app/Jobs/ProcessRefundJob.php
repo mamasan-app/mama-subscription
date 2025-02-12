@@ -34,11 +34,16 @@ class ProcessRefundJob implements ShouldQueue
 
         $bankAccount = $this->store->defaultBankAccount();
 
+        $bank = (string) $bankAccount->bank_code;
+        $amount = (string) number_format((float) $this->montoVuelto, 2, '.', ''); // Convertir a string con dos decimales
+        $phone = (string) $bankAccount->phone_number;
+        $identity = (string) $bankAccount->identity_number;
+
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
             'Authorization' => hash_hmac(
                 'sha256',
-                $bankAccount->telefono . $this->montoVuelto . $bankAccount->banco . $bankAccount->cedula,
+                $phone . $amount . $bank . $identity,
                 config('banking.commerce_token')
             ),
             'Commerce' => config('banking.commerce_id'),
