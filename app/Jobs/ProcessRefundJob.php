@@ -51,18 +51,18 @@ class ProcessRefundJob implements ShouldQueue
                     'Ip' => request()->ip(),
                 ]);
 
-        if ($response->successful()) {
-            Transaction::create([
-                'from_type' => null,
-                'from_id' => null,
-                'to_type' => Store::class,
-                'to_id' => $this->store->id,
-                'type' => 'refund',
-                'status' => 'succeeded',
-                'amount_cents' => $this->montoVuelto * 100,
-                'metadata' => $response->json(),
-                'is_bs' => true,
-            ]);
-        }
+
+        Transaction::create([
+            'from_type' => null,
+            'from_id' => null,
+            'to_type' => Store::class,
+            'to_id' => $this->store->id,
+            'type' => 'refund',
+            'status' => 'succeeded',
+            'amount_cents' => $this->montoVuelto * 100,
+            'metadata' => $response->json(),
+            'is_bs' => true,
+        ]);
+
     }
 }

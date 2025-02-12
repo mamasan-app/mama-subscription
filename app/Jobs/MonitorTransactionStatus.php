@@ -86,7 +86,7 @@ class MonitorTransactionStatus implements ShouldQueue
 
                 // **Validar que la transacción esté asociada a una tienda**
                 if ($transaction->to_type === Store::class) {
-                    $store = Store::find($transaction->to_id);
+                    $store = Store::find($transaction->to_id)->first();
 
                     if ($store && $store->bank_account_default) {
                         $montoTransaction = $transaction->amount;
