@@ -90,6 +90,7 @@ class DatabaseSeeder extends Seeder
 
         BankAccount::create([
             'store_id' => $store->id,
+            'user_id' => $owner->id,
             'bank_code' => '0172', // Código del banco
             'phone_number' => '04122491919',
             'identity_number' => 'V15663644',
