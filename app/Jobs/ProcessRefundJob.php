@@ -12,6 +12,8 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Notifications\RefundSuccessfulNotification;
+use Illuminate\Support\Facades\Notification;
 
 class ProcessRefundJob implements ShouldQueue
 {
@@ -80,7 +82,7 @@ class ProcessRefundJob implements ShouldQueue
             'to_id' => $this->store->id,
             'type' => 'refund',
             'status' => $status,
-            'amount_cents' => $this->montoVuelto*100,
+            'amount_cents' => $this->montoVuelto * 100,
             'metadata' => $responseData,
             'is_bs' => true,
             'payment_id' => $this->transaction->payment_id,
@@ -99,6 +101,10 @@ class ProcessRefundJob implements ShouldQueue
             if ($payment) {
                 $payment->update(['paid' => true]);
                 Log::info("Pago actualizado como pagado", ['payment_id' => $payment->id]);
+
+                // Enviar notificación a la tienda
+                $this->store->notify(new RefundSuccessfulNotification($this->store, $this->montoVuelto));
+                Log::info("Notificación de reembolso enviado a la tienda", ['store_id' => $this->store->id]);
             } else {
                 Log::error("No se encontró el pago asociado a la transacción.", [
                     'transaction_id' => $this->transaction->id
