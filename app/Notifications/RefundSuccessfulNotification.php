@@ -27,13 +27,15 @@ class RefundSuccessfulNotification extends Notification implements ShouldQueue
 
     public function toMail($notifiable)
     {
+        $storeUrl = env('APP_URL') . "/tienda/{$this->store->slug}/transactions";
+        
         return (new MailMessage)
             ->subject('Pago de Vuelto Realizado Exitosamente')
             ->greeting('¡Hola ' . $this->store->name . '!')
             ->line('Se ha realizado un pago de vuelto exitosamente.')
             ->line('Monto recibido: Bs' . number_format($this->amount, 2) . ' USD')
             ->line('Gracias por confiar en nuestro servicio.')
-            ->action('Ver detalles', url('/tienda/transacciones'))
+            ->action('Ver detalles', $storeUrl)
             ->salutation('Saludos, Equipo de Mamapay');
     }
 }
