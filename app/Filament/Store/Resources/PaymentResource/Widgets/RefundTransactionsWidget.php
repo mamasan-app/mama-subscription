@@ -10,6 +10,8 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class RefundTransactionsWidget extends BaseWidget
 {
+    public $record; // Asegura que el widget tiene acceso al pago actual
+
     protected function getTableHeading(): ?string
     {
         return 'Transacciones de Vuelto';
@@ -61,10 +63,15 @@ class RefundTransactionsWidget extends BaseWidget
         // Obtener el store_id del tenant actual
         $storeId = Filament::getTenant()->id;
 
-        // Recupera solo las transacciones de tipo "refund" asociadas a la tienda actual
+        // Asegurar que el widget tiene acceso al pago actual
+        if (!$this->record) {
+            return Transaction::query()->whereRaw('1 = 0'); // Retorna una consulta vacía si no hay un pago asociado
+        }
+
         return Transaction::query()
             ->where('to_type', 'App\\Models\\Store')
             ->where('to_id', $storeId)
-            ->where('type', 'refund');
+            ->where('type', 'refund')
+            ->where('payment_id', $this->record->id); // Filtrar por el pago actual
     }
 }
