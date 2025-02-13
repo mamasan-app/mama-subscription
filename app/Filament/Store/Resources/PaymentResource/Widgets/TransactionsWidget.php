@@ -36,14 +36,14 @@ class TransactionsWidget extends BaseWidget
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
-                    ->formatStateUsing(fn ($record) => $record->status->getLabel())
+                    ->formatStateUsing(fn($record) => $record->status->getLabel())
                     ->badge()
-                    ->color(fn ($record) => $record->status->getColor())
+                    ->color(fn($record) => $record->status->getColor())
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('amount_cents')
                     ->label('Monto (USD)')
-                    ->formatStateUsing(fn ($record) => '$'.number_format($record->amount / 100, 2)),
+                    ->formatStateUsing(fn($record) => '$' . number_format($record->amount / 100, 2)),
 
                 Tables\Columns\TextColumn::make('date')
                     ->label('Fecha')
@@ -54,7 +54,7 @@ class TransactionsWidget extends BaseWidget
             ->actions([
                 Tables\Actions\Action::make('view')
                     ->label('Ver')
-                    ->url(fn ($record) => route('filament.store.resources.transactions.view', [
+                    ->url(fn($record) => route('filament.store.resources.transactions.view', [
                         'tenant' => Filament::getTenant()->slug, // Obtener el tenant actual
                         'record' => $record->id,
                     ]))
@@ -64,8 +64,10 @@ class TransactionsWidget extends BaseWidget
 
     protected function getQuery()
     {
-        // Recupera todas las transacciones relacionadas con el pago actual
+        // Recupera todas las transacciones relacionadas con el pago actual y que sean de tipo "subscription"
         return Transaction::query()
-            ->where('payment_id', $this->record->id);
+            ->where('payment_id', $this->record->id)
+            ->where('type', 'subscription'); // Agregar filtro por tipo de transacción
     }
+
 }

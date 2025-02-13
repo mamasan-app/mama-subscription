@@ -84,6 +84,7 @@ class ProcessRefundJob implements ShouldQueue
             'metadata' => $responseData,
             'is_bs' => true,
             'payment_id' => $this->transaction->payment_id,
+            'date' => now(),
         ]);
 
         Log::info("Transacción de reembolso creada", [

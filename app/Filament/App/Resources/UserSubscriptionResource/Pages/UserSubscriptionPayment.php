@@ -345,7 +345,7 @@ class UserSubscriptionPayment extends Page
             'type' => TransactionTypeEnum::Subscription->value,
             'status' => TransactionStatusEnum::Processing,
             'date' => now()->setTimezone('America/Caracas'),
-            'amount_cents' => $payment->amount_cents,
+            'amount_cents' => $amount,
             'metadata' => $response->json(),
             'payment_id' => $payment->id,
             'is_bs' => true,

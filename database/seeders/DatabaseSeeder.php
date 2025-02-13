@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Address;
+use App\Models\BankAccount;
 use App\Models\Frequency;
 use App\Models\Plan;
 use App\Models\Store;
@@ -24,7 +25,7 @@ class DatabaseSeeder extends Seeder
             'first_name' => 'admin',
             'last_name' => 'admin',
             'email' => 'admin@gmail.com',
-            'password' => '201102',
+            'password' => bcrypt('201102'),
             'email_verified_at' => now(),
         ]);
         $admin->assignRole('admin');
@@ -33,7 +34,7 @@ class DatabaseSeeder extends Seeder
             'first_name' => 'owner',
             'last_name' => 'owner',
             'email' => 'store@gmail.com',
-            'password' => '201102',
+            'password' => bcrypt('201102'),
             'email_verified_at' => now(),
         ]);
         $owner->assignRole('owner_store');
@@ -44,7 +45,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'moises.liotawork@gmail.com',
             'identity_document' => 'V-12260129',
             'phone_number' => '04146634862',
-            'password' => '201102',
+            'password' => bcrypt('201102'),
             'email_verified_at' => now(),
         ]);
         $customer->assignRole('customer');
@@ -53,7 +54,7 @@ class DatabaseSeeder extends Seeder
             'first_name' => 'employee',
             'last_name' => 'employee',
             'email' => 'employee@gmail.com',
-            'password' => '201102',
+            'password' => bcrypt('201102'),
             'email_verified_at' => now(),
         ]);
         $employee->assignRole('employee');
@@ -68,7 +69,7 @@ class DatabaseSeeder extends Seeder
 
         $address = Address::create([
             'branch' => 'Guarenas',
-            'location' => 'Guarenas, frenta el estacionamiento del Seguro Social',
+            'location' => 'Guarenas, frente al estacionamiento del Seguro Social',
             'store_id' => $store->id,
         ]);
 
@@ -77,6 +78,23 @@ class DatabaseSeeder extends Seeder
         $store->users()->attach($employee->id, ['role' => 'employee']);
         $store->users()->attach($customer->id, ['role' => 'customer']);
         $store->users()->attach($employee->id, ['role' => 'customer']);
+
+        // Crear cuenta bancaria para el usuario customer y asociarla a la tienda
+        BankAccount::create([
+            'user_id' => $customer->id,
+            'bank_code' => '0105', // Código del banco
+            'phone_number' => '04122491919',
+            'identity_number' => 'V15663644',
+            'default_account' => true, // Se marca como cuenta por defecto
+        ]);
+
+        BankAccount::create([
+            'store_id' => $store->id,
+            'bank_code' => '0172', // Código del banco
+            'phone_number' => '04122491919',
+            'identity_number' => 'V15663644',
+            'default_account' => true, // Se marca como cuenta por defecto
+        ]);
 
         // Crear frecuencias
         $daily = Frequency::create(['name' => 'Diaria', 'days_count' => 1]);
@@ -88,7 +106,7 @@ class DatabaseSeeder extends Seeder
         Plan::create([
             'name' => 'Plan Critico',
             'description' => 'Acceso limitado a funciones básicas.',
-            'price_cents' => 1000, // $50.00
+            'price_cents' => 1000, // $10.00
             'published' => true,
             'featured' => false,
             'store_id' => $store->id,
@@ -139,5 +157,17 @@ class DatabaseSeeder extends Seeder
             'infinite_duration' => true,
         ]);
 
+        Plan::create([
+            'name' => 'Prueba',
+            'description' => 'Acceso completo con soporte prioritario.',
+            'price_cents' => 10, // $1000.00
+            'published' => true,
+            'featured' => true,
+            'store_id' => $store->id,
+            'frequency_id' => $yearly->id,
+            'free_days' => 30,
+            'grace_period' => 10,
+            'infinite_duration' => true,
+        ]);
     }
 }
