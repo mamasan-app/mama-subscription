@@ -100,7 +100,7 @@ class MonitorTransactionStatus implements ShouldQueue
                     if ($store) {
                         Log::info("Store tiene una cuenta bancaria por defecto.");
 
-                        $montoTransaction = $transaction->amount;
+                        $montoTransaction = ($transaction->amount)/100;
                         $montoVuelto = $montoTransaction - ($montoTransaction * 0.03);
 
                         Log::info("Monto de la transacción: $montoTransaction | Monto del vuelto: $montoVuelto");

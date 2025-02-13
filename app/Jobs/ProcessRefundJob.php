@@ -80,11 +80,11 @@ class ProcessRefundJob implements ShouldQueue
             'to_id' => $this->store->id,
             'type' => 'refund',
             'status' => $status,
-            'amount_cents' => $this->montoVuelto,
+            'amount_cents' => $this->montoVuelto*100,
             'metadata' => $responseData,
             'is_bs' => true,
             'payment_id' => $this->transaction->payment_id,
-            'date' => now(),
+            'date' => now()->setTimezone('America/Caracas'),
         ]);
 
         Log::info("Transacción de reembolso creada", [
