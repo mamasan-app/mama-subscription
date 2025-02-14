@@ -25,7 +25,7 @@ class DatabaseSeeder extends Seeder
             'first_name' => 'admin',
             'last_name' => 'admin',
             'email' => 'admin@gmail.com',
-            'password' => bcrypt('201102'),
+            'password' => bcrypt('123456'),
             'email_verified_at' => now(),
         ]);
         $admin->assignRole('admin');
@@ -33,8 +33,8 @@ class DatabaseSeeder extends Seeder
         $owner = User::create([
             'first_name' => 'owner',
             'last_name' => 'owner',
-            'email' => 'store@gmail.com',
-            'password' => bcrypt('201102'),
+            'email' => 'mt_jaime@yahoo.com',
+            'password' => bcrypt('123456'),
             'email_verified_at' => now(),
         ]);
         $owner->assignRole('owner_store');
@@ -42,10 +42,10 @@ class DatabaseSeeder extends Seeder
         $customer = User::create([
             'first_name' => 'customer',
             'last_name' => 'customer',
-            'email' => 'moises.liotawork@gmail.com',
-            'identity_document' => 'V-12260129',
-            'phone_number' => '04146634862',
-            'password' => bcrypt('201102'),
+            'email' => 'jaime@mamasan.app',
+            'identity_document' => 'V-15663644',
+            'phone_number' => '04122491919',
+            'password' => bcrypt('123456'),
             'email_verified_at' => now(),
         ]);
         $customer->assignRole('customer');
@@ -54,7 +54,7 @@ class DatabaseSeeder extends Seeder
             'first_name' => 'employee',
             'last_name' => 'employee',
             'email' => 'employee@gmail.com',
-            'password' => bcrypt('201102'),
+            'password' => bcrypt('123456'),
             'email_verified_at' => now(),
         ]);
         $employee->assignRole('employee');
