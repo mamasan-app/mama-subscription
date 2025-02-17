@@ -95,14 +95,12 @@ class CreatePayment extends Page
                     }
 
                     if ($subscription->status === SubscriptionStatusEnum::OnTrial->value) {
-                        abort(
-                            redirect(
-                                \App\Filament\App\Resources\UserSubscriptionResource\Pages\UserSubscriptionPayment::getUrl(['record' => $this->subscription_id])
-                            )
+                        redirect()->to(
+                            \App\Filament\App\Resources\UserSubscriptionResource\Pages\UserSubscriptionPayment::getUrl(['record' => $this->subscription_id])
                         );
+                        return false; // Evita que el modal se abra
                     }
 
-                    // Buscar pago pendiente en Bs
                     $this->payment = Payment::where('subscription_id', $this->subscription_id)
                         ->where('status', PaymentStatusEnum::Pending)
                         ->where('is_bs', true)
@@ -118,9 +116,15 @@ class CreatePayment extends Page
                     }
 
                     $amountInUsd = $this->payment->amount_cents / 100;
-                    $this->amountInBs = $this->convertToBs($amountInUsd) ?? $amountInUsd;
+                    $this->amountInBs = $this->convertToBs($amountInUsd);
+
+                    if (!$this->amountInBs) {
+                        $this->amountInBs = round($amountInUsd * 40, 2); // Asignamos un valor estimado
+                    }
+
                     return true;
                 })
+
                 ->modalActions([
 
                     // Botón para registrar una nueva cuenta
