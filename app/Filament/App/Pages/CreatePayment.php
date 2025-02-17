@@ -38,7 +38,35 @@ class CreatePayment extends Page
     public function mount(): void
     {
         $this->resetForm();
+
+        if ($this->subscription_id) {
+            $subscription = Subscription::find($this->subscription_id);
+
+            if ($subscription && $subscription->status === SubscriptionStatusEnum::OnTrial->value) {
+                redirect()->to(
+                    \App\Filament\App\Resources\UserSubscriptionResource\Pages\UserSubscriptionPayment::getUrl(['record' => $this->subscription_id])
+                );
+            }
+
+            // Buscar pago pendiente
+            $this->payment = Payment::where('subscription_id', $this->subscription_id)
+                ->where('status', PaymentStatusEnum::Pending)
+                ->where('is_bs', true)
+                ->first();
+
+            if ($this->payment) {
+                $amountInUsd = $this->payment->amount_cents / 100;
+                $this->amountInBs = $this->convertToBs($amountInUsd) ?? $amountInUsd;
+            } else {
+                Notification::make()
+                    ->title('Error')
+                    ->body('No se encontró un pago pendiente en Bs para esta suscripción.')
+                    ->danger()
+                    ->send();
+            }
+        }
     }
+
 
     public function resetForm(): void
     {
@@ -82,49 +110,6 @@ class CreatePayment extends Page
                 ->label('Pagar en Bolívares')
                 ->modalHeading('Seleccionar una opción')
                 ->modalWidth('lg')
-                ->before(function () {
-                    $subscription = Subscription::find($this->subscription_id);
-
-                    if (!$subscription) {
-                        Notification::make()
-                            ->title('Error')
-                            ->body('No se encontró la suscripción seleccionada.')
-                            ->danger()
-                            ->send();
-                        return false;
-                    }
-
-                    if ($subscription->status === SubscriptionStatusEnum::OnTrial->value) {
-                        redirect()->to(
-                            \App\Filament\App\Resources\UserSubscriptionResource\Pages\UserSubscriptionPayment::getUrl(['record' => $this->subscription_id])
-                        );
-                        return false; // Evita que el modal se abra
-                    }
-
-                    $this->payment = Payment::where('subscription_id', $this->subscription_id)
-                        ->where('status', PaymentStatusEnum::Pending)
-                        ->where('is_bs', true)
-                        ->first();
-
-                    if (!$this->payment) {
-                        Notification::make()
-                            ->title('Error')
-                            ->body('No se encontró un pago pendiente en Bs para esta suscripción.')
-                            ->danger()
-                            ->send();
-                        return false;
-                    }
-
-                    $amountInUsd = $this->payment->amount_cents / 100;
-                    $this->amountInBs = $this->convertToBs($amountInUsd);
-
-                    if (!$this->amountInBs) {
-                        $this->amountInBs = round($amountInUsd * 40, 2); // Asignamos un valor estimado
-                    }
-
-                    return true;
-                })
-
                 ->modalActions([
 
                     // Botón para registrar una nueva cuenta
