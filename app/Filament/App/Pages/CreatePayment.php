@@ -38,33 +38,6 @@ class CreatePayment extends Page
     public function mount(): void
     {
         $this->resetForm();
-
-        if ($this->subscription_id) {
-            $subscription = Subscription::find($this->subscription_id);
-
-            if ($subscription && $subscription->status === SubscriptionStatusEnum::OnTrial->value) {
-                redirect()->to(
-                    \App\Filament\App\Resources\UserSubscriptionResource\Pages\UserSubscriptionPayment::getUrl(['record' => $this->subscription_id])
-                );
-            }
-
-            // Buscar pago pendiente
-            $this->payment = Payment::where('subscription_id', $this->subscription_id)
-                ->where('status', PaymentStatusEnum::Pending)
-                ->where('is_bs', true)
-                ->first();
-
-            if ($this->payment) {
-                $amountInUsd = $this->payment->amount_cents / 100;
-                $this->amountInBs = $this->convertToBs($amountInUsd) ?? $amountInUsd;
-            } else {
-                Notification::make()
-                    ->title('Error')
-                    ->body('No se encontró un pago pendiente en Bs para esta suscripción.')
-                    ->danger()
-                    ->send();
-            }
-        }
     }
 
 
