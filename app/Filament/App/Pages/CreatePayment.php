@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Http;
 use App\Enums\TransactionStatusEnum;
 use App\Enums\TransactionTypeEnum;
 use App\Jobs\MonitorTransactionStatus;
+use Exception;
 
 class CreatePayment extends Page
 {
@@ -415,4 +416,44 @@ class CreatePayment extends Page
         return $response->json();
 
     }
+
+    protected function convertToBs($amountInUSD)
+    {
+        try {
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => $this->generateBcvToken(),
+                'Commerce' => config('banking.commerce_id'),
+            ])->post(config('banking.tasa_bcv'), [
+                        'Moneda' => 'USD',
+                        'Fechavalor' => now()->format('Y-m-d'),
+                    ]);
+
+            $rate = $response->json()['tipocambio'] ?? null;
+
+            //dd($response->json());
+
+            if ($rate) {
+                return round($amountInUSD * $rate, 2);
+            }
+
+            throw new Exception('No se pudo obtener la tasa de cambio.');
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('Error al obtener la tasa')
+                ->body('No se pudo obtener la tasa de cambio del BCV. Detalles: ' . $e->getMessage())
+                ->danger()
+                ->send();
+
+            return null;
+        }
+    }
+
+    protected function generateBcvToken()
+    {
+        $data = now()->format('Y-m-d') . 'USD';
+
+        return hash_hmac('sha256', $data, config('banking.commerce_id'));
+    }
+
 }
