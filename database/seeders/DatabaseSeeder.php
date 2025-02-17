@@ -8,6 +8,12 @@ use App\Models\Frequency;
 use App\Models\Plan;
 use App\Models\Store;
 use App\Models\User;
+use App\Enums\PaymentStatusEnum;
+use App\Enums\TransactionStatusEnum;
+use App\Enums\TransactionTypeEnum;
+use App\Models\Payment;
+use App\Models\Subscription;
+use App\Models\Transaction;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -158,10 +164,10 @@ class DatabaseSeeder extends Seeder
             'infinite_duration' => true,
         ]);
 
-        Plan::create([
+        $plan = Plan::create([
             'name' => 'Prueba',
             'description' => 'Acceso completo con soporte prioritario.',
-            'price_cents' => 10, // $1000.00
+            'price_cents' => 10,
             'published' => true,
             'featured' => true,
             'store_id' => $store->id,
@@ -169,6 +175,58 @@ class DatabaseSeeder extends Seeder
             'free_days' => 30,
             'grace_period' => 10,
             'infinite_duration' => true,
+        ]);
+
+        // Crear suscripción asociada al Plan
+        $subscription = Subscription::create([
+            'user_id' => $customer->id,
+            'store_id' => $store->id,
+            'service_id' => $plan->id,
+            'service_name' => $plan->name,
+            'service_description' => $plan->description,
+            'service_price_cents' => $plan->price_cents,
+            'status' => 'active',
+            'trial_ends_at' => now()->addDays(30),
+            'renews_at' => now()->addDays(365),
+            'ends_at' => null,
+            'last_notification_at' => null,
+            'expires_at' => now()->addDays(375),
+            'frequency_days' => $plan->frequency->days_count,
+        ]);
+
+        // Crear Payment **Aprobado** con una **Transaction** aprobada
+        $approvedPayment = Payment::create([
+            'subscription_id' => $subscription->id,
+            'status' => PaymentStatusEnum::Completed,
+            'amount_cents' => $subscription->service_price_cents,
+            'due_date' => now()->subDays(10),
+            'paid_date' => now()->subDays(5),
+            'is_bs' => true,
+            'paid' => true,
+        ]);
+
+        Transaction::create([
+            'from_type' => get_class($customer),
+            'from_id' => $customer->id,
+            'to_type' => get_class($store),
+            'to_id' => $store->id,
+            'type' => TransactionTypeEnum::Subscription->value,
+            'status' => TransactionStatusEnum::Succeeded,
+            'date' => now()->subDays(5),
+            'amount_cents' => $approvedPayment->amount_cents,
+            'metadata' => ['reference' => 'TRANS123456'],
+            'payment_id' => $approvedPayment->id,
+            'is_bs' => true,
+        ]);
+
+        // Crear Payment **Pendiente** para pruebas
+        Payment::create([
+            'subscription_id' => $subscription->id,
+            'status' => PaymentStatusEnum::Pending,
+            'amount_cents' => $subscription->service_price_cents,
+            'due_date' => now()->addDays(5),
+            'is_bs' => true,
+            'paid' => false,
         ]);
     }
 }
