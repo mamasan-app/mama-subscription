@@ -320,7 +320,7 @@ class CreatePayment extends Page
                     'Telefono' => $phone, // Teléfono completo (11 dígitos)
                     'Cedula' => $identity, // Cédula con prefijo
                 ]);
-        // dd('Respuesta de la API', $response->json());
+        dd('Respuesta de la API', $response->json());
 
         return $response->json();
     }
