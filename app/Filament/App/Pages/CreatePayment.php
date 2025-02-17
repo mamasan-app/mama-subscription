@@ -35,6 +35,8 @@ class CreatePayment extends Page
     public $identity;
     public $amountInBs;
     public $payment;
+    public $subscription;
+
 
     public function mount(): void
     {
@@ -80,6 +82,30 @@ class CreatePayment extends Page
 
     public function handleSubscriptionChange($subscriptionId)
     {
+        $this->subscription_id = $subscriptionId;
+
+        if (!$subscriptionId) {
+            return;
+        }
+
+        $this->subscription = Subscription::find($subscriptionId); // ✅ Guardar la suscripción
+
+        if (!$this->subscription) {
+            Notification::make()
+                ->title('Error')
+                ->body('No se encontró la suscripción seleccionada.')
+                ->danger()
+                ->send();
+            return;
+        }
+
+        if ($this->subscription->status === SubscriptionStatusEnum::OnTrial->value) {
+            $this->redirectRoute(
+                'filament.app.resources.user-subscription-payment',
+                ['record' => $subscriptionId]
+            );
+            return;
+        }
 
         // Buscar el pago pendiente en Bs
         $this->payment = Payment::where('subscription_id', $subscriptionId)
@@ -100,8 +126,6 @@ class CreatePayment extends Page
         $amountInUsd = $this->payment->amount_cents / 100;
         $this->amountInBs = $this->convertToBs($amountInUsd) ?? $amountInUsd;
     }
-
-
 
     protected function getActions(): array
     {
@@ -347,7 +371,11 @@ class CreatePayment extends Page
     protected function processImmediateDebit($payment)
     {
         $user = auth()->user(); // Obtener el usuario autenticado
-        $store = $this->subscription->store; // Tienda asociada a la suscripción
+        $store = $this->subscription ? $this->subscription->store : null;
+
+        if (!$store) {
+            throw new Exception('No se pudo obtener la tienda de la suscripción.');
+        }
 
         $nombre = $user->name ?? "{$user->first_name} {$user->last_name}"; // Obtener el nombre completo
         $bank = (string) $this->bank;
