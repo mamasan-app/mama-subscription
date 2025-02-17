@@ -97,10 +97,9 @@ class CreatePayment extends Page
         }
 
         if ($subscription->status === SubscriptionStatusEnum::OnTrial->value) {
-            redirect()->to(
+            return redirect()->away(
                 \App\Filament\App\Resources\UserSubscriptionResource\Pages\UserSubscriptionPayment::getUrl(['record' => $subscriptionId])
             );
-            return;
         }
 
         // Buscar el pago pendiente en Bs
