@@ -98,9 +98,11 @@ class CreatePayment extends Page
         }
 
         if ($subscription->status === SubscriptionStatusEnum::OnTrial->value) {
-            return redirect()->away(
-                \App\Filament\App\Resources\UserSubscriptionResource\Pages\UserSubscriptionPayment::getUrl(['record' => $subscriptionId])
+            $this->redirectRoute(
+                'filament.app.resources.user-subscription-payment', // Asegúrate de que esta ruta es la correcta
+                ['record' => $subscriptionId]
             );
+            return;
         }
 
         // Buscar el pago pendiente en Bs
@@ -122,6 +124,7 @@ class CreatePayment extends Page
         $amountInUsd = $this->payment->amount_cents / 100;
         $this->amountInBs = $this->convertToBs($amountInUsd) ?? $amountInUsd;
     }
+
 
 
     protected function getActions(): array
