@@ -65,8 +65,10 @@ class CreatePayment extends Page
                             });
                     })
                         ->whereNull('stripe_subscription_id')
-                        ->pluck('service_name', 'id')
+                        ->get()
+                        ->mapWithKeys(fn($sub) => [$sub->id => "{$sub->id} - {$sub->service_name}"])
                         ->toArray()
+
                 )
                 ->required()
                 ->reactive(),
@@ -93,9 +95,10 @@ class CreatePayment extends Page
                     }
 
                     if ($subscription->status === SubscriptionStatusEnum::OnTrial->value) {
-                        // Redirigir al primer pago si es una suscripción en prueba
-                        return $this->redirect(
-                            \App\Filament\App\Resources\UserSubscriptionResource\Pages\UserSubscriptionPayment::getUrl(['record' => $this->subscription_id])
+                        abort(
+                            redirect(
+                                \App\Filament\App\Resources\UserSubscriptionResource\Pages\UserSubscriptionPayment::getUrl(['record' => $this->subscription_id])
+                            )
                         );
                     }
 
@@ -114,7 +117,8 @@ class CreatePayment extends Page
                         return false;
                     }
 
-                    $this->amountInBs = $this->convertToBs($this->payment->amount_cents / 100);
+                    $amountInUsd = $this->payment->amount_cents / 100;
+                    $this->amountInBs = $this->convertToBs($amountInUsd) ?? $amountInUsd;
                     return true;
                 })
                 ->modalActions([
