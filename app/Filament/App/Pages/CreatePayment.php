@@ -80,30 +80,6 @@ class CreatePayment extends Page
 
     public function handleSubscriptionChange($subscriptionId)
     {
-        $this->subscription_id = $subscriptionId;
-
-        if (!$subscriptionId) {
-            return;
-        }
-
-        $subscription = Subscription::find($subscriptionId);
-
-        if (!$subscription) {
-            Notification::make()
-                ->title('Error')
-                ->body('No se encontró la suscripción seleccionada.')
-                ->danger()
-                ->send();
-            return;
-        }
-
-        if ($subscription->status === SubscriptionStatusEnum::OnTrial->value) {
-            $this->redirectRoute(
-                'filament.app.resources.user-subscription-payment', // Asegúrate de que esta ruta es la correcta
-                ['record' => $subscriptionId]
-            );
-            return;
-        }
 
         // Buscar el pago pendiente en Bs
         $this->payment = Payment::where('subscription_id', $subscriptionId)
