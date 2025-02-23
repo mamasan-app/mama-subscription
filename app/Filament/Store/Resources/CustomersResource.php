@@ -9,6 +9,8 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Forms;
+use Filament\Forms\Form;
 
 class CustomersResource extends Resource
 {
@@ -26,6 +28,46 @@ class CustomersResource extends Resource
     public static function canCreate(): bool
     {
         return false;
+    }
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Forms\Components\TextInput::make('first_name')
+                    ->label('Nombre')
+                    ->required(),
+
+                Forms\Components\TextInput::make('last_name')
+                    ->label('Apellido')
+                    ->required(),
+
+                Forms\Components\TextInput::make('email')
+                    ->label('Correo Electrónico')
+                    ->email()
+                    ->required(),
+
+                Forms\Components\TextInput::make('phone_number')
+                    ->label('Número de Teléfono')
+                    ->required(),
+
+                Forms\Components\DatePicker::make('birth_date')
+                    ->label('Fecha de Nacimiento')
+                    ->required(),
+
+                // Campos de solo lectura
+                Forms\Components\TextInput::make('id')
+                    ->label('ID')
+                    ->disabled(),
+
+                Forms\Components\DateTimePicker::make('created_at')
+                    ->label('Fecha de Creación')
+                    ->disabled(),
+
+                Forms\Components\DateTimePicker::make('updated_at')
+                    ->label('Última Actualización')
+                    ->disabled(),
+            ]);
     }
 
     public static function table(Table $table): Table
@@ -92,7 +134,7 @@ class CustomersResource extends Resource
     {
         $currentStore = Filament::getTenant();
 
-        if (! $currentStore) {
+        if (!$currentStore) {
             // Si no hay tienda en sesión, devuelve una consulta vacía
             return User::query()->whereRaw('1 = 0');
         }
