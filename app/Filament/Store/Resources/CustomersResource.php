@@ -22,7 +22,7 @@ class CustomersResource extends Resource
 
     protected static ?string $navigationGroup = 'Usuarios';
 
-    protected static ?string $modelLabel = 'Editar Clientes';
+    protected static ?string $modelLabel = 'Clientes';
 
     // Desactivar la página de creación
     public static function canCreate(): bool
