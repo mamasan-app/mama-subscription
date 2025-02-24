@@ -95,7 +95,7 @@ class SubscriptionResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
                     ->sortable()
-                    ->formatStateUsing(fn ($state) => $state?->getLabel()),
+                    ->formatStateUsing(fn($state) => $state?->getLabel()),
 
                 Tables\Columns\TextColumn::make('trial_ends_at')
                     ->label('Fin del Período de Prueba')
@@ -124,7 +124,7 @@ class SubscriptionResource extends Resource
     {
         $currentStore = Filament::getTenant();
 
-        if (! $currentStore) {
+        if (!$currentStore) {
             // Si no hay tienda en sesión, no mostrar resultados
             return Subscription::query()->whereRaw('1 = 0');
         }

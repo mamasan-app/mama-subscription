@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\App\Pages\Dashboard;
 use App\Filament\Pages\Auth\UserLogin;
+use App\Filament\App\Pages\Auth\EditProfile;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -29,6 +30,7 @@ class AppPanelProvider extends PanelProvider
             ->login(UserLogin::class)
             ->passwordReset()
             ->emailVerification()
+            ->profile(EditProfile::class)
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
             ->colors([

@@ -25,6 +25,8 @@ class BankAccountResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $modelLabel = 'Cuentas de Banco';
+
     public static function form(Form $form): Form
     {
         return $form
