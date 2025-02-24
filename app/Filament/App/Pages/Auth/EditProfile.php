@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Store\Pages\Auth;
+namespace App\Filament\App\Pages\Auth;
 
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
