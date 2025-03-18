@@ -21,6 +21,7 @@
         "livewire/livewire": "*",
         "moneyphp/money": "^4.5",
         "norbybaru/passwordless-auth": "^1.2",
+        "resend/resend-laravel": "^0.16.1",
         "saade/filament-fullcalendar": "^3.2",
         "spatie/laravel-medialibrary": "^11.9",
         "spatie/laravel-permission": "^6.9",
