@@ -62,9 +62,11 @@ class WelcomeCustomerNotification extends Notification
             [
                 'id' => $notifiable->getKey(),
                 'hash' => sha1($notifiable->getEmailForVerification()),
+                'panel' => 'app', // Asegurar que el usuario vaya al panel app
             ]
         );
     }
+
 
     /**
      * Representación del correo.
