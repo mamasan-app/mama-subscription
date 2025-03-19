@@ -40,6 +40,7 @@ class User extends Authenticatable implements CanUsePasswordlessAuthenticatable,
         'ci_picture_path',
         'code',
         'stripe_customer_id',
+        'email_verified_at',
     ];
 
     /**
@@ -80,7 +81,7 @@ class User extends Authenticatable implements CanUsePasswordlessAuthenticatable,
     public function name(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->first_name.' '.$this->last_name,
+            get: fn() => $this->first_name . ' ' . $this->last_name,
         );
     }
 
@@ -192,7 +193,6 @@ class User extends Authenticatable implements CanUsePasswordlessAuthenticatable,
      */
     public function sendEmailVerificationNotification()
     {
-        $panel = request()->segment(1); // Captura el panel actual desde la URL (app, tienda, admin)
-        $this->notify(new CustomVerifyEmail($panel));
+
     }
 }
