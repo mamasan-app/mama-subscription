@@ -83,25 +83,25 @@ class CustomerCreate extends Page
             Forms\Components\TextInput::make('first_name')
                 ->label('Nombre')
                 ->required()
-                ->hidden(fn ($get) => ! $get('showAdditionalFields')),
+                ->hidden(fn($get) => !$get('showAdditionalFields')),
 
             Forms\Components\TextInput::make('last_name')
                 ->label('Apellido')
                 ->required()
-                ->hidden(fn ($get) => ! $get('showAdditionalFields')),
+                ->hidden(fn($get) => !$get('showAdditionalFields')),
 
             Forms\Components\TextInput::make('phone_number')
                 ->label('Número de Teléfono')
                 ->required()
-                ->hidden(fn ($get) => ! $get('showAdditionalFields')),
+                ->hidden(fn($get) => !$get('showAdditionalFields')),
 
             \App\Filament\Inputs\IdentityDocumentTextInput::make()
-                ->hidden(fn ($get) => ! $get('showAdditionalFields')),
+                ->hidden(fn($get) => !$get('showAdditionalFields')),
 
             Forms\Components\DatePicker::make('birth_date')
                 ->label('Fecha de Nacimiento')
                 ->nullable()
-                ->hidden(fn ($get) => ! $get('showAdditionalFields')),
+                ->hidden(fn($get) => !$get('showAdditionalFields')),
 
         ];
     }
@@ -111,7 +111,7 @@ class CustomerCreate extends Page
         // Obtener la tienda actual usando Filament::getTenant()
         $currentStore = Filament::getTenant();
 
-        if (! $currentStore) {
+        if (!$currentStore) {
             Notification::make()
                 ->title('Error')
                 ->body('No se pudo identificar la tienda actual.')
@@ -167,7 +167,7 @@ class CustomerCreate extends Page
         } else {
 
             try {
-                $this->identity_document = $this->identity_prefix.'-'.$this->identity_number;
+                $this->identity_document = $this->identity_prefix . '-' . $this->identity_number;
 
                 if (User::where('email', $this->email)->exists()) {
                     /* Notificación */
@@ -181,7 +181,7 @@ class CustomerCreate extends Page
                     ]);
 
                 }
-                if (! empty($this->phone_number) && User::where('phone_number', $this->phone_number)->exists()) {
+                if (!empty($this->phone_number) && User::where('phone_number', $this->phone_number)->exists()) {
                     /* Notificación */
                     Notification::make()
                         ->title('Error crítico')
@@ -214,6 +214,7 @@ class CustomerCreate extends Page
                     'birth_date' => $this->birth_date ?: null,
                     'password' => bcrypt('default_password'),
                     'identity_document' => $this->identity_document,
+                    'email_verified_at' => now(),
                 ]);
 
                 $newUser->assignRole('customer');
@@ -232,7 +233,7 @@ class CustomerCreate extends Page
             } catch (\Exception $e) {
                 Notification::make()
                     ->title('Error crítico')
-                    ->body('Ocurrió un error inesperado: '.$e->getMessage())
+                    ->body('Ocurrió un error inesperado: ' . $e->getMessage())
                     ->danger()
                     ->send();
             }
