@@ -34,7 +34,7 @@ Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $requ
         default:
             return redirect('/app'); // Redirige siempre a /app
     }
-})->middleware(['auth', 'signed'])->name('verification.verify');
+})->middleware(['signed'])->name('verification.verify');
 
 
 Route::get('/magiclink/send', [MagicLinkLoginController::class, 'sendMagicLink'])->name('magiclink.send');
