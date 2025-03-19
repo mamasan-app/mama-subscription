@@ -248,6 +248,6 @@ class CustomerCreate extends Page
         $store = Filament::getTenant(); // Obtener la tienda actual
         $storeName = $store ? $store->name : 'Nuestra Tienda'; // Nombre de la tienda o valor por defecto
 
-        $user->notify(new \App\Notifications\WelcomeCustomerNotification($magicLinkUrl, $storeName));
+        $user->notify(new \App\Notifications\WelcomeCustomerNotification($magicLinkUrl, $storeName, $user));
     }
 }
